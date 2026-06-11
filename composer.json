@@ -1,0 +1,33 @@
+{
+  "name": "concrete5-community/dashboard_favorites_manager",
+  "description": "A ConcreteCMS package to manage, reorder, and remove dashboard favorites",
+  "type": "concrete5-package",
+  "keywords": [
+    "concretecms",
+    "concrete",
+    "cms",
+    "concrete5",
+    "package",
+    "dashboard",
+    "favorites",
+    "manager"
+  ],
+  "homepage": "https://github.com/concrete5-community/dashboard_favorites_manager",
+  "license": "GPL-2.0-only",
+  "authors": [
+    {
+      "name": "DigitMaster"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/concrete5-community/dashboard_favorites_manager/issues",
+    "source": "https://github.com/concrete5-community/dashboard_favorites_manager"
+  },
+  "require": {
+    "concrete5/core": "^9.2"
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "sort-packages": true
+  }
+}
