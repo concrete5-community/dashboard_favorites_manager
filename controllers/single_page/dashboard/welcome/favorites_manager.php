@@ -79,7 +79,9 @@ class FavoritesManager extends DashboardPageController
         }
 
         $command = new ClearCacheCommand();
-        $command->setLogCacheClear(true);
+        if (method_exists($command, 'setLogCacheClear')) {
+            $command->setLogCacheClear(true);
+        }
         $this->app->executeCommand($command);
 
         $timestamp = time();
