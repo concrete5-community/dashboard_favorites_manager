@@ -2,6 +2,8 @@
 
 namespace Concrete\Package\DashboardFavoritesManager\Controller\SinglePage\Dashboard\Welcome;
 
+defined('C5_EXECUTE') or die('Access Denied.');
+
 use Concrete\Core\Application\UserInterface\Dashboard\Navigation\FavoritesNavigationCache;
 use Concrete\Core\Application\UserInterface\Dashboard\Navigation\FavoritesNavigationFactory;
 use Concrete\Core\Cache\Command\ClearCacheCommand;
