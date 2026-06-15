@@ -86,6 +86,48 @@
     color: #6c757d;
 }
 
+.dashboard-favorites-toolbar-notice {
+    align-items: center;
+    border-bottom: 1px solid #edf0f2;
+    display: flex;
+    font-size: 0.875rem;
+    gap: 0.75rem;
+    justify-content: space-between;
+    line-height: 1.2;
+    padding: 0.55rem 0.75rem;
+}
+
+.dashboard-favorites-toolbar-notice-text {
+    min-width: 0;
+}
+
+.dashboard-favorites-toolbar-notice-success {
+    animation: dashboard-favorites-toolbar-success-fade 1.8s ease-out forwards;
+    background: #e6f7eb;
+    color: #16773a;
+}
+
+.dashboard-favorites-toolbar-notice-error {
+    background: #fff3f3;
+    color: #b02a37;
+}
+
+.dashboard-favorites-toolbar-notice-dismiss {
+    background: transparent;
+    border: 0;
+    color: #b02a37;
+    flex: 0 0 auto;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1;
+    padding: 0 0.1rem;
+}
+
+.dashboard-favorites-toolbar-notice-dismiss:hover,
+.dashboard-favorites-toolbar-notice-dismiss:focus {
+    color: #842029;
+}
+
 .dashboard-favorites-toolbar-action {
     border-top: 1px solid #edf0f2;
     margin: 0;
@@ -110,6 +152,21 @@
 .dashboard-favorites-toolbar-action-button:hover,
 .dashboard-favorites-toolbar-action-button:focus {
     background: #f6f7f9;
+}
+
+.dashboard-favorites-toolbar-action-button:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
+@keyframes dashboard-favorites-toolbar-success-fade {
+    from {
+        background: #bff2cd;
+    }
+
+    to {
+        background: #e6f7eb;
+    }
 }
 
 @media (max-width: 575.98px) {

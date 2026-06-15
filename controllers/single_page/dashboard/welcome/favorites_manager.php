@@ -67,15 +67,11 @@ class FavoritesManager extends DashboardPageController
     public function toolbar_clear_cache()
     {
         if (!$this->app->make('token')->validate('clear_cache', $this->request->request->get('ccm_token'))) {
-            $this->flash('error', $this->app->make('token')->getErrorMessage());
-
-            return new RedirectResponse($this->getToolbarClearCacheReturnUrl());
+            return $this->handleToolbarClearCacheResponse(false, $this->app->make('token')->getErrorMessage(), 400);
         }
 
         if (!$this->canUseToolbarClearCache()) {
-            $this->flash('error', t('You do not have permission to clear the cache.'));
-
-            return new RedirectResponse($this->getToolbarClearCacheReturnUrl());
+            return $this->handleToolbarClearCacheResponse(false, t('You do not have permission to clear the cache.'), 403);
         }
 
         $command = new ClearCacheCommand();
@@ -88,9 +84,9 @@ class FavoritesManager extends DashboardPageController
         $config = $this->app->make('config');
         $config->set('concrete.cache.last_cleared', $timestamp);
         $config->save('concrete.cache.last_cleared', $timestamp);
-        $this->flash('success', t('Cached files removed.'));
+        $this->logToolbarClearCache();
 
-        return new RedirectResponse($this->getToolbarClearCacheReturnUrl());
+        return $this->handleToolbarClearCacheResponse(true, t('Cached files removed.'));
     }
 
     public function toggle_dashboard_page()
@@ -806,6 +802,40 @@ class FavoritesManager extends DashboardPageController
         }
 
         return $this->canViewDashboardPage($page);
+    }
+
+    private function handleToolbarClearCacheResponse($success, $message, $status = 200)
+    {
+        if ($this->isToolbarClearCacheJsonRequest()) {
+            return new JsonResponse([
+                'success' => (bool) $success,
+                'message' => (string) $message,
+            ], $status);
+        }
+
+        $this->flash($success ? 'success' : 'error', (string) $message);
+
+        return new RedirectResponse($this->getToolbarClearCacheReturnUrl());
+    }
+
+    private function logToolbarClearCache()
+    {
+        try {
+            $user = new User();
+            $userID = $user->isRegistered() ? (int) $user->getUserID() : 0;
+            $logger = $this->app->make('log/factory')->createLogger('operations');
+            $logger->notice(t('Dashboard Favorites Manager cleared cache from the toolbar. User ID: %s', $userID));
+        } catch (\Throwable $e) {
+        }
+    }
+
+    private function isToolbarClearCacheJsonRequest()
+    {
+        if ($this->request->isXmlHttpRequest()) {
+            return true;
+        }
+
+        return stripos((string) $this->request->headers->get('accept'), 'application/json') !== false;
     }
 
     private function getToolbarClearCacheReturnUrl()

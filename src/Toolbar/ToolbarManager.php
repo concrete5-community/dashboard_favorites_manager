@@ -59,6 +59,7 @@ class ToolbarManager
                     'url' => (string) \URL::to($this->managerPath, 'toolbar_clear_cache'),
                     'token' => $this->app->make('token')->generate('clear_cache'),
                     'label' => t('Clear cache now!'),
+                    'errorText' => t('Unable to clear cache.'),
                 ];
             }
             if ($this->settings->isLogoutEnabled()) {

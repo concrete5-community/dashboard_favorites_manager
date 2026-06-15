@@ -34,6 +34,85 @@
         return !scheme || /^(?:http|https)$/i.test(scheme[1]);
     }
 
+    function showToolbarNotice(menu, type, message) {
+        var notice = menu.querySelector('[data-dashboard-favorites-toolbar-notice]');
+        if (!notice) {
+            notice = createElement('div', 'dashboard-favorites-toolbar-notice');
+            notice.setAttribute('data-dashboard-favorites-toolbar-notice', '1');
+            notice.setAttribute('role', 'status');
+            notice.setAttribute('aria-live', 'polite');
+            menu.insertBefore(notice, menu.firstChild);
+        }
+
+        while (notice.firstChild) {
+            notice.removeChild(notice.firstChild);
+        }
+
+        var noticeText = createElement('span', 'dashboard-favorites-toolbar-notice-text', message || '');
+        var dismissButton = createElement('button', 'dashboard-favorites-toolbar-notice-dismiss', 'x');
+        dismissButton.type = 'button';
+        dismissButton.setAttribute('aria-label', 'Dismiss message');
+        dismissButton.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (notice.parentNode) {
+                notice.parentNode.removeChild(notice);
+            }
+        });
+
+        notice.className = 'dashboard-favorites-toolbar-notice dashboard-favorites-toolbar-notice-' + type;
+        notice.appendChild(noticeText);
+        notice.appendChild(dismissButton);
+        notice.style.animation = 'none';
+        notice.offsetHeight;
+        notice.style.animation = '';
+    }
+
+    function getAjaxErrorMessage(response, fallback) {
+        if (response && response.message) {
+            return response.message;
+        }
+
+        return fallback || 'Unable to clear cache.';
+    }
+
+    function submitClearCacheForm(event, menu, config, button) {
+        if (!window.fetch || !window.FormData) {
+            return;
+        }
+
+        event.preventDefault();
+
+        var form = event.currentTarget;
+        var originalText = button.textContent;
+        button.disabled = true;
+
+        window.fetch(form.action, {
+            method: 'POST',
+            body: new window.FormData(form),
+            credentials: 'same-origin',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        }).then(function (response) {
+            return response.json().catch(function () {
+                return {};
+            }).then(function (json) {
+                if (!response.ok || !json.success) {
+                    throw json;
+                }
+
+                showToolbarNotice(menu, 'success', json.message || originalText);
+            });
+        }).catch(function (json) {
+            showToolbarNotice(menu, 'error', getAjaxErrorMessage(json, config.clearCache.errorText));
+        }).then(function () {
+            button.disabled = false;
+            button.textContent = originalText;
+        });
+    }
+
     function renderMenuItems(menu, config) {
         while (menu.firstChild) {
             menu.removeChild(menu.firstChild);
@@ -76,6 +155,9 @@
 
             clearCacheForm.appendChild(token);
             clearCacheForm.appendChild(clearCacheButton);
+            clearCacheForm.addEventListener('submit', function (event) {
+                submitClearCacheForm(event, menu, config, clearCacheButton);
+            });
             menu.appendChild(clearCacheForm);
         }
 
