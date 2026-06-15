@@ -46,6 +46,7 @@ class DashboardFavoritesRepairer
                 ['DASHBOARD_FAVORITES']
             );
         } catch (\Throwable $e) {
+            // Dashboard favorites repair is best-effort.
             return;
         }
 
