@@ -41,8 +41,8 @@
             notice.setAttribute('data-dashboard-favorites-toolbar-notice', '1');
             notice.setAttribute('role', 'status');
             notice.setAttribute('aria-live', 'polite');
-            menu.insertBefore(notice, menu.firstChild);
         }
+        menu.appendChild(notice);
 
         while (notice.firstChild) {
             notice.removeChild(notice.firstChild);

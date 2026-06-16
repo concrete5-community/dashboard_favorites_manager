@@ -88,7 +88,7 @@
 
 .dashboard-favorites-toolbar-notice {
     align-items: center;
-    border-bottom: 1px solid #edf0f2;
+    box-shadow: inset 0 1px 0 #a9dcb5;
     display: flex;
     font-size: 0.875rem;
     gap: 0.75rem;
@@ -103,8 +103,16 @@
 
 .dashboard-favorites-toolbar-notice-success {
     animation: dashboard-favorites-toolbar-success-fade 1.8s ease-out forwards;
-    background: #e6f7eb;
-    color: #16773a;
+    background: #d4edda;
+    color: #10431c;
+}
+
+.dashboard-favorites-toolbar-notice-success .dashboard-favorites-toolbar-notice-dismiss {
+    animation: dashboard-favorites-toolbar-success-dismiss 1.8s linear forwards;
+    color: currentColor;
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
 }
 
 .dashboard-favorites-toolbar-notice-error {
@@ -128,6 +136,11 @@
     color: #842029;
 }
 
+.dashboard-favorites-toolbar-notice-success .dashboard-favorites-toolbar-notice-dismiss:hover,
+.dashboard-favorites-toolbar-notice-success .dashboard-favorites-toolbar-notice-dismiss:focus {
+    color: #000;
+}
+
 .dashboard-favorites-toolbar-action {
     border-top: 1px solid #edf0f2;
     margin: 0;
@@ -138,15 +151,41 @@
 }
 
 .dashboard-favorites-toolbar-action-button {
+    align-items: center;
     background: transparent;
     border: 0;
     color: #0d6efd;
-    display: block;
+    display: flex;
     font-size: 0.875rem;
+    gap: 0.4rem;
     line-height: 1.2;
     padding: 0.55rem 0.75rem;
     text-align: left;
     width: 100%;
+}
+
+.dashboard-favorites-toolbar-action-link {
+    align-items: center;
+    display: flex;
+    gap: 0.4rem;
+}
+
+.dashboard-favorites-toolbar-action-button::before {
+    content: "\f152";
+    flex: 0 0 auto;
+    font-family: "Font Awesome 5 Free";
+    font-size: 1.215rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.dashboard-favorites-toolbar-action-link::before {
+    content: "\f152";
+    flex: 0 0 auto;
+    font-family: "Font Awesome 5 Free";
+    font-size: 1.215rem;
+    font-weight: 900;
+    line-height: 1;
 }
 
 .dashboard-favorites-toolbar-action-button:hover,
@@ -161,11 +200,39 @@
 
 @keyframes dashboard-favorites-toolbar-success-fade {
     from {
-        background: #bff2cd;
+        background: #a6dfb5;
+        box-shadow: inset 0 1px 0 #a9dcb5, 0 0 0 0.18rem rgba(40, 167, 69, 0.28);
+        color: #fff;
+        text-shadow: 0 0 0.45rem rgba(255, 255, 255, 0.95), 0 0 0.9rem rgba(16, 67, 28, 0.45);
+    }
+
+    45% {
+        background: #b8e6c4;
+        box-shadow: inset 0 1px 0 #a9dcb5, 0 0 0 0.08rem rgba(40, 167, 69, 0.16);
+        color: #fff;
+        text-shadow: 0 0 0.3rem rgba(255, 255, 255, 0.75), 0 0 0.55rem rgba(16, 67, 28, 0.28);
     }
 
     to {
-        background: #e6f7eb;
+        background: #d4edda;
+        box-shadow: inset 0 1px 0 #a9dcb5;
+        color: #10431c;
+        text-shadow: none;
+    }
+}
+
+@keyframes dashboard-favorites-toolbar-success-dismiss {
+    0%,
+    99% {
+        opacity: 0;
+        pointer-events: none;
+        visibility: hidden;
+    }
+
+    to {
+        opacity: 1;
+        pointer-events: auto;
+        visibility: visible;
     }
 }
 
