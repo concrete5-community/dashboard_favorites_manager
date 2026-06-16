@@ -277,6 +277,11 @@
         display: none;
     }
 
+    .dashboard-favorites-toolbar-button {
+        height: 40px;
+        min-width: 40px;
+    }
+
     .dashboard-favorites-toolbar-menu-version {
         display: flex;
     }
