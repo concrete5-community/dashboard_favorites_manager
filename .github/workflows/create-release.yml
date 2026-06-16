@@ -1,4 +1,4 @@
-name: Prepare GitHub Release
+name: Create GitHub Release
 
 on:
   push:
@@ -6,8 +6,8 @@ on:
       - '*'
 
 jobs:
-  attach-zip:
-    name: Prepare GitHub Release
+  create-release:
+    name: Create GitHub Release
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -23,7 +23,7 @@ jobs:
         name: Checkout
         uses: actions/checkout@v6
       -
-        name: Create draft release
+        name: Create release
         uses: concrete5-community/gh-package-release-attach@main
         with:
           remove-files: |
