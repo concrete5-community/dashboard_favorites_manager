@@ -12,6 +12,12 @@ class ToolbarSettings
     private const USER_CONFIG_TOOLBAR_CLEAR_CACHE_ENABLED = 'DASHBOARD_FAVORITES_MANAGER_TOOLBAR_CLEAR_CACHE_ENABLED';
     private const USER_CONFIG_TOOLBAR_LOGOUT_ENABLED = 'DASHBOARD_FAVORITES_MANAGER_TOOLBAR_LOGOUT_ENABLED';
     private const USER_CONFIG_TOOLBAR_CONCRETE_VERSION_ENABLED = 'DASHBOARD_FAVORITES_MANAGER_TOOLBAR_CONCRETE_VERSION_ENABLED';
+    private const USER_CONFIG_KEYS = [
+        self::USER_CONFIG_TOOLBAR_ENABLED,
+        self::USER_CONFIG_TOOLBAR_CLEAR_CACHE_ENABLED,
+        self::USER_CONFIG_TOOLBAR_LOGOUT_ENABLED,
+        self::USER_CONFIG_TOOLBAR_CONCRETE_VERSION_ENABLED,
+    ];
 
     public function isFavoritesEnabled()
     {
@@ -103,6 +109,17 @@ class ToolbarSettings
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_CLEAR_CACHE_ENABLED, 1);
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_LOGOUT_ENABLED, 1);
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_CONCRETE_VERSION_ENABLED, 0);
+    }
+
+    public function clearAllUserSettings($app)
+    {
+        $db = $app->make('database')->connection();
+        $placeholders = implode(', ', array_fill(0, count(self::USER_CONFIG_KEYS), '?'));
+
+        $db->executeStatement(
+            'delete from ConfigStore where cfKey in (' . $placeholders . ')',
+            self::USER_CONFIG_KEYS
+        );
     }
 
     public function migrateLegacySettingsToCurrentUser($config)

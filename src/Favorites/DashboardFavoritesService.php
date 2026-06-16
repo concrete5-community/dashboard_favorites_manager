@@ -43,6 +43,46 @@ class DashboardFavoritesService
         $this->clearFavoritesCache();
     }
 
+    public function removeDashboardFavoritesManagerFavoriteFromAllUsers($page)
+    {
+        $db = $this->app->make('database')->connection();
+
+        try {
+            $rows = $db->fetchAllAssociative(
+                'select cfValue, uID from ConfigStore where cfKey = ?',
+                ['DASHBOARD_FAVORITES']
+            );
+        } catch (\Throwable $e) {
+            return;
+        }
+
+        $managerPageID = $page instanceof Page && !$page->isError() ? (int) $page->getCollectionID() : 0;
+        $changed = false;
+        foreach ($rows as $row) {
+            $value = (string) ($row['cfValue'] ?? '');
+            $items = json_decode($value, true);
+            if (json_last_error() !== JSON_ERROR_NONE || !is_array($items)) {
+                continue;
+            }
+
+            $removed = false;
+            $filteredItems = $this->removeDashboardFavoritesManagerFavoriteItems($items, $managerPageID, $removed);
+            if (!$removed) {
+                continue;
+            }
+
+            $db->executeStatement(
+                'update ConfigStore set cfValue = ? where cfKey = ? and uID = ?',
+                [json_encode($this->normalizeItems($filteredItems)), 'DASHBOARD_FAVORITES', (int) $row['uID']]
+            );
+            $changed = true;
+        }
+
+        if ($changed) {
+            $this->clearFavoritesCache();
+        }
+    }
+
     public function getDashboardFavoritesManagerFavoriteItem(Page $page)
     {
         return [
@@ -192,6 +232,35 @@ class DashboardFavoritesService
         }
 
         return false;
+    }
+
+    private function removeDashboardFavoritesManagerFavoriteItems(array $items, $managerPageID, &$removed)
+    {
+        $filtered = [];
+        foreach ($items as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+
+            $path = $this->normalizer->normalizeUrlPath((string) ($item['url'] ?? ''));
+            $pageID = (int) ($item['pageID'] ?? 0);
+            if ($path === $this->managerPath || ($managerPageID > 0 && $pageID === $managerPageID)) {
+                $removed = true;
+                continue;
+            }
+
+            if (!empty($item['children']) && is_array($item['children'])) {
+                $item['children'] = $this->removeDashboardFavoritesManagerFavoriteItems(
+                    $item['children'],
+                    $managerPageID,
+                    $removed
+                );
+            }
+
+            $filtered[] = $item;
+        }
+
+        return $filtered;
     }
 
     private function canViewPage($page)

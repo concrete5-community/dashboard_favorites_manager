@@ -22,7 +22,7 @@ class Controller extends Package
 
     protected $pkgHandle = 'dashboard_favorites_manager';
     protected $appVersionRequired = '9.2.0';
-    protected $pkgVersion = '1.1.0-rc1';
+    protected $pkgVersion = '1.1.1-rc1';
 
     public function getPackageName()
     {
@@ -106,6 +106,9 @@ class Controller extends Package
 
     public function uninstall()
     {
+        $page = Page::getByPath(self::MANAGER_PATH);
+        $this->getDashboardFavoritesService()->removeDashboardFavoritesManagerFavoriteFromAllUsers($page);
+        $this->getToolbarSettings()->clearAllUserSettings($this->app);
         $this->uninstallSinglePages();
         parent::uninstall();
     }
