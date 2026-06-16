@@ -38,6 +38,30 @@ jobs:
         with:
           fail-on-warnings: true
 
+  php-cs:
+    name: PHP Coding Style
+    runs-on: ubuntu-latest
+    container: ghcr.io/concrete5-community/docker5:9.5
+    steps:
+      -
+        name: Start DBMS
+        run: ccm-service start db
+      -
+        name: Install PHP CS Fixer
+        run: ccm-install php-cs-fixer
+      -
+        name: Checkout
+        uses: actions/checkout@v6
+      -
+        name: Copy repository
+        run: |
+          mkdir -p /app/packages/dashboard_favorites_manager
+          cp -R "$GITHUB_WORKSPACE"/* /app/packages/dashboard_favorites_manager/
+      -
+        name: Check code style
+        working-directory: /app
+        run: php-cs-fixer --ansi --no-interaction --dry-run --diff --using-cache=no --config=.php-cs-fixer.dist.php fix packages/dashboard_favorites_manager
+
   development-leftovers:
     name: Check Development Leftovers
     runs-on: ubuntu-latest
@@ -65,6 +89,7 @@ jobs:
     container: ghcr.io/concrete5-community/docker5:${{ matrix.ccm-version }}
     needs:
       - php-syntax
+      - php-cs
       - development-leftovers
     strategy:
       matrix:
