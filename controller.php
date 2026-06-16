@@ -77,6 +77,16 @@ class Controller extends Package
         $this->getToolbarSettings()->setLogoutEnabled($enabled);
     }
 
+    public function isToolbarConcreteVersionEnabled()
+    {
+        return $this->getToolbarSettings()->isConcreteVersionEnabled();
+    }
+
+    public function setToolbarConcreteVersionEnabled($enabled)
+    {
+        $this->getToolbarSettings()->setConcreteVersionEnabled($enabled);
+    }
+
     public function install()
     {
         $pkg = parent::install();

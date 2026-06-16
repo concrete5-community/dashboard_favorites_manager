@@ -6,6 +6,7 @@
 /** @var bool $toolbarFavoritesEnabled */
 /** @var bool $toolbarClearCacheEnabled */
 /** @var bool $toolbarLogoutEnabled */
+/** @var bool $toolbarConcreteVersionEnabled */
 /** @var bool $canUseToolbarClearCache */
 /** @var string $toolbarSettingsToken */
 /** @var string $toggleDashboardPageToken */
@@ -60,6 +61,7 @@
             <input type="hidden" name="toolbar_favorites_enabled" value="0">
             <input type="hidden" name="toolbar_clear_cache_enabled" value="0">
             <input type="hidden" name="toolbar_logout_enabled" value="0">
+            <input type="hidden" name="toolbar_concrete_version_enabled" value="0">
             <div class="form-check form-switch">
                 <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-toolbar-enabled" name="toolbar_favorites_enabled" value="1" aria-label="<?php echo h(t('Show blue star button in toolbar')); ?>" onchange="this.form.submit()" <?php echo $toolbarFavoritesEnabled ? 'checked' : ''; ?>>
                 <span class="form-check-label">
@@ -78,6 +80,12 @@
                 <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-logout-enabled" name="toolbar_logout_enabled" value="1" aria-label="<?php echo h(t('Show "Log out" action inside the blue star menu')); ?>" onchange="this.form.submit()" <?php echo $toolbarFavoritesEnabled && $toolbarLogoutEnabled ? 'checked' : ''; ?> <?php echo $toolbarFavoritesEnabled ? '' : 'disabled'; ?>>
                 <span class="form-check-label">
                     <?php echo t('Show "Log out" action inside the blue star menu'); ?>
+                </span>
+            </div>
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-concrete-version-enabled" name="toolbar_concrete_version_enabled" value="1" aria-label="<?php echo h(t('Show Concrete CMS version in toolbar')); ?>" onchange="this.form.submit()" <?php echo $toolbarConcreteVersionEnabled ? 'checked' : ''; ?>>
+                <span class="form-check-label">
+                    <?php echo t('Show Concrete CMS version in toolbar'); ?>
                 </span>
             </div>
         </form>

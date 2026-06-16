@@ -11,6 +11,7 @@ class ToolbarSettings
     private const USER_CONFIG_TOOLBAR_ENABLED = 'DASHBOARD_FAVORITES_MANAGER_TOOLBAR_ENABLED';
     private const USER_CONFIG_TOOLBAR_CLEAR_CACHE_ENABLED = 'DASHBOARD_FAVORITES_MANAGER_TOOLBAR_CLEAR_CACHE_ENABLED';
     private const USER_CONFIG_TOOLBAR_LOGOUT_ENABLED = 'DASHBOARD_FAVORITES_MANAGER_TOOLBAR_LOGOUT_ENABLED';
+    private const USER_CONFIG_TOOLBAR_CONCRETE_VERSION_ENABLED = 'DASHBOARD_FAVORITES_MANAGER_TOOLBAR_CONCRETE_VERSION_ENABLED';
 
     public function isFavoritesEnabled()
     {
@@ -76,11 +77,32 @@ class ToolbarSettings
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_LOGOUT_ENABLED, $enabled ? 1 : 0);
     }
 
+    public function isConcreteVersionEnabled()
+    {
+        $user = new User();
+        if (!$user->isRegistered()) {
+            return false;
+        }
+
+        return (int) $user->config(self::USER_CONFIG_TOOLBAR_CONCRETE_VERSION_ENABLED) === 1;
+    }
+
+    public function setConcreteVersionEnabled($enabled)
+    {
+        $user = new User();
+        if (!$user->isRegistered()) {
+            return;
+        }
+
+        $user->saveConfig(self::USER_CONFIG_TOOLBAR_CONCRETE_VERSION_ENABLED, $enabled ? 1 : 0);
+    }
+
     public function enableDefaultsForUser(User $user)
     {
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_ENABLED, 1);
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_CLEAR_CACHE_ENABLED, 1);
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_LOGOUT_ENABLED, 1);
+        $user->saveConfig(self::USER_CONFIG_TOOLBAR_CONCRETE_VERSION_ENABLED, 0);
     }
 
     public function migrateLegacySettingsToCurrentUser($config)
@@ -107,5 +129,6 @@ class ToolbarSettings
             $legacyClearCacheEnabled === null || (int) $legacyClearCacheEnabled === 1 ? 1 : 0
         );
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_LOGOUT_ENABLED, 1);
+        $user->saveConfig(self::USER_CONFIG_TOOLBAR_CONCRETE_VERSION_ENABLED, 0);
     }
 }

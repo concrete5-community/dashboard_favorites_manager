@@ -170,31 +170,40 @@
 
     function buildMenu(config, wrapperTag, wrapperClassName) {
         var wrapper = createElement(wrapperTag || 'li', wrapperClassName || 'dashboard-favorites-toolbar float-end');
-        var button = createElement('button', 'dashboard-favorites-toolbar-button');
-        button.type = 'button';
-        button.setAttribute('aria-expanded', 'false');
-        button.setAttribute('aria-haspopup', 'true');
-        button.setAttribute('data-dashboard-favorites-toolbar-button', '1');
-        button.title = config.title || '';
+        if (config.concreteVersion && (config.concreteVersion.name || config.concreteVersion.version)) {
+            var version = createElement('span', 'dashboard-favorites-toolbar-version');
+            version.appendChild(createElement('span', 'dashboard-favorites-toolbar-version-name', config.concreteVersion.name || 'ConcreteCMS'));
+            version.appendChild(createElement('span', 'dashboard-favorites-toolbar-version-number', config.concreteVersion.version || ''));
+            wrapper.appendChild(version);
+        }
 
-        var icon = createElement('i', 'fas fa-star');
-        icon.setAttribute('aria-hidden', 'true');
-        var title = createElement('span', 'ccm-toolbar-accessibility-title', config.title || '');
-        button.appendChild(icon);
-        button.appendChild(title);
+        if (config.favoritesEnabled === true) {
+            var button = createElement('button', 'dashboard-favorites-toolbar-button');
+            button.type = 'button';
+            button.setAttribute('aria-expanded', 'false');
+            button.setAttribute('aria-haspopup', 'true');
+            button.setAttribute('data-dashboard-favorites-toolbar-button', '1');
+            button.title = config.title || '';
 
-        var menu = createElement('div', 'dashboard-favorites-toolbar-menu');
-        renderMenuItems(menu, config);
+            var icon = createElement('i', 'fas fa-star');
+            icon.setAttribute('aria-hidden', 'true');
+            var title = createElement('span', 'ccm-toolbar-accessibility-title', config.title || '');
+            button.appendChild(icon);
+            button.appendChild(title);
 
-        button.addEventListener('click', function (event) {
-            event.preventDefault();
-            event.stopPropagation();
-            var isOpen = wrapper.classList.toggle('is-open');
-            button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-        });
+            var menu = createElement('div', 'dashboard-favorites-toolbar-menu');
+            renderMenuItems(menu, config);
 
-        wrapper.appendChild(button);
-        wrapper.appendChild(menu);
+            button.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                var isOpen = wrapper.classList.toggle('is-open');
+                button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            });
+
+            wrapper.appendChild(button);
+            wrapper.appendChild(menu);
+        }
 
         return wrapper;
     }
@@ -253,11 +262,13 @@
             dashboardPageHeader.appendChild(menu);
         }
 
-        document.addEventListener('click', function (event) {
-            if (!event.target.closest('.dashboard-favorites-toolbar')) {
-                closeMenu(menu);
-            }
-        });
+        if (config.favoritesEnabled === true) {
+            document.addEventListener('click', function (event) {
+                if (!event.target.closest('.dashboard-favorites-toolbar')) {
+                    closeMenu(menu);
+                }
+            });
+        }
     }
 
     function isCoreDashboardFavoriteControl(target) {

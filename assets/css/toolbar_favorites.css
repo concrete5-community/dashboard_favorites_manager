@@ -1,4 +1,7 @@
 .dashboard-favorites-toolbar {
+    align-items: center;
+    display: flex;
+    gap: 0.45rem;
     position: relative;
 }
 
@@ -38,6 +41,22 @@
 
 .dashboard-favorites-toolbar-button .fas {
     color: #0d6efd;
+}
+
+.dashboard-favorites-toolbar-version {
+    align-items: flex-end;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    justify-content: center;
+    line-height: 1.05;
+    white-space: nowrap;
+}
+
+.dashboard-favorites-toolbar-version-number {
+    font-size: 0.75rem;
 }
 
 .dashboard-favorites-toolbar-menu {

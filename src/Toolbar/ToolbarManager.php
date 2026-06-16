@@ -35,11 +35,13 @@ class ToolbarManager
     {
         $this->registerAssets($package);
 
-        if (!$this->settings->isFavoritesEnabled()) {
+        $favoritesEnabled = $this->settings->isFavoritesEnabled();
+        $concreteVersionEnabled = $this->settings->isConcreteVersionEnabled();
+        if (!$favoritesEnabled && !$concreteVersionEnabled) {
             return;
         }
 
-        Events::addListener('on_before_render', function ($event) {
+        Events::addListener('on_before_render', function ($event) use ($favoritesEnabled, $concreteVersionEnabled) {
             $view = method_exists($event, 'getArgument') ? $event->getArgument('view') : View::getInstance();
             if (!$view instanceof PageView) {
                 return;
@@ -50,11 +52,18 @@ class ToolbarManager
 
             $toolbarConfig = [
                 'enabled' => true,
-                'favorites' => $this->favoritesService->getToolbarFavoriteLinks(),
+                'favoritesEnabled' => $favoritesEnabled,
+                'favorites' => $favoritesEnabled ? $this->favoritesService->getToolbarFavoriteLinks() : [],
                 'emptyText' => t('No dashboard favorites found.'),
                 'title' => t('Dashboard favorites'),
             ];
-            if ($this->settings->isClearCacheEnabled() && $this->canUseToolbarClearCache()) {
+            if ($concreteVersionEnabled) {
+                $toolbarConfig['concreteVersion'] = [
+                    'name' => 'ConcreteCMS',
+                    'version' => $this->getConcreteCmsVersion(),
+                ];
+            }
+            if ($favoritesEnabled && $this->settings->isClearCacheEnabled() && $this->canUseToolbarClearCache()) {
                 $toolbarConfig['clearCache'] = [
                     'url' => (string) \URL::to($this->managerPath, 'toolbar_clear_cache'),
                     'token' => $this->app->make('token')->generate('clear_cache'),
@@ -62,7 +71,7 @@ class ToolbarManager
                     'errorText' => t('Unable to clear cache.'),
                 ];
             }
-            if ($this->settings->isLogoutEnabled()) {
+            if ($favoritesEnabled && $this->settings->isLogoutEnabled()) {
                 $toolbarConfig['logout'] = [
                     'url' => (string) \URL::to('/login', 'do_logout', $this->app->make('token')->generate('do_logout')),
                     'label' => t('Log out'),
@@ -125,5 +134,10 @@ class ToolbarManager
         } catch (\Throwable $e) {
             return false;
         }
+    }
+
+    private function getConcreteCmsVersion()
+    {
+        return defined('APP_VERSION') ? (string) APP_VERSION : '';
     }
 }
