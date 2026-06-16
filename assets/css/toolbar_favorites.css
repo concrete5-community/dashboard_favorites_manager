@@ -59,6 +59,23 @@
     font-size: 0.75rem;
 }
 
+.dashboard-favorites-toolbar-menu-version {
+    border-bottom: 1px solid #edf0f2;
+    color: #495057;
+    display: none;
+    font-size: 0.75rem;
+    font-weight: 600;
+    gap: 0.35rem;
+    justify-content: flex-end;
+    line-height: 1.2;
+    padding: 0.55rem 0.75rem;
+    text-align: right;
+}
+
+.dashboard-favorites-toolbar-menu-version-number {
+    color: #212529;
+}
+
 .dashboard-favorites-toolbar-menu {
     background: #fff;
     border: 1px solid #d7dce2;
@@ -256,6 +273,14 @@
 }
 
 @media (max-width: 575.98px) {
+    .dashboard-favorites-toolbar-version {
+        display: none;
+    }
+
+    .dashboard-favorites-toolbar-menu-version {
+        display: flex;
+    }
+
     .dashboard-favorites-toolbar-menu {
         max-width: calc(100vw - 1rem);
         min-width: 14rem;

@@ -118,6 +118,13 @@
             menu.removeChild(menu.firstChild);
         }
 
+        if (config.concreteVersion && (config.concreteVersion.name || config.concreteVersion.version)) {
+            var menuVersion = createElement('div', 'dashboard-favorites-toolbar-menu-version');
+            menuVersion.appendChild(createElement('span', 'dashboard-favorites-toolbar-menu-version-name', config.concreteVersion.name || 'ConcreteCMS'));
+            menuVersion.appendChild(createElement('span', 'dashboard-favorites-toolbar-menu-version-number', config.concreteVersion.version || ''));
+            menu.appendChild(menuVersion);
+        }
+
         var favorites = config.favorites || [];
         if (!favorites.length) {
             menu.appendChild(createElement('div', 'dashboard-favorites-toolbar-empty', config.emptyText || ''));
