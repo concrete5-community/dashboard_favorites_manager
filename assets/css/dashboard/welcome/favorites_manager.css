@@ -405,6 +405,7 @@
     display: none;
     min-height: 2.45rem;
     padding: 0.35rem 0.75rem;
+    transition: background-color 220ms ease;
 }
 
 .dashboard-favorites-manager-page-result.is-visible {
@@ -416,7 +417,7 @@
 }
 
 .dashboard-favorites-manager-page-result:hover {
-    background: #f8fafc;
+    background: #bfdbfe;
 }
 
 .dashboard-favorites-manager-toggle-form {
