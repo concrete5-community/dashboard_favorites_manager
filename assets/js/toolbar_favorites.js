@@ -34,7 +34,7 @@
         return !scheme || /^(?:http|https)$/i.test(scheme[1]);
     }
 
-    function showToolbarNotice(menu, type, message) {
+    function showToolbarNotice(menu, type, message, config) {
         var notice = menu.querySelector('[data-dashboard-favorites-toolbar-notice]');
         if (!notice) {
             notice = createElement('div', 'dashboard-favorites-toolbar-notice');
@@ -51,7 +51,7 @@
         var noticeText = createElement('span', 'dashboard-favorites-toolbar-notice-text', message || '');
         var dismissButton = createElement('button', 'dashboard-favorites-toolbar-notice-dismiss', 'x');
         dismissButton.type = 'button';
-        dismissButton.setAttribute('aria-label', 'Dismiss message');
+        dismissButton.setAttribute('aria-label', (config && config.dismissText) || 'Dismiss message');
         dismissButton.addEventListener('click', function (event) {
             event.preventDefault();
             event.stopPropagation();
@@ -103,10 +103,10 @@
                     throw json;
                 }
 
-                showToolbarNotice(menu, 'success', json.message || originalText);
+                showToolbarNotice(menu, 'success', json.message || originalText, config);
             });
         }).catch(function (json) {
-            showToolbarNotice(menu, 'error', getAjaxErrorMessage(json, config.clearCache.errorText));
+            showToolbarNotice(menu, 'error', getAjaxErrorMessage(json, config.clearCache.errorText), config);
         }).then(function () {
             button.disabled = false;
             button.textContent = originalText;

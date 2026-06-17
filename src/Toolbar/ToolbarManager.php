@@ -56,6 +56,7 @@ class ToolbarManager
                 'favorites' => $favoritesEnabled ? $this->favoritesService->getToolbarFavoriteLinks() : [],
                 'emptyText' => t('No dashboard favorites found.'),
                 'title' => t('Dashboard favorites'),
+                'dismissText' => t('Dismiss message'),
             ];
             if ($concreteVersionEnabled) {
                 $toolbarConfig['concreteVersion'] = [
