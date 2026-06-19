@@ -214,6 +214,8 @@ class DashboardFavoritesService
     private function getDefaultFavoriteItems()
     {
         try {
+            $this->clearFavoritesCache();
+
             return json_decode(json_encode($this->app->make(FavoritesNavigationFactory::class)->createNavigation()), true) ?: [];
         } catch (\Throwable $e) {
             // Fall back to no favorites if Concrete cannot build the navigation.

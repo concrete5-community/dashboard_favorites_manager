@@ -19,10 +19,11 @@ class Controller extends Package
     private const MANAGER_PATH = '/dashboard/welcome/favorites_manager';
     private const DASHBOARD_FAVORITES_REPAIR_VERSION = '2';
     private const CONFIG_DASHBOARD_FAVORITES_REPAIR_VERSION = 'repair.dashboard_favorites.version';
+    private const SESSION_FAVORITES_CACHE_USER_ID = 'dashboard_favorites_manager.favorites_cache_user_id';
 
     protected $pkgHandle = 'dashboard_favorites_manager';
     protected $appVersionRequired = '9.2.0';
-    protected $pkgVersion = '1.1.1';
+    protected $pkgVersion = '1.1.2';
 
     public function getPackageName()
     {
@@ -43,6 +44,7 @@ class Controller extends Package
 
     public function on_start()
     {
+        $this->clearFavoritesCacheWhenUserChanges();
         $this->getDashboardFavoritesRepairer()->repairOnce();
         $this->getToolbarManager()->start($this);
     }
@@ -141,6 +143,25 @@ class Controller extends Package
 
         $this->getToolbarSettings()->enableDefaultsForUser($user);
         $this->getDashboardFavoritesService()->addCurrentUserDashboardFavorite($user, $page);
+    }
+
+    private function clearFavoritesCacheWhenUserChanges()
+    {
+        try {
+            $user = new User();
+            if (!$user->isRegistered()) {
+                return;
+            }
+
+            $session = $this->app->make('session');
+            $userID = (int) $user->getUserID();
+            if ((int) $session->get(self::SESSION_FAVORITES_CACHE_USER_ID, -1) !== $userID) {
+                $this->getDashboardFavoritesService()->clearFavoritesCache();
+                $session->set(self::SESSION_FAVORITES_CACHE_USER_ID, $userID);
+            }
+        } catch (\Throwable $e) {
+            // Favorites cache protection is best-effort during package startup.
+        }
     }
 
     private function uninstallSinglePages()
