@@ -113,6 +113,327 @@
         });
     }
 
+    function renderFavoritesList(container, config) {
+        while (container.firstChild) {
+            container.removeChild(container.firstChild);
+        }
+        var favorites = config.favorites || [];
+        if (!favorites.length) {
+            container.appendChild(createElement('div', 'dashboard-favorites-toolbar-empty', config.emptyText || ''));
+        } else {
+            var addedFavorites = 0;
+            for (var i = 0; i < favorites.length; i++) {
+                var favorite = favorites[i];
+                if (!isSafeUrl(favorite.url || '')) {
+                    continue;
+                }
+
+                var link = createElement('a', 'dashboard-favorites-toolbar-link', favorite.name || favorite.url || '');
+                link.href = favorite.url || '#';
+                container.appendChild(link);
+                addedFavorites++;
+            }
+
+            if (addedFavorites === 0) {
+                container.appendChild(createElement('div', 'dashboard-favorites-toolbar-empty', config.emptyText || ''));
+            }
+        }
+    }
+
+    function updateToolbarSearchStar(item, isFavorite, searchConfig) {
+        var value = item.querySelector('[data-dashboard-favorites-toolbar-search-favorite]');
+        var button = item.querySelector('[data-dashboard-favorites-toolbar-search-toggle]');
+        var icon = button ? button.querySelector('i') : null;
+        var text = button ? button.querySelector('.ccm-toolbar-accessibility-title') : null;
+        var label = isFavorite ? searchConfig.removeText : searchConfig.addText;
+
+        item.classList.toggle('is-favorite', isFavorite);
+        if (value) {
+            value.value = isFavorite ? '0' : '1';
+        }
+        if (button) {
+            button.setAttribute('aria-pressed', isFavorite ? 'true' : 'false');
+            button.title = label || '';
+        }
+        if (icon) {
+            icon.className = (isFavorite ? 'fas' : 'far') + ' fa-star';
+        }
+        if (text) {
+            text.textContent = label || '';
+        }
+    }
+
+    function submitToolbarSearchToggle(event, item, page, menu, config, searchConfig) {
+        if (!window.fetch || !window.FormData) {
+            return;
+        }
+
+        event.preventDefault();
+
+        var form = event.currentTarget;
+        var button = form.querySelector('[data-dashboard-favorites-toolbar-search-toggle]');
+        if (button) {
+            button.disabled = true;
+        }
+
+        window.fetch(searchConfig.toggleUrl, {
+            method: 'POST',
+            body: new window.FormData(form),
+            credentials: 'same-origin',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        }).then(function (response) {
+            return response.json().catch(function () {
+                return {};
+            }).then(function (json) {
+                if (!response.ok || !json.success) {
+                    throw json;
+                }
+
+                updateToolbarSearchStar(item, json.favorite === true, searchConfig);
+                if (page) {
+                    page.isFavorite = json.favorite === true;
+                }
+                if (json.favorites) {
+                    config.favorites = json.favorites;
+                    var favoritesList = menu.querySelector('[data-dashboard-favorites-toolbar-list]');
+                    if (favoritesList) {
+                        renderFavoritesList(favoritesList, config);
+                    }
+                }
+                if (json.message) {
+                    showToolbarNotice(menu, 'success', json.message, config);
+                }
+            });
+        }).catch(function (json) {
+            showToolbarNotice(menu, 'error', getAjaxErrorMessage(json, searchConfig.errorText), config);
+        }).then(function () {
+            if (button) {
+                button.disabled = false;
+            }
+        });
+    }
+
+    function renderToolbarSearchResult(page, menu, config, searchConfig) {
+        var item = createElement('div', 'dashboard-favorites-toolbar-search-result');
+        item.setAttribute('data-dashboard-favorites-toolbar-search-result', '1');
+
+        var form = createElement('form', 'dashboard-favorites-toolbar-search-toggle-form');
+        form.method = 'post';
+        form.action = searchConfig.toggleUrl;
+
+        var token = document.createElement('input');
+        token.type = 'hidden';
+        token.name = 'ccm_token';
+        token.value = searchConfig.token || '';
+
+        var pageID = document.createElement('input');
+        pageID.type = 'hidden';
+        pageID.name = 'page_id';
+        pageID.value = page.id || '';
+
+        var favorite = document.createElement('input');
+        favorite.type = 'hidden';
+        favorite.name = 'favorite';
+        favorite.setAttribute('data-dashboard-favorites-toolbar-search-favorite', '1');
+
+        var button = createElement('button', 'dashboard-favorites-toolbar-search-star');
+        button.type = 'submit';
+        button.setAttribute('data-dashboard-favorites-toolbar-search-toggle', '1');
+        var icon = createElement('i');
+        icon.setAttribute('aria-hidden', 'true');
+        var hiddenText = createElement('span', 'ccm-toolbar-accessibility-title');
+        button.appendChild(icon);
+        button.appendChild(hiddenText);
+
+        form.appendChild(token);
+        form.appendChild(pageID);
+        form.appendChild(favorite);
+        form.appendChild(button);
+        form.addEventListener('submit', function (event) {
+            submitToolbarSearchToggle(event, item, page, menu, config, searchConfig);
+        });
+
+        var main = createElement('div', 'dashboard-favorites-toolbar-search-result-main');
+        main.appendChild(createElement('div', 'dashboard-favorites-toolbar-search-result-name', page.name || ''));
+        main.appendChild(createElement('div', 'dashboard-favorites-toolbar-search-result-path', page.path || ''));
+
+        var link = createElement('a', 'dashboard-favorites-toolbar-search-result-link');
+        link.href = isSafeUrl(page.url || '') ? page.url : '#';
+        link.title = searchConfig.openText || '';
+        link.setAttribute('aria-label', searchConfig.openText || '');
+        var arrow = createElement('i', 'fas fa-arrow-right');
+        arrow.setAttribute('aria-hidden', 'true');
+        link.appendChild(arrow);
+
+        item.appendChild(form);
+        item.appendChild(main);
+        item.appendChild(link);
+        updateToolbarSearchStar(item, page.isFavorite === true, searchConfig);
+
+        return item;
+    }
+
+    function normalizeToolbarSearchText(value) {
+        return (value || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    }
+
+    function filterToolbarSearchPages(pages, query) {
+        var normalizedQuery = normalizeToolbarSearchText(query);
+        var matches = [];
+        if (normalizedQuery.length < 2) {
+            return matches;
+        }
+
+        for (var i = 0; i < pages.length; i++) {
+            if ((pages[i].searchText || '').indexOf(normalizedQuery) === -1) {
+                continue;
+            }
+
+            matches.push(pages[i]);
+            if (matches.length >= 12) {
+                break;
+            }
+        }
+
+        return matches;
+    }
+
+    function renderToolbarSearchStatus(results, text) {
+        while (results.firstChild) {
+            results.removeChild(results.firstChild);
+        }
+        if (text) {
+            results.appendChild(createElement('div', 'dashboard-favorites-toolbar-search-empty', text));
+        }
+        results.hidden = !text;
+    }
+
+    function renderToolbarSearchResults(results, pages, menu, config, searchConfig) {
+        while (results.firstChild) {
+            results.removeChild(results.firstChild);
+        }
+
+        if (!pages.length) {
+            renderToolbarSearchStatus(results, searchConfig.emptyText || '');
+            return;
+        }
+
+        for (var i = 0; i < pages.length; i++) {
+            results.appendChild(renderToolbarSearchResult(pages[i], menu, config, searchConfig));
+        }
+        results.hidden = false;
+    }
+
+    function renderToolbarSearch(menu, config) {
+        var searchConfig = config.search || null;
+        if (!searchConfig || !searchConfig.url || !searchConfig.toggleUrl || !searchConfig.token) {
+            return null;
+        }
+        if (!window.fetch || !window.Promise) {
+            return null;
+        }
+
+        var wrapper = createElement('div', 'dashboard-favorites-toolbar-search');
+        var input = createElement('input', 'dashboard-favorites-toolbar-search-input');
+        input.type = 'search';
+        input.placeholder = searchConfig.placeholder || '';
+        input.autocomplete = 'off';
+
+        var results = createElement('div', 'dashboard-favorites-toolbar-search-results');
+        results.hidden = true;
+
+        var timer = null;
+        var requestID = 0;
+        var cachedPages = null;
+        var pendingPages = null;
+
+        function fetchToolbarSearchPages() {
+            if (cachedPages) {
+                return window.Promise.resolve(cachedPages);
+            }
+            if (pendingPages) {
+                return pendingPages;
+            }
+
+            var separator = searchConfig.url.indexOf('?') === -1 ? '?' : '&';
+            pendingPages = window.fetch(searchConfig.url + separator + 'all=1', {
+                credentials: 'same-origin',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            }).then(function (response) {
+                return response.json().catch(function () {
+                    return {};
+                }).then(function (json) {
+                    if (!response.ok || !json.success) {
+                        throw json;
+                    }
+
+                    cachedPages = (json.pages || []).map(function (page) {
+                        page.searchText = normalizeToolbarSearchText(page.name || '');
+
+                        return page;
+                    });
+
+                    return cachedPages;
+                });
+            }).catch(function (json) {
+                pendingPages = null;
+                throw json;
+            });
+
+            return pendingPages;
+        }
+
+        function updateToolbarSearchResults() {
+            var query = input.value.replace(/\s+/g, ' ').trim();
+            window.clearTimeout(timer);
+            if (query.length < 2) {
+                requestID++;
+                renderToolbarSearchStatus(results, '');
+                return;
+            }
+
+            timer = window.setTimeout(function () {
+                var currentRequestID = ++requestID;
+                fetchToolbarSearchPages().then(function (pages) {
+                    if (currentRequestID !== requestID) {
+                        return;
+                    }
+
+                    renderToolbarSearchResults(results, filterToolbarSearchPages(pages, query), menu, config, searchConfig);
+                }).catch(function (json) {
+                    if (currentRequestID === requestID) {
+                        renderToolbarSearchStatus(results, getAjaxErrorMessage(json, searchConfig.errorText));
+                    }
+                });
+            }, 120);
+        }
+
+        input.addEventListener('focus', function () {
+            fetchToolbarSearchPages().catch(function () {});
+        });
+
+        input.addEventListener('input', updateToolbarSearchResults);
+
+        input.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                input.value = '';
+                requestID++;
+                renderToolbarSearchStatus(results, '');
+            }
+        });
+
+        wrapper.appendChild(input);
+        wrapper.appendChild(results);
+
+        return wrapper;
+    }
+
     function renderMenuItems(menu, config) {
         while (menu.firstChild) {
             menu.removeChild(menu.firstChild);
@@ -125,27 +446,15 @@
             menu.appendChild(menuVersion);
         }
 
-        var favorites = config.favorites || [];
-        if (!favorites.length) {
-            menu.appendChild(createElement('div', 'dashboard-favorites-toolbar-empty', config.emptyText || ''));
-        } else {
-            var addedFavorites = 0;
-            for (var i = 0; i < favorites.length; i++) {
-                var favorite = favorites[i];
-                if (!isSafeUrl(favorite.url || '')) {
-                    continue;
-                }
-
-                var link = createElement('a', 'dashboard-favorites-toolbar-link', favorite.name || favorite.url || '');
-                link.href = favorite.url || '#';
-                menu.appendChild(link);
-                addedFavorites++;
-            }
-
-            if (addedFavorites === 0) {
-                menu.appendChild(createElement('div', 'dashboard-favorites-toolbar-empty', config.emptyText || ''));
-            }
+        var search = renderToolbarSearch(menu, config);
+        if (search) {
+            menu.appendChild(search);
         }
+
+        var favoritesList = createElement('div', 'dashboard-favorites-toolbar-list');
+        favoritesList.setAttribute('data-dashboard-favorites-toolbar-list', '1');
+        renderFavoritesList(favoritesList, config);
+        menu.appendChild(favoritesList);
 
         if (config.clearCache && config.clearCache.url && config.clearCache.token) {
             var clearCacheForm = createElement('form', 'dashboard-favorites-toolbar-action');
@@ -223,7 +532,12 @@
         }
 
         config.favorites = favorites || [];
-        renderMenuItems(menu, config);
+        var favoritesList = menu.querySelector('[data-dashboard-favorites-toolbar-list]');
+        if (favoritesList) {
+            renderFavoritesList(favoritesList, config);
+        } else {
+            renderMenuItems(menu, config);
+        }
     }
 
     function getToolbarConfig() {

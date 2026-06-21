@@ -64,6 +64,19 @@ class ToolbarManager
                     'version' => $this->getConcreteCmsVersion(),
                 ];
             }
+            if ($favoritesEnabled) {
+                $toolbarConfig['search'] = [
+                    'url' => (string) \URL::to($this->managerPath, 'search_dashboard_pages'),
+                    'toggleUrl' => (string) \URL::to($this->managerPath, 'toggle_dashboard_page'),
+                    'token' => $this->app->make('token')->generate('dashboard_favorites_manager_toggle_dashboard_page'),
+                    'placeholder' => t('Search dashboard pages'),
+                    'emptyText' => t('No dashboard pages found.'),
+                    'errorText' => t('Unable to search dashboard pages.'),
+                    'addText' => t('Add to favorites'),
+                    'removeText' => t('Remove from favorites'),
+                    'openText' => t('Open page'),
+                ];
+            }
             if ($favoritesEnabled && $this->settings->isClearCacheEnabled() && $this->canUseToolbarClearCache()) {
                 $toolbarConfig['clearCache'] = [
                     'url' => (string) \URL::to($this->managerPath, 'toolbar_clear_cache'),

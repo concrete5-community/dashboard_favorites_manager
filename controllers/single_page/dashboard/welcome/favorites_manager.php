@@ -108,7 +108,44 @@ class FavoritesManager extends DashboardPageController
 
         return $this->handleToggleDashboardPageResponse($result['success'], $result['message'] ?? '', [
             'favorite' => $favorite && $result['success'],
+            'favorites' => $this->getDashboardFavoriteLinks(),
             'pageID' => $pageID,
+        ]);
+    }
+
+    public function search_dashboard_pages()
+    {
+        if ($this->getCurrentUserID() <= 0) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => t('You must be logged in to search dashboard pages.'),
+            ], 403);
+        }
+
+        $returnAll = (string) $this->request->query->get('all', '') === '1';
+        $query = $this->normalizeSearchText((string) $this->request->query->get('q', ''));
+        if (!$returnAll && strlen($query) < 2) {
+            return new JsonResponse([
+                'success' => true,
+                'pages' => [],
+            ]);
+        }
+
+        $pages = [];
+        foreach ($this->getDashboardPageTree() as $page) {
+            if (!$returnAll && strpos($this->normalizeSearchText((string) $page['name']), $query) === false) {
+                continue;
+            }
+
+            $pages[] = $page;
+            if (!$returnAll && count($pages) >= 12) {
+                break;
+            }
+        }
+
+        return new JsonResponse([
+            'success' => true,
+            'pages' => $pages,
         ]);
     }
 
@@ -369,26 +406,21 @@ class FavoritesManager extends DashboardPageController
         }
 
         $pages = [];
+        $addedPageIDs = [];
+
+        $dashboardPage = Page::getByPath('/dashboard');
+        if ($dashboardPage instanceof Page) {
+            $this->addDashboardPageTreeItem($dashboardPage, $favoritePageIDs, $pages, $addedPageIDs);
+        }
+
         $pageList = new PageList();
         if (method_exists($pageList, 'includeSystemPages')) {
             $pageList->includeSystemPages();
         }
-        $pageList->sortByName();
+        $pageList->filterByPath('/dashboard');
 
         foreach ($pageList->getResults() as $page) {
-            if (!$this->isDashboardPage($page) || !$this->canViewDashboardPage($page)) {
-                continue;
-            }
-
-            $pageID = (int) $page->getCollectionID();
-            $path = $this->getPagePath($page);
-            $pages[] = [
-                'id' => $pageID,
-                'name' => (string) $page->getCollectionName(),
-                'path' => $path,
-                'url' => $this->getPageUrl($page),
-                'isFavorite' => isset($favoritePageIDs[$pageID]),
-            ];
+            $this->addDashboardPageTreeItem($page, $favoritePageIDs, $pages, $addedPageIDs, false);
         }
 
         usort($pages, static function ($a, $b) {
@@ -396,6 +428,33 @@ class FavoritesManager extends DashboardPageController
         });
 
         return $pages;
+    }
+
+    private function addDashboardPageTreeItem(Page $page, array $favoritePageIDs, array &$pages, array &$addedPageIDs, $checkPermissions = true)
+    {
+        if (!$this->isDashboardPage($page) || ($checkPermissions && !$this->canViewDashboardPage($page))) {
+            return;
+        }
+
+        $pageID = (int) $page->getCollectionID();
+        if (isset($addedPageIDs[$pageID])) {
+            return;
+        }
+
+        $addedPageIDs[$pageID] = true;
+        $path = $this->getPagePath($page);
+        $pages[] = [
+            'id' => $pageID,
+            'name' => (string) $page->getCollectionName(),
+            'path' => $path,
+            'url' => $this->getPageUrl($page),
+            'isFavorite' => isset($favoritePageIDs[$pageID]),
+        ];
+    }
+
+    private function normalizeSearchText($value)
+    {
+        return trim((string) preg_replace('/\s+/', ' ', strtolower((string) $value)));
     }
 
     private function handleToggleDashboardPageResponse($success, $message, array $data = [])
