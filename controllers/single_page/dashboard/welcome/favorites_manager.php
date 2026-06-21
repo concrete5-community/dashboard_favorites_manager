@@ -386,6 +386,7 @@ class FavoritesManager extends DashboardPageController
                 'id' => $pageID,
                 'name' => (string) $page->getCollectionName(),
                 'path' => $path,
+                'url' => $this->getPageUrl($page),
                 'isFavorite' => isset($favoritePageIDs[$pageID]),
             ];
         }

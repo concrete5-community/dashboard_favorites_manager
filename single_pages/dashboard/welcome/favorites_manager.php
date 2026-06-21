@@ -176,7 +176,7 @@
 
     <div class="dashboard-favorites-manager-page-search mb-4">
         <div class="dashboard-favorites-manager-page-search-heading">
-            <?php echo t('Search for dashboard pages to add or remove from your favorites'); ?>
+            <?php echo t('Search dashboard pages. Use the star ★ to add or remove favorites, and the arrow → to open the page.'); ?>
         </div>
         <?php if (empty($dashboardPageTree)) { ?>
             <div class="alert alert-info mb-0">
@@ -208,6 +208,9 @@
                             <div class="dashboard-favorites-manager-page-result-name"><?php echo h($page['name']); ?></div>
                             <div class="dashboard-favorites-manager-page-result-path"><?php echo h($page['path']); ?></div>
                         </div>
+                        <a href="<?php echo h($page['url']); ?>" class="dashboard-favorites-manager-page-result-link" title="<?php echo h(t('Open page')); ?>" aria-label="<?php echo h(t('Open page')); ?>">
+                            <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                        </a>
                     </li>
                 <?php } ?>
             </ul>

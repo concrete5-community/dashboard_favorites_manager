@@ -443,6 +443,7 @@
 }
 
 .dashboard-favorites-manager-page-result-main {
+    flex: 1 1 auto;
     min-width: 0;
 }
 
@@ -456,6 +457,24 @@
     font-size: 0.78rem;
     line-height: 1.2;
     overflow-wrap: anywhere;
+}
+
+.dashboard-favorites-manager-page-result-link {
+    align-items: center;
+    color: #6c757d;
+    display: inline-flex;
+    flex: 0 0 auto;
+    justify-content: center;
+    margin-left: 0.75rem;
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+    text-decoration: none;
+}
+
+.dashboard-favorites-manager-page-result-link:hover,
+.dashboard-favorites-manager-page-result-link:focus {
+    color: #0d6efd;
+    text-decoration: none;
 }
 
 .dashboard-favorites-manager-page-search-empty {
