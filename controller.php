@@ -23,7 +23,7 @@ class Controller extends Package
 
     protected $pkgHandle = 'dashboard_favorites_manager';
     protected $appVersionRequired = '9.2.0';
-    protected $pkgVersion = '1.1.2';
+    protected $pkgVersion = '1.1.3-rc1';
 
     public function getPackageName()
     {
