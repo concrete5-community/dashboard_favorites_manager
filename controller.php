@@ -59,6 +59,16 @@ class Controller extends Package
         $this->getToolbarSettings()->setFavoritesEnabled($enabled);
     }
 
+    public function isToolbarSearchEnabled()
+    {
+        return $this->getToolbarSettings()->isSearchEnabled();
+    }
+
+    public function setToolbarSearchEnabled($enabled)
+    {
+        $this->getToolbarSettings()->setSearchEnabled($enabled);
+    }
+
     public function isToolbarClearCacheEnabled()
     {
         return $this->getToolbarSettings()->isClearCacheEnabled();

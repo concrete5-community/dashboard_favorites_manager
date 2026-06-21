@@ -34,6 +34,7 @@ class FavoritesManager extends DashboardPageController
         $this->set('packageVersion', $packageController->getPackageVersion());
         $this->set('pendingPackageUpdate', $this->getPendingPackageUpdate($packageController));
         $this->set('toolbarFavoritesEnabled', $packageController->isToolbarFavoritesEnabled());
+        $this->set('toolbarSearchEnabled', $packageController->isToolbarSearchEnabled());
         $this->set('toolbarClearCacheEnabled', $packageController->isToolbarClearCacheEnabled());
         $this->set('toolbarLogoutEnabled', $packageController->isToolbarLogoutEnabled());
         $this->set('toolbarConcreteVersionEnabled', $packageController->isToolbarConcreteVersionEnabled());
@@ -55,10 +56,12 @@ class FavoritesManager extends DashboardPageController
         }
 
         $toolbarEnabled = (string) $this->request->request->get('toolbar_favorites_enabled') === '1';
+        $searchEnabled = $toolbarEnabled && (string) $this->request->request->get('toolbar_search_enabled') === '1';
         $clearCacheEnabled = $toolbarEnabled && $this->canUseToolbarClearCache() && (string) $this->request->request->get('toolbar_clear_cache_enabled') === '1';
         $logoutEnabled = $toolbarEnabled && (string) $this->request->request->get('toolbar_logout_enabled') === '1';
         $concreteVersionEnabled = (string) $this->request->request->get('toolbar_concrete_version_enabled') === '1';
         $this->getManagerPackageController()->setToolbarFavoritesEnabled($toolbarEnabled);
+        $this->getManagerPackageController()->setToolbarSearchEnabled($searchEnabled);
         $this->getManagerPackageController()->setToolbarClearCacheEnabled($clearCacheEnabled);
         $this->getManagerPackageController()->setToolbarLogoutEnabled($logoutEnabled);
         $this->getManagerPackageController()->setToolbarConcreteVersionEnabled($concreteVersionEnabled);

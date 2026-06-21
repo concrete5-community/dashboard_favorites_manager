@@ -9,11 +9,13 @@ use Concrete\Core\User\User;
 class ToolbarSettings
 {
     private const USER_CONFIG_TOOLBAR_ENABLED = 'DASHBOARD_FAVORITES_MANAGER_TOOLBAR_ENABLED';
+    private const USER_CONFIG_TOOLBAR_SEARCH_ENABLED = 'DASHBOARD_FAVORITES_MANAGER_TOOLBAR_SEARCH_ENABLED';
     private const USER_CONFIG_TOOLBAR_CLEAR_CACHE_ENABLED = 'DASHBOARD_FAVORITES_MANAGER_TOOLBAR_CLEAR_CACHE_ENABLED';
     private const USER_CONFIG_TOOLBAR_LOGOUT_ENABLED = 'DASHBOARD_FAVORITES_MANAGER_TOOLBAR_LOGOUT_ENABLED';
     private const USER_CONFIG_TOOLBAR_CONCRETE_VERSION_ENABLED = 'DASHBOARD_FAVORITES_MANAGER_TOOLBAR_CONCRETE_VERSION_ENABLED';
     private const USER_CONFIG_KEYS = [
         self::USER_CONFIG_TOOLBAR_ENABLED,
+        self::USER_CONFIG_TOOLBAR_SEARCH_ENABLED,
         self::USER_CONFIG_TOOLBAR_CLEAR_CACHE_ENABLED,
         self::USER_CONFIG_TOOLBAR_LOGOUT_ENABLED,
         self::USER_CONFIG_TOOLBAR_CONCRETE_VERSION_ENABLED,
@@ -37,6 +39,28 @@ class ToolbarSettings
         }
 
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_ENABLED, $enabled ? 1 : 0);
+    }
+
+    public function isSearchEnabled()
+    {
+        $user = new User();
+        if (!$user->isRegistered()) {
+            return false;
+        }
+
+        $value = $user->config(self::USER_CONFIG_TOOLBAR_SEARCH_ENABLED);
+
+        return $value === null ? true : (int) $value === 1;
+    }
+
+    public function setSearchEnabled($enabled)
+    {
+        $user = new User();
+        if (!$user->isRegistered()) {
+            return;
+        }
+
+        $user->saveConfig(self::USER_CONFIG_TOOLBAR_SEARCH_ENABLED, $enabled ? 1 : 0);
     }
 
     public function isClearCacheEnabled()
@@ -106,6 +130,7 @@ class ToolbarSettings
     public function enableDefaultsForUser(User $user)
     {
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_ENABLED, 1);
+        $user->saveConfig(self::USER_CONFIG_TOOLBAR_SEARCH_ENABLED, 1);
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_CLEAR_CACHE_ENABLED, 1);
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_LOGOUT_ENABLED, 1);
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_CONCRETE_VERSION_ENABLED, 0);
@@ -139,6 +164,7 @@ class ToolbarSettings
         }
 
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_ENABLED, 1);
+        $user->saveConfig(self::USER_CONFIG_TOOLBAR_SEARCH_ENABLED, 1);
 
         $legacyClearCacheEnabled = $config->get('toolbar.clear_cache.enabled');
         $user->saveConfig(

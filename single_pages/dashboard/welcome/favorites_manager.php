@@ -4,6 +4,7 @@
 /** @var array $dashboardPageTree */
 /** @var string $packageVersion */
 /** @var bool $toolbarFavoritesEnabled */
+/** @var bool $toolbarSearchEnabled */
 /** @var bool $toolbarClearCacheEnabled */
 /** @var bool $toolbarLogoutEnabled */
 /** @var bool $toolbarConcreteVersionEnabled */
@@ -59,6 +60,7 @@
         <form method="post" action="<?php echo h($view->action('save_toolbar_settings')); ?>" class="dashboard-favorites-manager-toolbar-toggle">
             <input type="hidden" name="ccm_token" value="<?php echo h($toolbarSettingsToken); ?>">
             <input type="hidden" name="toolbar_favorites_enabled" value="0">
+            <input type="hidden" name="toolbar_search_enabled" value="0">
             <input type="hidden" name="toolbar_clear_cache_enabled" value="0">
             <input type="hidden" name="toolbar_logout_enabled" value="0">
             <input type="hidden" name="toolbar_concrete_version_enabled" value="0">
@@ -66,6 +68,12 @@
                 <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-toolbar-enabled" name="toolbar_favorites_enabled" value="1" aria-label="<?php echo h(t('Show blue star button in toolbar')); ?>" onchange="this.form.submit()" <?php echo $toolbarFavoritesEnabled ? 'checked' : ''; ?>>
                 <span class="form-check-label">
                     <?php echo t('Show blue star %s button in toolbar', '<span class="dashboard-favorites-manager-label-star">★</span>'); ?>
+                </span>
+            </div>
+            <div class="form-check form-switch dashboard-favorites-manager-dependent-switch<?php echo $toolbarFavoritesEnabled ? '' : ' is-disabled'; ?>">
+                <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-search-enabled" name="toolbar_search_enabled" value="1" aria-label="<?php echo h(t('Show dashboard page search inside the blue star menu')); ?>" onchange="this.form.submit()" <?php echo $toolbarFavoritesEnabled && $toolbarSearchEnabled ? 'checked' : ''; ?> <?php echo $toolbarFavoritesEnabled ? '' : 'disabled'; ?>>
+                <span class="form-check-label">
+                    <?php echo t('Show dashboard page search inside the blue star menu'); ?>
                 </span>
             </div>
             <?php if ($canUseToolbarClearCache) { ?>

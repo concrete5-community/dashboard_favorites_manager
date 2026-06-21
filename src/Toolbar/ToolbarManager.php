@@ -64,7 +64,7 @@ class ToolbarManager
                     'version' => $this->getConcreteCmsVersion(),
                 ];
             }
-            if ($favoritesEnabled) {
+            if ($favoritesEnabled && $this->settings->isSearchEnabled()) {
                 $toolbarConfig['search'] = [
                     'url' => (string) \URL::to($this->managerPath, 'search_dashboard_pages'),
                     'toggleUrl' => (string) \URL::to($this->managerPath, 'toggle_dashboard_page'),
