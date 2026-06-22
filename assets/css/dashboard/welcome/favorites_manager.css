@@ -471,6 +471,11 @@
     text-decoration: none;
 }
 
+.dashboard-favorites-manager-page-result:hover .dashboard-favorites-manager-page-result-link,
+.dashboard-favorites-manager-page-result:focus-within .dashboard-favorites-manager-page-result-link {
+    color: #0d6efd;
+}
+
 .dashboard-favorites-manager-page-result-link:hover,
 .dashboard-favorites-manager-page-result-link:focus {
     color: #0d6efd;
