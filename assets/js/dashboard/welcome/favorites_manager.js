@@ -401,10 +401,64 @@
         }
     }
 
+    function getCurrentImportFileInput() {
+        var inputs = document.querySelectorAll('[data-dashboard-favorites-import-file]');
+        for (var i = 0; i < inputs.length; i++) {
+            if (inputs[i].getAttribute('data-dashboard-favorites-import-pending') !== '1') {
+                return inputs[i];
+            }
+        }
+
+        return inputs.length ? inputs[0] : null;
+    }
+
+    function clearPendingImportFileInputs() {
+        var inputs = document.querySelectorAll('[data-dashboard-favorites-import-pending="1"]');
+        for (var i = 0; i < inputs.length; i++) {
+            if (inputs[i].parentNode) {
+                inputs[i].parentNode.removeChild(inputs[i]);
+            }
+        }
+    }
+
+    function getImportFileInputForPicker() {
+        var fileInput = getCurrentImportFileInput();
+        if (!fileInput) {
+            return null;
+        }
+
+        clearPendingImportFileInputs();
+        if (!fileInput.files || !fileInput.files.length) {
+            return fileInput;
+        }
+
+        var replacementInput = fileInput.cloneNode(false);
+        replacementInput.value = '';
+        replacementInput.removeAttribute('name');
+        replacementInput.removeAttribute('required');
+        replacementInput.setAttribute('data-dashboard-favorites-import-pending', '1');
+        fileInput.parentNode.insertBefore(replacementInput, fileInput.nextSibling);
+
+        return replacementInput;
+    }
+
+    function keepImportFileInput(eventTarget) {
+        var previousInput = getCurrentImportFileInput();
+        if (!previousInput || previousInput === eventTarget || !previousInput.parentNode) {
+            eventTarget.removeAttribute('data-dashboard-favorites-import-pending');
+            return;
+        }
+
+        eventTarget.setAttribute('name', previousInput.getAttribute('name') || 'favorites_file');
+        eventTarget.setAttribute('required', 'required');
+        eventTarget.removeAttribute('data-dashboard-favorites-import-pending');
+        previousInput.parentNode.replaceChild(eventTarget, previousInput);
+    }
+
     function openImportControls() {
         var openButton = document.querySelector('[data-dashboard-favorites-import-open]');
         var controls = document.querySelector('[data-dashboard-favorites-import-controls]');
-        var fileInput = document.querySelector('[data-dashboard-favorites-import-file]');
+        var fileInput = getCurrentImportFileInput();
         if (!openButton || !controls) {
             return;
         }
@@ -422,13 +476,14 @@
     function closeImportControls() {
         var openButton = document.querySelector('[data-dashboard-favorites-import-open]');
         var controls = document.querySelector('[data-dashboard-favorites-import-controls]');
-        var fileInput = document.querySelector('[data-dashboard-favorites-import-file]');
+        var fileInput = getCurrentImportFileInput();
         var fileName = document.querySelector('[data-dashboard-favorites-file-name]');
         var uploadButton = document.querySelector('[data-dashboard-favorites-upload]');
         if (!openButton || !controls) {
             return;
         }
 
+        clearPendingImportFileInputs();
         if (fileInput) {
             fileInput.value = '';
         }
@@ -448,16 +503,44 @@
         openButton.focus();
     }
 
+    function clearImportReport() {
+        var report = document.querySelector('[data-dashboard-favorites-import-report]');
+        if (!report) {
+            return;
+        }
+
+        report.hidden = true;
+        var importButton = document.querySelector('[data-dashboard-favorites-import-open]');
+        if (importButton) {
+            importButton.focus();
+        }
+    }
+
     document.addEventListener('change', function (event) {
         if (event.target.matches('[data-dashboard-favorites-import-file]')) {
             var fileName = document.querySelector('[data-dashboard-favorites-file-name]');
             var uploadButton = document.querySelector('[data-dashboard-favorites-upload]');
             var maxSize = parseInt(event.target.getAttribute('data-dashboard-favorites-import-max-size') || '0', 10);
+            var isReplacementInput = event.target.getAttribute('data-dashboard-favorites-import-pending') === '1';
             var file = event.target.files && event.target.files.length ? event.target.files[0] : null;
+            if (isReplacementInput && !file) {
+                event.target.parentNode.removeChild(event.target);
+                return;
+            }
+
             if (file && maxSize > 0 && file.size > maxSize) {
                 event.target.value = '';
                 showConcreteError(event.target.getAttribute('data-dashboard-favorites-import-size-error') || getManagerText('data-dashboard-favorites-file-large-error'));
+                if (isReplacementInput) {
+                    event.target.parentNode.removeChild(event.target);
+                    return;
+                }
+
                 file = null;
+            }
+
+            if (isReplacementInput) {
+                keepImportFileInput(event.target);
             }
 
             if (fileName) {
@@ -547,10 +630,16 @@
 
         if (event.target.closest('[data-dashboard-favorites-file-button]')) {
             event.preventDefault();
-            var fileInput = document.querySelector('[data-dashboard-favorites-import-file]');
+            var fileInput = getImportFileInputForPicker();
             if (fileInput) {
                 fileInput.click();
             }
+            return;
+        }
+
+        if (event.target.closest('[data-dashboard-favorites-import-report-clear]')) {
+            event.preventDefault();
+            clearImportReport();
             return;
         }
 

@@ -263,11 +263,18 @@
 }
 
 .dashboard-favorites-manager-import-report-heading {
+    align-items: center;
     background: #f6f7f9;
     border-bottom: 1px solid #d7dce2;
     color: #000;
+    display: flex;
+    gap: 0.75rem;
     font-weight: 600;
     padding: 0.55rem 0.75rem;
+}
+
+.dashboard-favorites-manager-import-report-clear {
+    flex: 0 0 auto;
 }
 
 .dashboard-favorites-manager-import-report-summary {
@@ -302,6 +309,10 @@
 .dashboard-favorites-manager-import-report-summary span.is-unavailable {
     background: #f8d7da;
     color: #842029;
+}
+
+.dashboard-favorites-manager-import-report-message {
+    margin: 0 0.75rem 0.75rem;
 }
 
 .dashboard-favorites-manager-import-report-table td {

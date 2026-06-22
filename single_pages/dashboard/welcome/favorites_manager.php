@@ -71,9 +71,9 @@
                 </span>
             </div>
             <div class="form-check form-switch dashboard-favorites-manager-dependent-switch<?php echo $toolbarFavoritesEnabled ? '' : ' is-disabled'; ?>">
-                <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-search-enabled" name="toolbar_search_enabled" value="1" aria-label="<?php echo h(t('Show dashboard page search inside the blue star menu')); ?>" onchange="this.form.submit()" <?php echo $toolbarFavoritesEnabled && $toolbarSearchEnabled ? 'checked' : ''; ?> <?php echo $toolbarFavoritesEnabled ? '' : 'disabled'; ?>>
+                <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-search-enabled" name="toolbar_search_enabled" value="1" aria-label="<?php echo h(t('Show dashboard page search inside the blue star menu (search can be a bit slow on low-cost or overloaded hosting)')); ?>" onchange="this.form.submit()" <?php echo $toolbarFavoritesEnabled && $toolbarSearchEnabled ? 'checked' : ''; ?> <?php echo $toolbarFavoritesEnabled ? '' : 'disabled'; ?>>
                 <span class="form-check-label">
-                    <?php echo t('Show dashboard page search inside the blue star menu'); ?>
+                    <?php echo t('Show dashboard page search inside the blue star menu (search can be a bit slow on low-cost or overloaded hosting)'); ?>
                 </span>
             </div>
             <?php if ($canUseToolbarClearCache) { ?>
@@ -112,7 +112,7 @@
                 </button>
                 <div class="dashboard-favorites-manager-import-controls" data-dashboard-favorites-import-controls hidden>
                     <input type="file" name="favorites_file" class="dashboard-favorites-manager-file-input" accept="application/json,.json" required data-dashboard-favorites-import-file data-dashboard-favorites-import-max-size="65536" data-dashboard-favorites-import-size-error="<?php echo h(t('The selected file is too large. Maximum size is 64 KB.')); ?>">
-                    <button type="button" class="btn btn-secondary btn-sm dashboard-favorites-manager-file-button" data-dashboard-favorites-file-button>
+                    <button type="button" class="btn btn-primary btn-sm dashboard-favorites-manager-file-button" data-dashboard-favorites-file-button>
                         <?php echo t('Select file'); ?>
                     </button>
                     <button type="submit" class="btn btn-primary btn-sm dashboard-favorites-manager-upload-button" data-dashboard-favorites-upload hidden>
@@ -129,10 +129,13 @@
         </div>
     </div>
 
-    <?php if (!empty($importReport) && !empty($importReport['rows']) && is_array($importReport['rows'])) { ?>
-        <div class="dashboard-favorites-manager-import-report mb-4">
+    <?php if (!empty($importReport) && isset($importReport['rows']) && is_array($importReport['rows'])) { ?>
+        <div class="dashboard-favorites-manager-import-report mb-4" data-dashboard-favorites-import-report>
             <div class="dashboard-favorites-manager-import-report-heading">
-                <?php echo t('Import results'); ?>
+                <span><?php echo t('Import results'); ?></span>
+                <button type="button" class="btn btn-primary btn-sm dashboard-favorites-manager-import-report-clear" data-dashboard-favorites-import-report-clear>
+                    <?php echo t('Clear'); ?>
+                </button>
             </div>
             <div class="dashboard-favorites-manager-import-report-summary">
                 <?php
@@ -144,41 +147,51 @@
                 <span class="<?php echo $existingCount > 0 ? 'is-existing has-events' : ''; ?>"><?php echo t('Skipped, already existing: %s', $existingCount); ?></span>
                 <span class="<?php echo $unavailableCount > 0 ? 'is-unavailable has-events' : ''; ?>"><?php echo t('Skipped, unavailable: %s', $unavailableCount); ?></span>
             </div>
-            <table class="table table-sm table-striped mb-0 dashboard-favorites-manager-import-report-table">
-                <thead>
-                    <tr>
-                        <th><?php echo t('Name'); ?></th>
-                        <th><?php echo t('Status'); ?></th>
-                        <th><?php echo t('Path'); ?></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($importReport['rows'] as $row) {
-                        $status = (string) ($row['status'] ?? '');
-                        $statusClass = in_array($status, ['imported', 'existing', 'unavailable'], true) ? $status : 'unavailable';
-                        $statusText = (string) ($row['message'] ?? '');
-                        if ($status === 'imported') {
-                            $statusText = t('Imported');
-                        }
-                        if ($status === 'existing') {
-                            $statusText = t('Skipped, already existing');
-                        }
-                        if ($status === 'unavailable') {
-                            $statusText = t('Skipped, unavailable');
-                        }
-                        ?>
+            <?php
+            $importMessage = trim((string) ($importReport['message'] ?? ''));
+            ?>
+            <?php if ($importMessage !== '') { ?>
+                <div class="alert alert-info mb-0 dashboard-favorites-manager-import-report-message">
+                    <?php echo h($importMessage); ?>
+                </div>
+            <?php } ?>
+            <?php if (!empty($importReport['rows'])) { ?>
+                <table class="table table-sm table-striped mb-0 dashboard-favorites-manager-import-report-table">
+                    <thead>
                         <tr>
-                            <td><?php echo h((string) ($row['name'] ?? '')); ?></td>
-                            <td>
-                                <span class="dashboard-favorites-manager-import-status dashboard-favorites-manager-import-status-<?php echo h($statusClass); ?>" title="<?php echo h((string) ($row['message'] ?? '')); ?>">
-                                    <?php echo h($statusText); ?>
-                                </span>
-                            </td>
-                            <td><?php echo h((string) ($row['path'] ?? '')); ?></td>
+                            <th><?php echo t('Name'); ?></th>
+                            <th><?php echo t('Status'); ?></th>
+                            <th><?php echo t('Path'); ?></th>
                         </tr>
-                    <?php } ?>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($importReport['rows'] as $row) {
+                            $status = (string) ($row['status'] ?? '');
+                            $statusClass = in_array($status, ['imported', 'existing', 'unavailable'], true) ? $status : 'unavailable';
+                            $statusText = (string) ($row['message'] ?? '');
+                            if ($status === 'imported') {
+                                $statusText = t('Imported');
+                            }
+                            if ($status === 'existing') {
+                                $statusText = t('Skipped, already existing');
+                            }
+                            if ($status === 'unavailable') {
+                                $statusText = t('Skipped, unavailable');
+                            }
+                            ?>
+                            <tr>
+                                <td><?php echo h((string) ($row['name'] ?? '')); ?></td>
+                                <td>
+                                    <span class="dashboard-favorites-manager-import-status dashboard-favorites-manager-import-status-<?php echo h($statusClass); ?>" title="<?php echo h((string) ($row['message'] ?? '')); ?>">
+                                        <?php echo h($statusText); ?>
+                                    </span>
+                                </td>
+                                <td><?php echo h((string) ($row['path'] ?? '')); ?></td>
+                            </tr>
+                        <?php } ?>
+                    </tbody>
+                </table>
+            <?php } ?>
         </div>
     <?php } ?>
 

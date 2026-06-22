@@ -725,6 +725,7 @@ class FavoritesManager extends DashboardPageController
             'imported' => 0,
             'skippedExisting' => 0,
             'skippedInvalid' => 0,
+            'message' => empty($favorites) ? t('No favorites found in the selected file.') : '',
             'rows' => [],
         ];
 
