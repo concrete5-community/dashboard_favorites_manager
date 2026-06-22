@@ -337,10 +337,16 @@
         }
 
         var wrapper = createElement('div', 'dashboard-favorites-toolbar-search');
+        var control = createElement('div', 'dashboard-favorites-toolbar-search-control');
         var input = createElement('input', 'dashboard-favorites-toolbar-search-input');
         input.type = 'search';
         input.placeholder = searchConfig.placeholder || '';
         input.autocomplete = 'off';
+
+        var clearButton = createElement('button', 'dashboard-favorites-toolbar-search-clear', 'x');
+        clearButton.type = 'button';
+        clearButton.hidden = true;
+        clearButton.setAttribute('aria-label', searchConfig.clearText || 'Clear search');
 
         var results = createElement('div', 'dashboard-favorites-toolbar-search-results');
         results.hidden = true;
@@ -389,8 +395,26 @@
             return pendingPages;
         }
 
+        function updateToolbarSearchClear() {
+            clearButton.hidden = input.value.length === 0;
+        }
+
+        function clearToolbarSearch() {
+            if (!input.value) {
+                return;
+            }
+
+            input.value = '';
+            updateToolbarSearchClear();
+            window.clearTimeout(timer);
+            requestID++;
+            renderToolbarSearchStatus(results, '');
+            input.focus();
+        }
+
         function updateToolbarSearchResults() {
             var query = input.value.replace(/\s+/g, ' ').trim();
+            updateToolbarSearchClear();
             window.clearTimeout(timer);
             if (query.length < 2) {
                 requestID++;
@@ -422,13 +446,19 @@
 
         input.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') {
-                input.value = '';
-                requestID++;
-                renderToolbarSearchStatus(results, '');
+                event.preventDefault();
+                clearToolbarSearch();
             }
         });
 
-        wrapper.appendChild(input);
+        clearButton.addEventListener('click', function (event) {
+            event.preventDefault();
+            clearToolbarSearch();
+        });
+
+        control.appendChild(input);
+        control.appendChild(clearButton);
+        wrapper.appendChild(control);
         wrapper.appendChild(results);
 
         return wrapper;

@@ -72,6 +72,7 @@ class ToolbarManager
                     'placeholder' => t('Search dashboard pages'),
                     'emptyText' => t('No dashboard pages found.'),
                     'errorText' => t('Unable to search dashboard pages.'),
+                    'clearText' => t('Clear search'),
                     'addText' => t('Add to favorites'),
                     'removeText' => t('Remove from favorites'),
                     'openText' => t('Open page'),
