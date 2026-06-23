@@ -278,6 +278,10 @@ html.dashboard-favorites-manager-options-panel-initializing [data-dashboard-favo
     width: 100%;
 }
 
+.dashboard-favorites-manager-import-controls:not([hidden]) {
+    margin-top: 0.525rem;
+}
+
 .dashboard-favorites-manager-file-input {
     height: 1px;
     opacity: 0;
