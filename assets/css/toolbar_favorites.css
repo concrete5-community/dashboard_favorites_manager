@@ -100,6 +100,19 @@
     display: block;
 }
 
+.dashboard-favorites-toolbar.is-viewport-positioned .dashboard-favorites-toolbar-menu {
+    left: var(--dashboard-favorites-toolbar-menu-left, 50%);
+    max-height: calc(100vh - 56px);
+    max-width: calc(100vw - 1rem);
+    min-width: 0;
+    overflow-y: auto;
+    position: fixed;
+    right: auto;
+    top: 48px;
+    transform: translateX(-50%);
+    width: 22rem;
+}
+
 .dashboard-favorites-toolbar-search {
     border-bottom: 1px solid #edf0f2;
     padding: 0.6rem 0.75rem;

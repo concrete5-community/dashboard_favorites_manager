@@ -13,9 +13,55 @@
 
     function closeMenu(wrapper) {
         wrapper.classList.remove('is-open');
+        wrapper.classList.remove('is-viewport-positioned');
+        wrapper.style.removeProperty('--dashboard-favorites-toolbar-menu-left');
         var button = wrapper.querySelector('[data-dashboard-favorites-toolbar-button]');
         if (button) {
             button.setAttribute('aria-expanded', 'false');
+        }
+    }
+
+    function getViewportWidth() {
+        var widths = [];
+        if (window.innerWidth) {
+            widths.push(window.innerWidth);
+        }
+        if (document.documentElement && document.documentElement.clientWidth) {
+            widths.push(document.documentElement.clientWidth);
+        }
+        if (window.visualViewport && window.visualViewport.width) {
+            widths.push(window.visualViewport.width);
+        }
+
+        return widths.length ? Math.min.apply(Math, widths) : 0;
+    }
+
+    function getViewportCenterLeft() {
+        if (window.visualViewport && window.visualViewport.width) {
+            return window.visualViewport.offsetLeft + (window.visualViewport.width / 2);
+        }
+
+        return getViewportWidth() / 2;
+    }
+
+    function positionMenuInViewport(wrapper) {
+        var menu = wrapper.querySelector('.dashboard-favorites-toolbar-menu');
+        if (!menu || !wrapper.classList.contains('is-open')) {
+            return;
+        }
+
+        wrapper.classList.remove('is-viewport-positioned');
+        wrapper.style.removeProperty('--dashboard-favorites-toolbar-menu-left');
+
+        var viewportWidth = getViewportWidth();
+        if (!viewportWidth) {
+            return;
+        }
+
+        var rect = menu.getBoundingClientRect();
+        if (rect.left < 8 || rect.right > viewportWidth - 8) {
+            wrapper.style.setProperty('--dashboard-favorites-toolbar-menu-left', getViewportCenterLeft() + 'px');
+            wrapper.classList.add('is-viewport-positioned');
         }
     }
 
@@ -545,6 +591,12 @@
                 event.stopPropagation();
                 var isOpen = wrapper.classList.toggle('is-open');
                 button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                if (isOpen) {
+                    positionMenuInViewport(wrapper);
+                } else {
+                    wrapper.classList.remove('is-viewport-positioned');
+                    wrapper.style.removeProperty('--dashboard-favorites-toolbar-menu-left');
+                }
             });
 
             wrapper.appendChild(button);
@@ -618,6 +670,10 @@
                 if (!event.target.closest('.dashboard-favorites-toolbar')) {
                     closeMenu(menu);
                 }
+            });
+
+            window.addEventListener('resize', function () {
+                positionMenuInViewport(menu);
             });
         }
     }
