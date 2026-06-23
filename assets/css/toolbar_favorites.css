@@ -19,7 +19,7 @@
     display: flex;
     height: 47px;
     justify-content: center;
-    min-width: 48px;
+    min-width: 36px;
     padding: 0;
 }
 
@@ -53,6 +53,10 @@
     justify-content: center;
     line-height: 1.05;
     white-space: nowrap;
+}
+
+.dashboard-favorites-toolbar-version:only-child {
+    margin-right: 5px;
 }
 
 .dashboard-favorites-toolbar-version-number {
@@ -436,7 +440,7 @@
 
     .dashboard-favorites-toolbar-button {
         height: 40px;
-        min-width: 40px;
+        min-width: 36px;
     }
 
     .dashboard-favorites-toolbar-menu-version {

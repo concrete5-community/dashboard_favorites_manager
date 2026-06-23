@@ -3,7 +3,9 @@
 }
 
 .dashboard-favorites-manager-current-user-notice {
+    display: inline-block;
     margin-bottom: 1rem;
+    max-width: 100%;
 }
 
 .dashboard-favorites-manager-table td {
@@ -24,6 +26,15 @@
 
 .dashboard-favorites-manager-select-column {
     width: 2.25rem;
+}
+
+#dashboard-favorites-manager-select-all:not(:checked):hover,
+#dashboard-favorites-manager-select-all:not(:checked):focus,
+.dashboard-favorites-manager-checkbox:not(:checked):hover,
+.dashboard-favorites-manager-checkbox:not(:checked):focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.18rem rgba(13, 110, 253, 0.32);
+    outline: 0;
 }
 
 .dashboard-favorites-manager-position-column {
@@ -165,6 +176,27 @@
     margin-top: 0.35rem;
 }
 
+.dashboard-favorites-manager-options-section {
+    border-top: 1px solid #d7dce2;
+    margin-top: 0.55rem;
+    padding-top: 0.55rem;
+}
+
+.dashboard-favorites-manager-options-heading {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+}
+
+.dashboard-favorites-manager-options-section.is-disabled .dashboard-favorites-manager-options-heading {
+    opacity: 0.65;
+}
+
+.dashboard-favorites-manager-toolbar-options .form-check + .form-check,
+.dashboard-favorites-manager-menu-options .form-check + .form-check {
+    margin-top: 0.35rem;
+}
+
 .dashboard-favorites-manager-label-star {
     color: #0d6efd;
 }
@@ -183,7 +215,8 @@
 }
 
 .dashboard-favorites-manager-import-form {
-    flex-wrap: wrap;
+    align-items: flex-start;
+    flex-direction: column;
     width: 100%;
 }
 
@@ -199,9 +232,10 @@
 }
 
 .dashboard-favorites-manager-import-controls {
-    flex: 1 1 auto;
-    flex-wrap: wrap;
+    flex: 0 1 auto;
+    flex-wrap: nowrap;
     min-width: 0;
+    width: 100%;
 }
 
 .dashboard-favorites-manager-file-input {
@@ -223,7 +257,7 @@
     border: 1px solid #ced4da;
     border-radius: 4px;
     color: #495057;
-    flex: 1 1 13rem;
+    flex: 1 1 auto;
     font-size: 0.875rem;
     line-height: 1.5;
     min-width: 9rem;
