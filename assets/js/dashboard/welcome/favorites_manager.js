@@ -1,4 +1,6 @@
 (function () {
+    var OPTIONS_PANEL_STORAGE_KEY = 'dashboardFavoritesManager.optionsPanelVisible';
+
     function getJsonErrorMessage(json, fallback) {
         if (json && json.error) {
             return json.error.message || json.error;
@@ -32,6 +34,56 @@
         var wrapper = document.querySelector('.dashboard-favorites-manager');
 
         return wrapper ? (wrapper.getAttribute(name) || '') : '';
+    }
+
+    function getStoredOptionsPanelVisible() {
+        try {
+            var storedValue = window.localStorage.getItem(OPTIONS_PANEL_STORAGE_KEY);
+            if (storedValue === '0') {
+                return false;
+            }
+            if (storedValue === '1') {
+                return true;
+            }
+        } catch (e) {
+            // Storage can be unavailable; keep the panel visible in that case.
+            return true;
+        }
+
+        return true;
+    }
+
+    function storeOptionsPanelVisible(isVisible) {
+        try {
+            window.localStorage.setItem(OPTIONS_PANEL_STORAGE_KEY, isVisible ? '1' : '0');
+        } catch (e) {
+            // Storage is only for UI preference, so failing silently is acceptable.
+        }
+    }
+
+    function setOptionsPanelVisible(toggle, panel, isVisible) {
+        toggle.checked = isVisible;
+        toggle.setAttribute('aria-expanded', isVisible ? 'true' : 'false');
+
+        if (panel) {
+            panel.hidden = !isVisible;
+        }
+    }
+
+    function setupOptionsPanelToggle() {
+        var toggle = document.querySelector('[data-dashboard-favorites-options-panel-toggle]');
+        var panel = document.querySelector('[data-dashboard-favorites-options-panel]');
+
+        if (!toggle || !panel) {
+            return;
+        }
+
+        setOptionsPanelVisible(toggle, panel, getStoredOptionsPanelVisible());
+
+        toggle.addEventListener('change', function () {
+            setOptionsPanelVisible(toggle, panel, toggle.checked);
+            storeOptionsPanelVisible(toggle.checked);
+        });
     }
 
     function getFavoriteRows(body) {
@@ -695,6 +747,7 @@
     }, true);
 
     function initDashboardFavoritesManager() {
+        setupOptionsPanelToggle();
         setupFavoritesSortableWhenReady(0);
         updateDashboardPageSearch();
         updateRemoveState();

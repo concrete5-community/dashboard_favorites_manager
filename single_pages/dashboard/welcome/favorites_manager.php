@@ -24,13 +24,11 @@
     data-dashboard-favorites-file-large-error="<?php echo h(t('The selected file is too large.')); ?>"
 >
     <div class="text-muted small dashboard-favorites-manager-version">
-        <strong>
-            <?php if (!empty($pendingPackageUpdate)) { ?>
-                <?php echo h(t('Author: DigitMaster - Dedicated to mlocati, my Concrete CMS mentor')); ?>
-            <?php } else { ?>
-                <?php echo h(t('Version %s - Author: DigitMaster - Dedicated to mlocati, my Concrete CMS mentor', $packageVersion)); ?>
-            <?php } ?>
-        </strong>
+        <?php if (empty($pendingPackageUpdate)) { ?>
+            <?php echo t('Version'); ?> <strong><?php echo h($packageVersion); ?></strong> -
+        <?php } ?>
+        <?php echo t('Author:'); ?> <strong><?php echo h('DigitMaster'); ?></strong> -
+        <?php echo h(t('Dedicated to mlocati, my Concrete CMS mentor')); ?>
     </div>
     <?php if (!empty($pendingPackageUpdate)) { ?>
         <div class="alert alert-warning dashboard-favorites-manager-pending-update">
@@ -48,78 +46,65 @@
             <?php } ?>
         </div>
     <?php } ?>
-    <div class="alert alert-info dashboard-favorites-manager-current-user-notice">
-        <strong><?php echo t('Note:'); ?></strong> <?php echo t('These settings affect only the current user.'); ?>
+    <div class="dashboard-favorites-manager-current-user-notice">
+        <i class="fas fa-info-circle" aria-hidden="true"></i>
+        <strong><?php echo t('Info: Favorites and settings on this page affect only the current user.'); ?></strong>
     </div>
 
     <form method="post" action="<?php echo h($view->action('remove_favorites')); ?>" id="dashboard-favorites-manager-form">
         <input type="hidden" name="ccm_token" value="<?php echo h($removeFavoritesToken); ?>">
     </form>
 
-    <div class="dashboard-favorites-manager-tools mb-3">
-        <form method="post" action="<?php echo h($view->action('save_toolbar_settings')); ?>" class="dashboard-favorites-manager-toolbar-toggle">
-            <input type="hidden" name="ccm_token" value="<?php echo h($toolbarSettingsToken); ?>">
-            <input type="hidden" name="toolbar_favorites_enabled" value="0">
-            <input type="hidden" name="toolbar_search_enabled" value="0">
-            <input type="hidden" name="toolbar_clear_cache_enabled" value="0">
-            <input type="hidden" name="toolbar_logout_enabled" value="0">
-            <input type="hidden" name="toolbar_concrete_version_enabled" value="0">
+    <form method="post" action="<?php echo h($view->action('save_toolbar_settings')); ?>" id="dashboard-favorites-manager-toolbar-settings" class="dashboard-favorites-manager-toolbar-settings-form">
+        <input type="hidden" name="ccm_token" value="<?php echo h($toolbarSettingsToken); ?>">
+        <input type="hidden" name="toolbar_favorites_enabled" value="0">
+        <input type="hidden" name="toolbar_search_enabled" value="0">
+        <input type="hidden" name="toolbar_clear_cache_enabled" value="0">
+        <input type="hidden" name="toolbar_logout_enabled" value="0">
+        <input type="hidden" name="toolbar_concrete_version_enabled" value="0">
+    </form>
+
+    <div class="form-check form-switch dashboard-favorites-manager-options-panel-control">
+        <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-options-panel-toggle" data-dashboard-favorites-options-panel-toggle aria-controls="dashboard-favorites-manager-options-panel" aria-expanded="true" checked>
+        <label class="form-check-label" for="dashboard-favorites-manager-options-panel-toggle">
+            <?php echo t('Show options panel'); ?>
+        </label>
+    </div>
+
+    <div class="dashboard-favorites-manager-tools mb-3" id="dashboard-favorites-manager-options-panel" data-dashboard-favorites-options-panel>
+        <div class="dashboard-favorites-manager-toolbar-toggle">
             <div class="dashboard-favorites-manager-toolbar-options">
                 <div class="dashboard-favorites-manager-options-heading">
                     <?php echo t('Toolbar options'); ?>
                 </div>
                 <div class="form-check form-switch">
-                    <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-toolbar-enabled" name="toolbar_favorites_enabled" value="1" aria-label="<?php echo h(t('Show blue star button in toolbar')); ?>" onchange="this.form.submit()" <?php echo $toolbarFavoritesEnabled ? 'checked' : ''; ?>>
+                    <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-toolbar-enabled" name="toolbar_favorites_enabled" value="1" aria-label="<?php echo h(t('Show blue star button in toolbar')); ?>" form="dashboard-favorites-manager-toolbar-settings" onchange="this.form.submit()" <?php echo $toolbarFavoritesEnabled ? 'checked' : ''; ?>>
                     <span class="form-check-label">
                         <?php echo t('Show blue star %s button in toolbar', '<span class="dashboard-favorites-manager-label-star">★</span>'); ?>
                     </span>
                 </div>
                 <div class="form-check form-switch">
-                    <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-concrete-version-enabled" name="toolbar_concrete_version_enabled" value="1" aria-label="<?php echo h(t('Show Concrete CMS version in toolbar')); ?>" onchange="this.form.submit()" <?php echo $toolbarConcreteVersionEnabled ? 'checked' : ''; ?>>
+                    <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-concrete-version-enabled" name="toolbar_concrete_version_enabled" value="1" aria-label="<?php echo h(t('Show Concrete CMS version in toolbar')); ?>" form="dashboard-favorites-manager-toolbar-settings" onchange="this.form.submit()" <?php echo $toolbarConcreteVersionEnabled ? 'checked' : ''; ?>>
                     <span class="form-check-label">
                         <?php echo t('Show Concrete CMS version in toolbar'); ?>
                     </span>
                 </div>
             </div>
-            <div class="dashboard-favorites-manager-menu-options dashboard-favorites-manager-options-section<?php echo $toolbarFavoritesEnabled ? '' : ' is-disabled'; ?>">
-                <div class="dashboard-favorites-manager-options-heading">
-                    <?php echo t('Menu options'); ?>
-                </div>
-                <div class="form-check form-switch dashboard-favorites-manager-dependent-switch<?php echo $toolbarFavoritesEnabled ? '' : ' is-disabled'; ?>">
-                    <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-search-enabled" name="toolbar_search_enabled" value="1" aria-label="<?php echo h(t('Show dashboard page search. Search can be a bit slow on low-cost or overloaded hosting.')); ?>" onchange="this.form.submit()" <?php echo $toolbarFavoritesEnabled && $toolbarSearchEnabled ? 'checked' : ''; ?> <?php echo $toolbarFavoritesEnabled ? '' : 'disabled'; ?>>
-                    <span class="form-check-label">
-                        <?php echo t('Show dashboard page search. Search can be a bit slow on low-cost or overloaded hosting.'); ?>
-                    </span>
-                </div>
-                <?php if ($canUseToolbarClearCache) { ?>
-                <div class="form-check form-switch dashboard-favorites-manager-dependent-switch<?php echo $toolbarFavoritesEnabled ? '' : ' is-disabled'; ?>">
-                    <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-clear-cache-enabled" name="toolbar_clear_cache_enabled" value="1" aria-label="<?php echo h(t('Show "Clear cache now!" action')); ?>" onchange="this.form.submit()" <?php echo $toolbarFavoritesEnabled && $toolbarClearCacheEnabled ? 'checked' : ''; ?> <?php echo $toolbarFavoritesEnabled ? '' : 'disabled'; ?>>
-                    <span class="form-check-label">
-                        <?php echo t('Show "Clear cache now!" action'); ?>
-                    </span>
-                </div>
-                <?php } ?>
-                <div class="form-check form-switch dashboard-favorites-manager-dependent-switch<?php echo $toolbarFavoritesEnabled ? '' : ' is-disabled'; ?>">
-                    <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-logout-enabled" name="toolbar_logout_enabled" value="1" aria-label="<?php echo h(t('Show "Log out" action')); ?>" onchange="this.form.submit()" <?php echo $toolbarFavoritesEnabled && $toolbarLogoutEnabled ? 'checked' : ''; ?> <?php echo $toolbarFavoritesEnabled ? '' : 'disabled'; ?>>
-                    <span class="form-check-label">
-                        <?php echo t('Show "Log out" action'); ?>
-                    </span>
-                </div>
-            </div>
-        </form>
-
-        <div class="dashboard-favorites-manager-import-export">
-            <form method="post" action="<?php echo h($view->action('export_favorites')); ?>" class="dashboard-favorites-manager-import-export-row">
-                <input type="hidden" name="ccm_token" value="<?php echo h($importExportToken); ?>">
-                <button type="submit" class="btn btn-primary btn-sm">
-                    <?php echo t('Export favorites'); ?>
-                </button>
-            </form>
-            <form method="post" action="<?php echo h($view->action('import_favorites')); ?>" enctype="multipart/form-data" class="dashboard-favorites-manager-import-form">
-                <input type="hidden" name="ccm_token" value="<?php echo h($importExportToken); ?>">
+            <div class="dashboard-favorites-manager-import-export-actions">
+                <form method="post" action="<?php echo h($view->action('export_favorites')); ?>" class="dashboard-favorites-manager-import-export-row">
+                    <input type="hidden" name="ccm_token" value="<?php echo h($importExportToken); ?>">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="fas fa-upload" aria-hidden="true"></i>
+                        <?php echo t('Export favorites'); ?>
+                    </button>
+                </form>
                 <button type="button" class="btn btn-primary btn-sm dashboard-favorites-manager-import-button" data-dashboard-favorites-import-open>
+                    <i class="fas fa-download" aria-hidden="true"></i>
                     <?php echo t('Import favorites'); ?>
                 </button>
+            </div>
+            <form method="post" action="<?php echo h($view->action('import_favorites')); ?>" enctype="multipart/form-data" class="dashboard-favorites-manager-import-form dashboard-favorites-manager-import-controls-form">
+                <input type="hidden" name="ccm_token" value="<?php echo h($importExportToken); ?>">
                 <div class="dashboard-favorites-manager-import-controls" data-dashboard-favorites-import-controls hidden>
                     <input type="file" name="favorites_file" class="dashboard-favorites-manager-file-input" accept="application/json,.json" required data-dashboard-favorites-import-file data-dashboard-favorites-import-max-size="65536" data-dashboard-favorites-import-size-error="<?php echo h(t('The selected file is too large. Maximum size is 64 KB.')); ?>">
                     <button type="button" class="btn btn-primary btn-sm dashboard-favorites-manager-file-button" data-dashboard-favorites-file-button>
@@ -136,6 +121,34 @@
                     </button>
                 </div>
             </form>
+        </div>
+
+        <div class="dashboard-favorites-manager-import-export">
+            <div class="dashboard-favorites-manager-menu-options<?php echo $toolbarFavoritesEnabled ? '' : ' is-disabled'; ?>">
+                <div class="dashboard-favorites-manager-options-heading">
+                    <?php echo t('Menu options'); ?>
+                </div>
+                <div class="form-check form-switch dashboard-favorites-manager-dependent-switch<?php echo $toolbarFavoritesEnabled ? '' : ' is-disabled'; ?>">
+                    <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-search-enabled" name="toolbar_search_enabled" value="1" aria-label="<?php echo h(t('Show dashboard page search - may be slow on low-cost or overloaded hosting')); ?>" form="dashboard-favorites-manager-toolbar-settings" onchange="this.form.submit()" <?php echo $toolbarFavoritesEnabled && $toolbarSearchEnabled ? 'checked' : ''; ?> <?php echo $toolbarFavoritesEnabled ? '' : 'disabled'; ?>>
+                    <span class="form-check-label">
+                        <?php echo t('Show dashboard page search - may be slow on low-cost or overloaded hosting'); ?>
+                    </span>
+                </div>
+                <?php if ($canUseToolbarClearCache) { ?>
+                <div class="form-check form-switch dashboard-favorites-manager-dependent-switch<?php echo $toolbarFavoritesEnabled ? '' : ' is-disabled'; ?>">
+                    <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-clear-cache-enabled" name="toolbar_clear_cache_enabled" value="1" aria-label="<?php echo h(t('Show "Clear cache now!" action')); ?>" form="dashboard-favorites-manager-toolbar-settings" onchange="this.form.submit()" <?php echo $toolbarFavoritesEnabled && $toolbarClearCacheEnabled ? 'checked' : ''; ?> <?php echo $toolbarFavoritesEnabled ? '' : 'disabled'; ?>>
+                    <span class="form-check-label">
+                        <?php echo t('Show "Clear cache now!" action'); ?>
+                    </span>
+                </div>
+                <?php } ?>
+                <div class="form-check form-switch dashboard-favorites-manager-dependent-switch<?php echo $toolbarFavoritesEnabled ? '' : ' is-disabled'; ?>">
+                    <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-logout-enabled" name="toolbar_logout_enabled" value="1" aria-label="<?php echo h(t('Show "Log out" action')); ?>" form="dashboard-favorites-manager-toolbar-settings" onchange="this.form.submit()" <?php echo $toolbarFavoritesEnabled && $toolbarLogoutEnabled ? 'checked' : ''; ?> <?php echo $toolbarFavoritesEnabled ? '' : 'disabled'; ?>>
+                    <span class="form-check-label">
+                        <?php echo t('Show "Log out" action'); ?>
+                    </span>
+                </div>
+            </div>
         </div>
     </div>
 

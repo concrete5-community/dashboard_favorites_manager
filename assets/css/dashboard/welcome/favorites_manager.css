@@ -3,9 +3,19 @@
 }
 
 .dashboard-favorites-manager-current-user-notice {
-    display: inline-block;
-    margin-bottom: 1rem;
+    align-items: center;
+    color: #6c757d;
+    display: inline-flex;
+    font-size: 0.8125rem;
+    gap: 0.35rem;
+    line-height: 1.25;
+    margin-bottom: 0.65rem;
     max-width: 100%;
+}
+
+.dashboard-favorites-manager-current-user-notice .fas {
+    color: #0d6efd;
+    flex: 0 0 auto;
 }
 
 .dashboard-favorites-manager-table td {
@@ -158,10 +168,20 @@
     border-color: #6c757d;
 }
 
+.dashboard-favorites-manager-options-panel-control {
+    margin-bottom: 0.65rem;
+    max-width: 100%;
+    width: max-content;
+}
+
 .dashboard-favorites-manager-tools {
     align-items: stretch;
     display: flex;
     gap: 0.75rem;
+}
+
+.dashboard-favorites-manager-toolbar-settings-form {
+    display: none;
 }
 
 .dashboard-favorites-manager-toolbar-toggle,
@@ -176,10 +196,10 @@
     margin-top: 0.35rem;
 }
 
-.dashboard-favorites-manager-options-section {
-    border-top: 1px solid #d7dce2;
-    margin-top: 0.55rem;
-    padding-top: 0.55rem;
+.dashboard-favorites-manager-toolbar-options {
+    border-bottom: 1px solid #d7dce2;
+    margin-bottom: 0.55rem;
+    padding-bottom: 0.55rem;
 }
 
 .dashboard-favorites-manager-options-heading {
@@ -188,7 +208,7 @@
     margin-bottom: 0.35rem;
 }
 
-.dashboard-favorites-manager-options-section.is-disabled .dashboard-favorites-manager-options-heading {
+.dashboard-favorites-manager-menu-options.is-disabled .dashboard-favorites-manager-options-heading {
     opacity: 0.65;
 }
 
@@ -202,6 +222,7 @@
 }
 
 .dashboard-favorites-manager-import-export,
+.dashboard-favorites-manager-import-export-actions,
 .dashboard-favorites-manager-import-form,
 .dashboard-favorites-manager-import-controls {
     align-items: center;
@@ -212,6 +233,11 @@
 .dashboard-favorites-manager-import-export {
     align-items: flex-start;
     flex-direction: column;
+}
+
+.dashboard-favorites-manager-import-export-actions {
+    align-items: flex-start;
+    flex-wrap: wrap;
 }
 
 .dashboard-favorites-manager-import-form {
@@ -226,7 +252,11 @@
 
 .dashboard-favorites-manager-import-export-row .btn,
 .dashboard-favorites-manager-import-button {
+    align-items: center;
+    display: inline-flex;
     flex: 0 0 auto;
+    gap: 0.35rem;
+    justify-content: center;
     min-width: 8rem;
     white-space: nowrap;
 }
