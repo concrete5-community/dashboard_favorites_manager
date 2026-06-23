@@ -31,6 +31,8 @@
 }
 
 .dashboard-favorites-manager-table th {
+    color: #495057;
+    font-weight: 600;
     vertical-align: middle;
 }
 
@@ -102,7 +104,7 @@
 
 .dashboard-favorites-manager-move-button {
     align-items: center;
-    background: #f6f7f9;
+    background: #f8f9fa;
     border: 1px solid #ced4da;
     border-radius: 4px;
     color: #495057;
@@ -186,7 +188,7 @@
 
 .dashboard-favorites-manager-toolbar-toggle,
 .dashboard-favorites-manager-import-export {
-    border: 1px solid #d7dce2;
+    border: 1px solid #dee2e6;
     border-radius: 4px;
     flex: 1 1 0;
     padding: 0.65rem 0.75rem;
@@ -197,7 +199,7 @@
 }
 
 .dashboard-favorites-manager-toolbar-options {
-    border-bottom: 1px solid #d7dce2;
+    border-bottom: 1px solid #dee2e6;
     margin-bottom: 0.55rem;
     padding-bottom: 0.55rem;
 }
@@ -320,21 +322,12 @@
     color: #7f0f40;
 }
 
-.dashboard-favorites-manager-import-report {
-    border: 1px solid #d7dce2;
-    border-radius: 4px;
-    overflow: hidden;
-}
-
 .dashboard-favorites-manager-import-report-heading {
     align-items: center;
-    background: #f6f7f9;
-    border-bottom: 1px solid #d7dce2;
-    color: #000;
+    background-color: var(--bs-secondary-bg);
     display: flex;
     gap: 0.75rem;
     font-weight: 600;
-    padding: 0.55rem 0.75rem;
 }
 
 .dashboard-favorites-manager-import-report-clear {
@@ -414,26 +407,20 @@
     opacity: 0.65;
 }
 
-.dashboard-favorites-manager-favorites-management {
-    border: 1px solid #d7dce2;
+.ccm-ui .card.dashboard-favorites-manager-favorites-management {
+    border: 1px solid #dee2e6;
     border-radius: 4px;
+    box-shadow: none;
     overflow: hidden;
 }
 
 .dashboard-favorites-manager-favorites-management-heading {
-    background: #f6f7f9;
-    border-bottom: 1px solid #d7dce2;
-    color: #000;
+    background-color: var(--bs-secondary-bg);
     font-weight: 600;
-    padding: 0.55rem 0.75rem;
-}
-
-.dashboard-favorites-manager-favorites-management-body {
-    padding: 0.75rem;
 }
 
 .dashboard-favorites-manager-page-search {
-    border-bottom: 1px solid #d7dce2;
+    border-bottom: 1px solid #dee2e6;
     margin-bottom: 0.75rem;
     padding-bottom: 0.75rem;
 }

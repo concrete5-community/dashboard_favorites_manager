@@ -153,8 +153,8 @@
     </div>
 
     <?php if (!empty($importReport) && isset($importReport['rows']) && is_array($importReport['rows'])) { ?>
-        <div class="dashboard-favorites-manager-import-report mb-4" data-dashboard-favorites-import-report>
-            <div class="dashboard-favorites-manager-import-report-heading">
+        <div class="card dashboard-favorites-manager-import-report mb-4" data-dashboard-favorites-import-report>
+            <div class="card-header dashboard-favorites-manager-import-report-heading">
                 <span><?php echo t('Import results'); ?></span>
                 <button type="button" class="btn btn-primary btn-sm dashboard-favorites-manager-import-report-clear" data-dashboard-favorites-import-report-clear>
                     <?php echo t('Clear'); ?>
@@ -218,11 +218,11 @@
         </div>
     <?php } ?>
 
-    <div class="dashboard-favorites-manager-favorites-management">
-        <div class="dashboard-favorites-manager-favorites-management-heading">
+    <div class="card dashboard-favorites-manager-favorites-management">
+        <div class="card-header dashboard-favorites-manager-favorites-management-heading">
             <?php echo t('Favorites Management'); ?>
         </div>
-        <div class="dashboard-favorites-manager-favorites-management-body">
+        <div class="card-body dashboard-favorites-manager-favorites-management-body">
             <div class="dashboard-favorites-manager-page-search">
                 <div class="dashboard-favorites-manager-page-search-heading">
                     <?php echo t('Search dashboard pages. Use the star ★ to add or remove favorites, and the arrow → to open the page.'); ?>
