@@ -435,7 +435,7 @@ class FavoritesManager extends DashboardPageController
 
     private function addDashboardPageTreeItem(Page $page, array $favoritePageIDs, array &$pages, array &$addedPageIDs, $checkPermissions = true)
     {
-        if (!$this->isDashboardPage($page) || ($checkPermissions && !$this->canViewDashboardPage($page))) {
+        if (!$this->isSearchableDashboardPage($page) || ($checkPermissions && !$this->canViewDashboardPage($page))) {
             return;
         }
 
@@ -506,7 +506,7 @@ class FavoritesManager extends DashboardPageController
         }
 
         $page = Page::getByID((int) $pageID);
-        if (!$this->isDashboardPage($page) || !$this->canViewDashboardPage($page)) {
+        if (!$this->isSearchableDashboardPage($page) || !$this->canViewDashboardPage($page)) {
             return [
                 'success' => false,
                 'message' => t('Invalid dashboard page selected.'),
@@ -821,7 +821,7 @@ class FavoritesManager extends DashboardPageController
             $page = Page::getByPath($path);
         }
 
-        if ($this->isDashboardPage($page) && $this->canViewDashboardPage($page)) {
+        if ($this->isSearchableDashboardPage($page) && $this->canViewDashboardPage($page)) {
             return [
                 'name' => (string) $page->getCollectionName(),
                 'url' => $this->getPageUrl($page),
@@ -848,6 +848,20 @@ class FavoritesManager extends DashboardPageController
         $path = $this->getPagePath($page);
 
         return $path === '/dashboard' || strpos($path, '/dashboard/') === 0;
+    }
+
+    private function isSearchableDashboardPage($page)
+    {
+        $path = $this->getPagePath($page);
+        if (!$this->isDashboardPage($page) || (int) $page->getCollectionID() <= 0 || $path === '') {
+            return false;
+        }
+
+        try {
+            return !(bool) $page->getAttribute('exclude_nav');
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     private function canViewDashboardPage(Page $page)
