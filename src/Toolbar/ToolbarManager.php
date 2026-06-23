@@ -54,7 +54,7 @@ class ToolbarManager
                 'enabled' => true,
                 'favoritesEnabled' => $favoritesEnabled,
                 'favorites' => $favoritesEnabled ? $this->favoritesService->getToolbarFavoriteLinks() : [],
-                'emptyText' => t('No dashboard favorites found.'),
+                'emptyText' => t('The favorites list is empty.'),
                 'title' => t('Dashboard favorites'),
                 'dismissText' => t('Dismiss message'),
             ];

@@ -251,7 +251,7 @@
 
     <?php if (empty($favoriteLinks)) { ?>
         <div class="alert alert-info">
-            <?php echo t('No dashboard favorites found.'); ?>
+            <?php echo t('The favorites list is empty.'); ?>
         </div>
     <?php } else { ?>
         <div class="dashboard-favorites-manager-table-actions">

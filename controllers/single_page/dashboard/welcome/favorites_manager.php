@@ -587,7 +587,7 @@ class FavoritesManager extends DashboardPageController
         if ($this->getCurrentUserID() <= 0 || empty($items)) {
             return [
                 'success' => false,
-                'message' => t('No dashboard favorites found.'),
+                'message' => t('The favorites list is empty.'),
             ];
         }
 
@@ -648,7 +648,7 @@ class FavoritesManager extends DashboardPageController
         if ($this->getCurrentUserID() <= 0 || empty($items)) {
             return [
                 'success' => false,
-                'message' => t('No dashboard favorites found.'),
+                'message' => t('The favorites list is empty.'),
             ];
         }
 
