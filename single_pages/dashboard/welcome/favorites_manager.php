@@ -16,6 +16,7 @@
 /** @var string $importExportToken */
 /** @var array|null $importReport */
 /** @var array|null $pendingPackageUpdate */
+/** @var array $overlayMessages */
 ?>
 
 <script>
@@ -39,6 +40,29 @@ try {
     data-dashboard-page-search-empty-text="<?php echo h(t('No dashboard pages found.')); ?>"
     data-dashboard-favorites-file-large-error="<?php echo h(t('The selected file is too large.')); ?>"
 >
+    <?php if (!empty($overlayMessages) && is_array($overlayMessages)) { ?>
+        <div class="dashboard-favorites-overlay-messages" data-dashboard-favorites-overlay-messages aria-live="polite" aria-atomic="false">
+            <?php foreach ($overlayMessages as $overlayMessage) {
+                $messageType = (string) ($overlayMessage['type'] ?? 'info');
+                $messageText = (string) ($overlayMessage['message'] ?? '');
+                if ($messageText === '') {
+                    continue;
+                }
+                $messageClass = [
+                    'success' => 'success',
+                    'warning' => 'warning',
+                    'error' => 'danger',
+                    'info' => 'info',
+                ][$messageType] ?? 'info';
+                ?>
+                <div class="dashboard-favorites-overlay-toast alert alert-<?php echo h($messageClass); ?> alert-dismissible" role="<?php echo $messageClass === 'danger' ? 'alert' : 'status'; ?>" data-dashboard-favorites-overlay-message>
+                    <button type="button" class="btn-close" aria-label="<?php echo h(t('Dismiss message')); ?>" data-dashboard-favorites-overlay-dismiss></button>
+                    <?php echo nl2br(h($messageText)); ?>
+                </div>
+            <?php } ?>
+        </div>
+    <?php } ?>
+
     <div class="text-muted small dashboard-favorites-manager-version">
         <?php if (empty($pendingPackageUpdate)) { ?>
             <?php echo t('Version'); ?> <strong><?php echo h($packageVersion); ?></strong> -
@@ -289,6 +313,10 @@ try {
                 </div>
             <?php } else { ?>
                 <div class="dashboard-favorites-manager-table-actions">
+                    <label class="dashboard-favorites-manager-mobile-select-all">
+                        <input type="checkbox" data-dashboard-favorites-select-all-mobile>
+                        <span><?php echo t('Select all'); ?></span>
+                    </label>
                     <button type="button" class="btn btn-danger btn-sm" data-dashboard-favorites-remove disabled aria-disabled="true">
                         <?php echo t('Remove selected'); ?>
                     </button>
@@ -340,7 +368,7 @@ try {
                                     </span>
                                 </td>
                                 <td class="dashboard-favorites-manager-name-cell"><?php echo h($favorite['name']); ?></td>
-                                <td>
+                                <td class="dashboard-favorites-manager-path-cell">
                                     <?php
                                     $favoritePath = (string) ($favorite['path'] ?? '');
                                     $favoriteUrl = (string) ($favorite['url'] ?? '');

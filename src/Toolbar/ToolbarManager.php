@@ -11,6 +11,7 @@ use Concrete\Core\Support\Facade\Events;
 use Concrete\Core\User\User;
 use Concrete\Core\View\View;
 use Concrete\Package\DashboardFavoritesManager\Favorites\DashboardFavoritesService;
+use Concrete\Package\DashboardFavoritesManager\Message\OverlayMessageQueue;
 
 class ToolbarManager
 {
@@ -57,6 +58,7 @@ class ToolbarManager
                 'emptyText' => t('The favorites list is empty.'),
                 'title' => t('Dashboard favorites'),
                 'dismissText' => t('Dismiss message'),
+                'overlayMessages' => $this->pullOverlayMessages(),
             ];
             if ($concreteVersionEnabled) {
                 $toolbarConfig['concreteVersion'] = [
@@ -101,15 +103,18 @@ class ToolbarManager
     private function registerAssets($package)
     {
         $assetList = AssetList::getInstance();
+        $assetList->register('css', 'dashboard-favorites-manager/overlay', 'assets/css/overlay_messages.css', [], $package);
         $assetList->register('css', 'dashboard-favorites-manager/dashboard', 'assets/css/dashboard/welcome/favorites_manager.css', [], $package);
         $assetList->register('javascript', 'dashboard-favorites-manager/dashboard', 'assets/js/dashboard/welcome/favorites_manager.js', [], $package);
         $assetList->register('css', 'dashboard-favorites-manager/toolbar', 'assets/css/toolbar_favorites.css', [], $package);
         $assetList->register('javascript', 'dashboard-favorites-manager/toolbar', 'assets/js/toolbar_favorites.js', [], $package);
         $assetList->registerGroup('dashboard-favorites-manager/dashboard', [
+            ['css', 'dashboard-favorites-manager/overlay'],
             ['css', 'dashboard-favorites-manager/dashboard'],
             ['javascript', 'dashboard-favorites-manager/dashboard'],
         ]);
         $assetList->registerGroup('dashboard-favorites-manager/toolbar', [
+            ['css', 'dashboard-favorites-manager/overlay'],
             ['css', 'dashboard-favorites-manager/toolbar'],
             ['javascript', 'dashboard-favorites-manager/toolbar'],
         ]);
@@ -154,5 +159,10 @@ class ToolbarManager
     private function getConcreteCmsVersion()
     {
         return defined('APP_VERSION') ? (string) APP_VERSION : '';
+    }
+
+    private function pullOverlayMessages()
+    {
+        return (new OverlayMessageQueue($this->app->make('session')))->pull();
     }
 }

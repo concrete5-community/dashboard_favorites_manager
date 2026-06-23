@@ -49,6 +49,8 @@
 
 #dashboard-favorites-manager-select-all:not(:checked):hover,
 #dashboard-favorites-manager-select-all:not(:checked):focus,
+[data-dashboard-favorites-select-all-mobile]:not(:checked):hover,
+[data-dashboard-favorites-select-all-mobile]:not(:checked):focus,
 .dashboard-favorites-manager-checkbox:not(:checked):hover,
 .dashboard-favorites-manager-checkbox:not(:checked):focus {
     border-color: #0d6efd;
@@ -161,6 +163,13 @@
     flex-wrap: wrap;
     gap: 0.5rem;
     margin-bottom: 0.35rem;
+}
+
+.dashboard-favorites-manager-mobile-select-all {
+    align-items: center;
+    display: none;
+    gap: 0.35rem;
+    margin: 0;
 }
 
 .dashboard-favorites-manager-remove-confirm {
@@ -679,5 +688,88 @@ html.dashboard-favorites-manager-options-panel-initializing [data-dashboard-favo
 
     .dashboard-favorites-manager-import-cancel {
         width: 1.9375rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .dashboard-favorites-manager-mobile-select-all {
+        display: inline-flex;
+    }
+
+    .dashboard-favorites-manager-table {
+        border-collapse: separate;
+        border-spacing: 0;
+        display: block;
+    }
+
+    .dashboard-favorites-manager-table colgroup,
+    .dashboard-favorites-manager-table thead {
+        display: none;
+    }
+
+    .dashboard-favorites-manager-table tbody {
+        display: block;
+    }
+
+    .dashboard-favorites-manager-table tbody tr {
+        border-bottom: 1px solid #d7dce2;
+        display: grid;
+        grid-template-columns: 1.25rem 1.45rem minmax(0, 1fr);
+        grid-template-areas:
+            "select position name"
+            "sort sort name"
+            "path path path";
+        column-gap: 0.4rem;
+        padding: 0.55rem 0.35rem;
+        row-gap: 0.25rem;
+    }
+
+    .dashboard-favorites-manager-table tbody tr:last-child {
+        border-bottom: 0;
+    }
+
+    .dashboard-favorites-manager-table tbody td {
+        border: 0;
+        display: block;
+        min-width: 0;
+        padding: 0 !important;
+    }
+
+    .dashboard-favorites-manager-table tbody td:first-child {
+        grid-area: select;
+        padding-top: 0.15rem !important;
+    }
+
+    .dashboard-favorites-manager-position-cell {
+        grid-area: position;
+        padding-top: 0.05rem !important;
+        text-align: left;
+    }
+
+    .dashboard-favorites-manager-sort-cell {
+        grid-area: sort;
+        text-align: left;
+    }
+
+    .dashboard-favorites-manager-name-cell {
+        grid-area: name;
+        line-height: 1.35;
+    }
+
+    .dashboard-favorites-manager-path-cell {
+        grid-area: path;
+        font-size: 0.875rem;
+        line-height: 1.35;
+        padding-top: 0.2rem !important;
+    }
+
+    .dashboard-favorites-manager-path-link {
+        display: block;
+        overflow-wrap: anywhere;
+    }
+
+    .dashboard-favorites-manager-move-buttons {
+        flex-direction: row;
+        gap: 0.25rem;
     }
 }

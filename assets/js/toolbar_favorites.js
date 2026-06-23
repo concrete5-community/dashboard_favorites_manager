@@ -11,6 +11,80 @@
         return element;
     }
 
+    function removeOverlayMessage(message) {
+        if (message && message.parentNode) {
+            var container = message.parentNode;
+            container.removeChild(message);
+            if (!container.children.length && container.parentNode) {
+                container.parentNode.removeChild(container);
+            }
+        }
+    }
+
+    function hideOverlayMessage(message) {
+        if (!message || message.classList.contains('is-hiding')) {
+            return;
+        }
+
+        message.classList.add('is-hiding');
+        window.setTimeout(function () {
+            removeOverlayMessage(message);
+        }, 300);
+    }
+
+    function getOverlayAlertClass(type) {
+        if (type === 'error') {
+            return 'danger';
+        }
+        if (type === 'success' || type === 'warning' || type === 'info') {
+            return type;
+        }
+
+        return 'info';
+    }
+
+    function renderOverlayMessages(config) {
+        var messages = config && config.overlayMessages;
+        if (!messages || !messages.length || document.querySelector('[data-dashboard-favorites-overlay-messages]')) {
+            return;
+        }
+
+        var container = createElement('div', 'dashboard-favorites-overlay-messages');
+        container.setAttribute('data-dashboard-favorites-overlay-messages', '1');
+        container.setAttribute('aria-live', 'polite');
+        container.setAttribute('aria-atomic', 'false');
+
+        messages.forEach(function (item) {
+            if (!item || !item.message) {
+                return;
+            }
+
+            var alertClass = getOverlayAlertClass(item.type);
+            var message = createElement('div', 'dashboard-favorites-overlay-toast alert alert-' + alertClass + ' alert-dismissible');
+            var close = createElement('button', 'btn-close');
+            close.type = 'button';
+            close.setAttribute('aria-label', config.dismissText || 'Dismiss message');
+            close.setAttribute('data-dashboard-favorites-overlay-dismiss', '1');
+            close.addEventListener('click', function () {
+                hideOverlayMessage(message);
+            });
+
+            message.setAttribute('role', alertClass === 'danger' ? 'alert' : 'status');
+            message.setAttribute('data-dashboard-favorites-overlay-message', '1');
+            message.appendChild(close);
+            message.appendChild(document.createTextNode(item.message));
+            container.appendChild(message);
+
+            window.setTimeout(function () {
+                hideOverlayMessage(message);
+            }, 3000);
+        });
+
+        if (container.children.length) {
+            document.body.appendChild(container);
+        }
+    }
+
     function closeMenu(wrapper) {
         wrapper.classList.remove('is-open');
         wrapper.classList.remove('is-viewport-positioned');
@@ -632,12 +706,14 @@
     }
 
     function initToolbarFavorites() {
-        if (document.querySelector('.dashboard-favorites-toolbar')) {
+        var config = getToolbarConfig();
+        if (!config) {
             return;
         }
 
-        var config = getToolbarConfig();
-        if (!config) {
+        renderOverlayMessages(config);
+
+        if (document.querySelector('.dashboard-favorites-toolbar')) {
             return;
         }
 

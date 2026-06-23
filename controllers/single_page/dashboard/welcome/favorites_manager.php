@@ -13,6 +13,7 @@ use Concrete\Core\Page\Controller\DashboardPageController;
 use Concrete\Core\Page\PageList;
 use Concrete\Core\Permission\Checker;
 use Concrete\Core\User\User;
+use Concrete\Package\DashboardFavoritesManager\Message\OverlayMessageQueue;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -45,12 +46,13 @@ class FavoritesManager extends DashboardPageController
         $this->set('reorderFavoritesToken', $this->app->make('token')->generate('dashboard_favorites_manager_reorder'));
         $this->set('importExportToken', $this->app->make('token')->generate('dashboard_favorites_manager_import_export'));
         $this->set('importReport', $this->pullImportReport());
+        $this->set('overlayMessages', $this->pullOverlayMessages());
     }
 
     public function save_toolbar_settings()
     {
         if (!$this->app->make('token')->validate('dashboard_favorites_manager_toolbar_settings', $this->request->request->get('ccm_token'))) {
-            $this->flash('error', $this->app->make('token')->getErrorMessage());
+            $this->queueOverlayMessage('error', $this->app->make('token')->getErrorMessage());
 
             return $this->redirectToManager();
         }
@@ -65,7 +67,7 @@ class FavoritesManager extends DashboardPageController
         $this->getManagerPackageController()->setToolbarClearCacheEnabled($clearCacheEnabled);
         $this->getManagerPackageController()->setToolbarLogoutEnabled($logoutEnabled);
         $this->getManagerPackageController()->setToolbarConcreteVersionEnabled($concreteVersionEnabled);
-        $this->flash('success', t('Toolbar favorites settings saved.'));
+        $this->queueOverlayMessage('success', t('Toolbar favorites settings saved.'));
 
         return $this->redirectToManager();
     }
@@ -155,23 +157,23 @@ class FavoritesManager extends DashboardPageController
     public function remove_favorites()
     {
         if (!$this->app->make('token')->validate('dashboard_favorites_manager_remove', $this->request->request->get('ccm_token'))) {
-            $this->flash('error', $this->app->make('token')->getErrorMessage());
+            $this->queueOverlayMessage('error', $this->app->make('token')->getErrorMessage());
 
             return $this->redirectToManager();
         }
 
         $selected = $this->request->request->get('selected_favorites', []);
         if (!is_array($selected) || empty($selected)) {
-            $this->flash('warning', t('No favorites selected.'));
+            $this->queueOverlayMessage('warning', t('No favorites selected.'));
 
             return $this->redirectToManager();
         }
 
         $result = $this->removeDashboardFavorites($selected);
         if ($result['removed'] > 0) {
-            $this->flash('success', t('Removed %s dashboard favorites.', $result['removed']));
+            $this->queueOverlayMessage('success', t('Removed %s dashboard favorites.', $result['removed']));
         } else {
-            $this->flash('warning', t('No matching dashboard favorites found.'));
+            $this->queueOverlayMessage('warning', t('No matching dashboard favorites found.'));
         }
 
         return $this->redirectToManager();
@@ -180,7 +182,7 @@ class FavoritesManager extends DashboardPageController
     public function export_favorites()
     {
         if (!$this->app->make('token')->validate('dashboard_favorites_manager_import_export', $this->request->request->get('ccm_token'))) {
-            $this->flash('error', $this->app->make('token')->getErrorMessage());
+            $this->queueOverlayMessage('error', $this->app->make('token')->getErrorMessage());
 
             return $this->redirectToManager();
         }
@@ -193,7 +195,7 @@ class FavoritesManager extends DashboardPageController
         ];
         $json = json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
         if ($json === false) {
-            $this->flash('error', t('Unable to export dashboard favorites.'));
+            $this->queueOverlayMessage('error', t('Unable to export dashboard favorites.'));
 
             return $this->redirectToManager();
         }
@@ -209,20 +211,20 @@ class FavoritesManager extends DashboardPageController
     public function import_favorites()
     {
         if (!$this->app->make('token')->validate('dashboard_favorites_manager_import_export', $this->request->request->get('ccm_token'))) {
-            $this->flash('error', $this->app->make('token')->getErrorMessage());
+            $this->queueOverlayMessage('error', $this->app->make('token')->getErrorMessage());
 
             return $this->redirectToManager();
         }
 
         $file = $this->request->files->get('favorites_file');
         if (!$file || !$file->isValid()) {
-            $this->flash('warning', t('Select a valid favorites export file.'));
+            $this->queueOverlayMessage('warning', t('Select a valid favorites export file.'));
 
             return $this->redirectToManager();
         }
 
         if ((int) $file->getSize() > self::IMPORT_FILE_MAX_BYTES) {
-            $this->flash('error', t('The selected file is too large. Maximum size is 64 KB.'));
+            $this->queueOverlayMessage('error', t('The selected file is too large. Maximum size is 64 KB.'));
 
             return $this->redirectToManager();
         }
@@ -231,20 +233,20 @@ class FavoritesManager extends DashboardPageController
         $contents = $fileHelper->getContents($file->getPathname());
         $payload = json_decode((string) $contents, true);
         if (json_last_error() !== JSON_ERROR_NONE || !is_array($payload)) {
-            $this->flash('error', t('The selected file is not a valid favorites export.'));
+            $this->queueOverlayMessage('error', t('The selected file is not a valid favorites export.'));
 
             return $this->redirectToManager();
         }
 
         if (($payload['format'] ?? '') !== self::EXPORT_FORMAT || (int) ($payload['version'] ?? 0) !== self::EXPORT_VERSION) {
-            $this->flash('error', t('The selected file is not a supported dashboard favorites export.'));
+            $this->queueOverlayMessage('error', t('The selected file is not a supported dashboard favorites export.'));
 
             return $this->redirectToManager();
         }
 
         $favorites = $payload['favorites'] ?? null;
         if (!is_array($favorites)) {
-            $this->flash('error', t('The selected file does not contain dashboard favorites.'));
+            $this->queueOverlayMessage('error', t('The selected file does not contain dashboard favorites.'));
 
             return $this->redirectToManager();
         }
@@ -469,7 +471,7 @@ class FavoritesManager extends DashboardPageController
             ], $data), $success ? 200 : 400);
         }
 
-        $this->flash($success ? 'success' : 'warning', (string) $message);
+        $this->queueOverlayMessage($success ? 'success' : 'warning', (string) $message);
 
         return $this->redirectToManager();
     }
@@ -809,6 +811,21 @@ class FavoritesManager extends DashboardPageController
         }
     }
 
+    private function queueOverlayMessage($type, $message)
+    {
+        $this->getOverlayMessageQueue()->add($type, $message);
+    }
+
+    private function pullOverlayMessages()
+    {
+        return $this->getOverlayMessageQueue()->pull();
+    }
+
+    private function getOverlayMessageQueue()
+    {
+        return new OverlayMessageQueue($this->app->make('session'));
+    }
+
     private function resolveImportedFavoriteItem($favorite)
     {
         if (!is_array($favorite)) {
@@ -894,7 +911,7 @@ class FavoritesManager extends DashboardPageController
             ], $status);
         }
 
-        $this->flash($success ? 'success' : 'error', (string) $message);
+        $this->queueOverlayMessage($success ? 'success' : 'error', (string) $message);
 
         return new RedirectResponse($this->getToolbarClearCacheReturnUrl());
     }

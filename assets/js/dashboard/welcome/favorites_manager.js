@@ -36,6 +36,39 @@
         return wrapper ? (wrapper.getAttribute(name) || '') : '';
     }
 
+    function removeOverlayMessage(message) {
+        if (!message) {
+            return;
+        }
+        if (message.parentNode) {
+            var container = message.parentNode;
+            container.removeChild(message);
+            if (!container.children.length && container.parentNode) {
+                container.parentNode.removeChild(container);
+            }
+        }
+    }
+
+    function hideOverlayMessage(message) {
+        if (!message || message.classList.contains('is-hiding')) {
+            return;
+        }
+
+        message.classList.add('is-hiding');
+        window.setTimeout(function () {
+            removeOverlayMessage(message);
+        }, 300);
+    }
+
+    function setupOverlayMessages() {
+        var messages = document.querySelectorAll('[data-dashboard-favorites-overlay-message]');
+        Array.prototype.forEach.call(messages, function (message) {
+            window.setTimeout(function () {
+                hideOverlayMessage(message);
+            }, 3000);
+        });
+    }
+
     function getStoredOptionsPanelVisible() {
         try {
             var storedValue = window.localStorage.getItem(OPTIONS_PANEL_STORAGE_KEY);
@@ -390,14 +423,24 @@
             return;
         }
 
+        var favoriteCheckboxes = document.querySelectorAll('.dashboard-favorites-manager-checkbox');
         var selectedFavorites = document.querySelectorAll('.dashboard-favorites-manager-checkbox:checked');
         button.disabled = selectedFavorites.length === 0;
         button.setAttribute('aria-disabled', selectedFavorites.length === 0 ? 'true' : 'false');
+        updateSelectAllControls(favoriteCheckboxes.length, selectedFavorites.length);
         if (selectedFavorites.length === 0 && confirm) {
             confirm.hidden = true;
         } else if (confirm && !confirm.hidden) {
             updateRemoveConfirmText();
         }
+    }
+
+    function updateSelectAllControls(totalCount, selectedCount) {
+        var selectAllControls = document.querySelectorAll('#dashboard-favorites-manager-select-all, [data-dashboard-favorites-select-all-mobile]');
+        Array.prototype.forEach.call(selectAllControls, function (control) {
+            control.checked = totalCount > 0 && selectedCount === totalCount;
+            control.indeterminate = selectedCount > 0 && selectedCount < totalCount;
+        });
     }
 
     function updateRemoveConfirmText() {
@@ -607,7 +650,7 @@
             return;
         }
 
-        if (event.target.id === 'dashboard-favorites-manager-select-all') {
+        if (event.target.id === 'dashboard-favorites-manager-select-all' || event.target.matches('[data-dashboard-favorites-select-all-mobile]')) {
             var favoriteCheckboxes = document.querySelectorAll('.dashboard-favorites-manager-checkbox');
             for (var i = 0; i < favoriteCheckboxes.length; i++) {
                 favoriteCheckboxes[i].checked = event.target.checked;
@@ -735,6 +778,13 @@
             return;
         }
 
+        var overlayDismiss = event.target.closest('[data-dashboard-favorites-overlay-dismiss]');
+        if (overlayDismiss) {
+            event.preventDefault();
+            hideOverlayMessage(overlayDismiss.closest('[data-dashboard-favorites-overlay-message]'));
+            return;
+        }
+
         var moveButton = event.target.closest('[data-dashboard-favorites-move]');
         if (moveButton) {
             event.preventDefault();
@@ -749,6 +799,7 @@
     }, true);
 
     function initDashboardFavoritesManager() {
+        setupOverlayMessages();
         setupOptionsPanelToggle();
         setupFavoritesSortableWhenReady(0);
         updateDashboardPageSearch();
