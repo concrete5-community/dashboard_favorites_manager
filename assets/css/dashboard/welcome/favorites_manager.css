@@ -176,6 +176,14 @@
     width: max-content;
 }
 
+html.dashboard-favorites-manager-options-panel-hidden [data-dashboard-favorites-options-panel] {
+    display: none !important;
+}
+
+html.dashboard-favorites-manager-options-panel-initializing [data-dashboard-favorites-options-panel-control] {
+    visibility: hidden !important;
+}
+
 .dashboard-favorites-manager-tools {
     align-items: stretch;
     display: flex;

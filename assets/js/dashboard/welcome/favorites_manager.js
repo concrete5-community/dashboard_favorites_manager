@@ -64,6 +64,7 @@
     function setOptionsPanelVisible(toggle, panel, isVisible) {
         toggle.checked = isVisible;
         toggle.setAttribute('aria-expanded', isVisible ? 'true' : 'false');
+        document.documentElement.classList.toggle('dashboard-favorites-manager-options-panel-hidden', !isVisible);
 
         if (panel) {
             panel.hidden = !isVisible;
@@ -79,6 +80,7 @@
         }
 
         setOptionsPanelVisible(toggle, panel, getStoredOptionsPanelVisible());
+        document.documentElement.classList.remove('dashboard-favorites-manager-options-panel-initializing');
 
         toggle.addEventListener('change', function () {
             setOptionsPanelVisible(toggle, panel, toggle.checked);

@@ -18,6 +18,22 @@
 /** @var array|null $pendingPackageUpdate */
 ?>
 
+<script>
+try {
+    if (window.localStorage.getItem('dashboardFavoritesManager.optionsPanelVisible') === '0') {
+        document.documentElement.classList.add('dashboard-favorites-manager-options-panel-hidden', 'dashboard-favorites-manager-options-panel-initializing');
+        document.write('<style id="dashboard-favorites-manager-options-panel-early-style">html.dashboard-favorites-manager-options-panel-hidden [data-dashboard-favorites-options-panel]{display:none!important}html.dashboard-favorites-manager-options-panel-initializing [data-dashboard-favorites-options-panel-control]{visibility:hidden!important}</style>');
+        document.addEventListener('DOMContentLoaded', function () {
+            var toggle = document.querySelector('[data-dashboard-favorites-options-panel-toggle]');
+            if (toggle) {
+                toggle.checked = false;
+                toggle.setAttribute('aria-expanded', 'false');
+            }
+        }, {once: true});
+    }
+} catch (e) {}
+</script>
+
 <div class="dashboard-favorites-manager"
     data-dashboard-favorites-order-error="<?php echo h(t('Unable to save favorite order.')); ?>"
     data-dashboard-page-search-empty-text="<?php echo h(t('No dashboard pages found.')); ?>"
@@ -64,7 +80,7 @@
         <input type="hidden" name="toolbar_concrete_version_enabled" value="0">
     </form>
 
-    <div class="form-check form-switch dashboard-favorites-manager-options-panel-control">
+    <div class="form-check form-switch dashboard-favorites-manager-options-panel-control" data-dashboard-favorites-options-panel-control>
         <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-options-panel-toggle" data-dashboard-favorites-options-panel-toggle aria-controls="dashboard-favorites-manager-options-panel" aria-expanded="true" checked>
         <label class="form-check-label" for="dashboard-favorites-manager-options-panel-toggle">
             <strong><?php echo t('Show options panel'); ?></strong>
