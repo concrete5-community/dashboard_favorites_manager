@@ -414,24 +414,40 @@
     opacity: 0.65;
 }
 
-.dashboard-favorites-manager-page-search {
+.dashboard-favorites-manager-favorites-management {
     border: 1px solid #d7dce2;
     border-radius: 4px;
     overflow: hidden;
 }
 
-.dashboard-favorites-manager-page-search-heading {
+.dashboard-favorites-manager-favorites-management-heading {
     background: #f6f7f9;
     border-bottom: 1px solid #d7dce2;
+    color: #000;
     font-weight: 600;
     padding: 0.55rem 0.75rem;
+}
+
+.dashboard-favorites-manager-favorites-management-body {
+    padding: 0.75rem;
+}
+
+.dashboard-favorites-manager-page-search {
+    border-bottom: 1px solid #d7dce2;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+}
+
+.dashboard-favorites-manager-page-search-heading {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
 }
 
 .dashboard-favorites-manager-page-search-control {
     align-items: center;
     display: flex;
     max-width: 50ch;
-    padding: 0.75rem;
 }
 
 .dashboard-favorites-manager-page-search-control .form-control {
@@ -467,7 +483,7 @@
 
 .dashboard-favorites-manager-page-results {
     list-style: none;
-    margin: 0;
+    margin: 0.5rem 0 0;
     max-height: 18rem;
     max-width: 50ch;
     overflow-y: auto;
@@ -560,6 +576,11 @@
 .dashboard-favorites-manager-page-search-empty {
     border-top: 1px solid #edf0f2;
     padding: 0.55rem 0.75rem;
+}
+
+.dashboard-favorites-manager-empty-favorites,
+.dashboard-favorites-manager-favorites-management .dashboard-favorites-manager-table {
+    margin-bottom: 0;
 }
 
 @media (min-width: 1200px) {
