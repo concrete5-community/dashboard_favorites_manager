@@ -13,6 +13,7 @@ use Concrete\Core\Page\Controller\DashboardPageController;
 use Concrete\Core\Page\PageList;
 use Concrete\Core\Permission\Checker;
 use Concrete\Core\User\User;
+use Concrete\Package\DashboardFavoritesManager\Favorites\DashboardFavoriteNormalizer;
 use Concrete\Package\DashboardFavoritesManager\Message\OverlayMessageQueue;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -27,6 +28,7 @@ class FavoritesManager extends DashboardPageController
 
     private $dashboardDirectTargetCache = [];
     private $dashboardParentActionCache = [];
+    private $dashboardFavoriteNormalizer;
 
     public function view()
     {
@@ -313,8 +315,9 @@ class FavoritesManager extends DashboardPageController
 
     private function getDashboardFavoriteLinks()
     {
+        $normalizer = $this->getDashboardFavoriteNormalizer();
         $favorites = [];
-        foreach ($this->flattenFavoriteItems($this->getCurrentUserDashboardFavoriteItems()) as $item) {
+        foreach ($normalizer->flattenItems($this->getCurrentUserDashboardFavoriteItems()) as $item) {
             $pageID = (int) ($item['pageID'] ?? 0);
             $url = (string) ($item['url'] ?? '');
             $name = (string) ($item['name'] ?? '');
@@ -327,11 +330,11 @@ class FavoritesManager extends DashboardPageController
                 $path = '';
                 if ($pageID > 0) {
                     $page = Page::getByID($pageID);
-                    if ($this->isDashboardPage($page)) {
-                        $path = $this->getPagePath($page);
+                    if ($normalizer->isDashboardPage($page)) {
+                        $path = $normalizer->getPagePath($page);
                     }
                 }
-                $urlPath = $this->sanitizeFavoriteUrl($url);
+                $urlPath = $normalizer->sanitizeFavoriteUrl($url);
                 if ($urlPath === null && $path !== '') {
                     $urlPath = $path;
                 }
@@ -341,7 +344,7 @@ class FavoritesManager extends DashboardPageController
                     'pageID' => $pageID,
                     'name' => $name,
                     'path' => $path,
-                    'url' => $urlPath === null ? '' : $this->getDashboardFavoriteUrlFromPath($urlPath),
+                    'url' => $urlPath === null ? '' : $normalizer->getDashboardFavoriteUrlFromPath($urlPath),
                 ];
             }
         }
@@ -351,14 +354,15 @@ class FavoritesManager extends DashboardPageController
 
     private function getDashboardFavoriteExportItems()
     {
+        $normalizer = $this->getDashboardFavoriteNormalizer();
         $favorites = [];
         foreach ($this->getDashboardFavoriteLinks() as $favorite) {
             $pageID = (int) ($favorite['pageID'] ?? 0);
             $path = '';
             if ($pageID > 0) {
                 $page = Page::getByID($pageID);
-                if ($this->isDashboardPage($page)) {
-                    $path = $this->getPagePath($page);
+                if ($normalizer->isDashboardPage($page)) {
+                    $path = $normalizer->getPagePath($page);
                 }
             }
 
@@ -450,12 +454,13 @@ class FavoritesManager extends DashboardPageController
         }
 
         $addedPageIDs[$pageID] = true;
-        $path = $this->getPagePath($page);
+        $normalizer = $this->getDashboardFavoriteNormalizer();
+        $path = $normalizer->getPagePath($page);
         $pages[] = [
             'id' => $pageID,
             'name' => (string) $page->getCollectionName(),
             'path' => $path,
-            'url' => $this->getPageUrl($page),
+            'url' => $normalizer->getDashboardFavoriteUrlFromPath($path),
             'isFavorite' => isset($favoritePageIDs[$pageID]),
         ];
     }
@@ -519,11 +524,12 @@ class FavoritesManager extends DashboardPageController
         }
 
         $items = $this->getCurrentUserDashboardFavoriteItems();
+        $normalizer = $this->getDashboardFavoriteNormalizer();
         $name = (string) $page->getCollectionName();
-        $url = $this->getPageUrl($page);
+        $url = $normalizer->getDashboardFavoriteUrlFromPath($normalizer->getPagePath($page));
         $selectionKey = $this->getFavoriteSelectionKey((int) $pageID, $url, $name);
 
-        foreach ($this->flattenFavoriteItems($items) as $item) {
+        foreach ($normalizer->flattenItems($items) as $item) {
             $existingPageID = (int) ($item['pageID'] ?? 0);
             $existingUrl = (string) ($item['url'] ?? '');
             $existingName = (string) ($item['name'] ?? '');
@@ -562,7 +568,7 @@ class FavoritesManager extends DashboardPageController
         }
 
         $page = Page::getByID((int) $pageID);
-        if (!$this->isDashboardPage($page)) {
+        if (!$this->getDashboardFavoriteNormalizer()->isDashboardPage($page)) {
             return [
                 'success' => false,
                 'message' => t('Invalid dashboard page selected.'),
@@ -610,7 +616,7 @@ class FavoritesManager extends DashboardPageController
         }
 
         $favoritesByKey = [];
-        foreach ($this->flattenFavoriteItems($items) as $item) {
+        foreach ($this->getDashboardFavoriteNormalizer()->flattenItems($items) as $item) {
             $pageID = (int) ($item['pageID'] ?? 0);
             $url = (string) ($item['url'] ?? '');
             $name = (string) ($item['name'] ?? '');
@@ -667,7 +673,7 @@ class FavoritesManager extends DashboardPageController
 
         $ordered = [];
         $currentIndex = null;
-        foreach ($this->flattenFavoriteItems($items) as $item) {
+        foreach ($this->getDashboardFavoriteNormalizer()->flattenItems($items) as $item) {
             $pageID = (int) ($item['pageID'] ?? 0);
             $url = (string) ($item['url'] ?? '');
             $name = (string) ($item['name'] ?? '');
@@ -712,15 +718,16 @@ class FavoritesManager extends DashboardPageController
         $items = $this->getCurrentUserDashboardFavoriteItems();
         $existingPaths = [];
         $existingSelectionKeys = [];
+        $normalizer = $this->getDashboardFavoriteNormalizer();
 
-        foreach ($this->flattenFavoriteItems($items) as $item) {
+        foreach ($normalizer->flattenItems($items) as $item) {
             $pageID = (int) ($item['pageID'] ?? 0);
-            $url = $this->sanitizeFavoriteUrl($item['url'] ?? '') ?? '';
+            $url = $normalizer->sanitizeFavoriteUrl($item['url'] ?? '') ?? '';
             $name = (string) ($item['name'] ?? '');
             if ($pageID > 0) {
                 $page = Page::getByID($pageID);
-                if ($this->isDashboardPage($page)) {
-                    $existingPaths[$this->getPagePath($page)] = true;
+                if ($normalizer->isDashboardPage($page)) {
+                    $existingPaths[$normalizer->getPagePath($page)] = true;
                 }
             }
             $existingSelectionKeys[$this->getFavoriteSelectionKey($pageID, $url, $name)] = true;
@@ -754,8 +761,8 @@ class FavoritesManager extends DashboardPageController
             $path = '';
             if ($pageID > 0) {
                 $page = Page::getByID($pageID);
-                if ($this->isDashboardPage($page)) {
-                    $path = $this->getPagePath($page);
+                if ($normalizer->isDashboardPage($page)) {
+                    $path = $normalizer->getPagePath($page);
                 }
             }
             $selectionKey = $this->getFavoriteSelectionKey($pageID, $url, (string) $item['name']);
@@ -829,6 +836,15 @@ class FavoritesManager extends DashboardPageController
         return new OverlayMessageQueue($this->app->make('session'));
     }
 
+    private function getDashboardFavoriteNormalizer()
+    {
+        if (!$this->dashboardFavoriteNormalizer instanceof DashboardFavoriteNormalizer) {
+            $this->dashboardFavoriteNormalizer = new DashboardFavoriteNormalizer();
+        }
+
+        return $this->dashboardFavoriteNormalizer;
+    }
+
     private function resolveImportedFavoriteItem($favorite)
     {
         if (!is_array($favorite)) {
@@ -842,9 +858,11 @@ class FavoritesManager extends DashboardPageController
         }
 
         if ($this->isSearchableDashboardPage($page) && $this->canViewDashboardPage($page)) {
+            $normalizer = $this->getDashboardFavoriteNormalizer();
+
             return [
                 'name' => (string) $page->getCollectionName(),
-                'url' => $this->getPageUrl($page),
+                'url' => $normalizer->getDashboardFavoriteUrlFromPath($normalizer->getPagePath($page)),
                 'pageID' => (int) $page->getCollectionID(),
                 'isActive' => false,
                 'children' => [],
@@ -859,21 +877,11 @@ class FavoritesManager extends DashboardPageController
         return hash('sha256', (int) $pageID . '|' . (string) $url . '|' . (string) $name);
     }
 
-    private function isDashboardPage($page)
-    {
-        if (!$page instanceof Page || $page->isError()) {
-            return false;
-        }
-
-        $path = $this->getPagePath($page);
-
-        return $path === '/dashboard' || strpos($path, '/dashboard/') === 0;
-    }
-
     private function isSearchableDashboardPage($page)
     {
-        $path = $this->getPagePath($page);
-        if (!$this->isDashboardPage($page) || (int) $page->getCollectionID() <= 0 || $path === '') {
+        $normalizer = $this->getDashboardFavoriteNormalizer();
+        $path = $normalizer->getPagePath($page);
+        if (!$normalizer->isDashboardPage($page) || (int) $page->getCollectionID() <= 0 || $path === '') {
             return false;
         }
 
@@ -899,7 +907,7 @@ class FavoritesManager extends DashboardPageController
         }
 
         $parentPage = Page::getByPath($parentPath);
-        if (!$this->isDashboardPage($parentPage)) {
+        if (!$this->getDashboardFavoriteNormalizer()->isDashboardPage($parentPage)) {
             return true;
         }
 
@@ -938,7 +946,7 @@ class FavoritesManager extends DashboardPageController
 
     private function parentDashboardControllerHandlesSegment(Page $parentPage, $segment)
     {
-        $parentPath = $this->getPagePath($parentPage);
+        $parentPath = $this->getDashboardFavoriteNormalizer()->getPagePath($parentPage);
         $segment = trim((string) $segment);
         if ($parentPath === '' || $segment === '') {
             return false;
@@ -1079,82 +1087,6 @@ class FavoritesManager extends DashboardPageController
         return (string) \URL::to('/dashboard');
     }
 
-    private function getPagePath(Page $page)
-    {
-        return method_exists($page, 'getCollectionPath') ? (string) $page->getCollectionPath() : '';
-    }
-
-    private function getPageUrl(Page $page)
-    {
-        return $this->getDashboardFavoriteUrlFromPath($this->getPagePath($page));
-    }
-
-    private function sanitizeFavoriteUrl($url)
-    {
-        $url = trim((string) $url);
-        if ($url === '' || preg_match('/[\x00-\x1F\x7F]/', $url)) {
-            return null;
-        }
-
-        if (preg_match('/^(?:javascript|data|vbscript):/i', $url)) {
-            return null;
-        }
-
-        $parts = parse_url($url);
-        if ($parts === false) {
-            return null;
-        }
-
-        $path = $this->normalizeDashboardFavoriteUrlPath($url);
-        if ($path !== '/dashboard' && strpos($path, '/dashboard/') !== 0) {
-            return null;
-        }
-
-        return $path;
-    }
-
-    private function normalizeDashboardFavoriteUrlPath($url)
-    {
-        $path = (string) (parse_url((string) $url, PHP_URL_PATH) ?: '');
-        if ($path === '') {
-            return '';
-        }
-
-        $path = $this->stripApplicationBasePath($path);
-
-        if (strpos($path, '/index.php/') === 0) {
-            $path = substr($path, strlen('/index.php'));
-        } elseif ($path === '/index.php') {
-            $path = '/';
-        }
-
-        return $path;
-    }
-
-    private function stripApplicationBasePath($path)
-    {
-        $basePath = defined('DIR_REL') ? (string) DIR_REL : '';
-        if ($basePath === '' || $basePath === '/') {
-            return $path;
-        }
-
-        $basePath = '/' . trim($basePath, '/');
-        if ($path === $basePath) {
-            return '/';
-        }
-
-        if (strpos($path, $basePath . '/') === 0) {
-            return substr($path, strlen($basePath));
-        }
-
-        return $path;
-    }
-
-    private function getDashboardFavoriteUrlFromPath($path)
-    {
-        return (string) \URL::to((string) $path);
-    }
-
     private function getCurrentUserDashboardFavoriteItems()
     {
         $user = new User();
@@ -1179,40 +1111,8 @@ class FavoritesManager extends DashboardPageController
     private function saveCurrentUserDashboardFavorites(array $items)
     {
         $user = new User();
-        $user->saveConfig('DASHBOARD_FAVORITES', json_encode($this->normalizeFavoriteItems($items)));
+        $user->saveConfig('DASHBOARD_FAVORITES', json_encode($this->getDashboardFavoriteNormalizer()->normalizeItems($items)));
         $this->clearFavoritesCache();
-    }
-
-    private function normalizeFavoriteItems(array $items)
-    {
-        $normalized = [];
-        foreach ($items as $item) {
-            if (!is_array($item)) {
-                continue;
-            }
-
-            $item['pageID'] = (int) ($item['pageID'] ?? 0);
-            $path = $this->sanitizeFavoriteUrl($item['url'] ?? '');
-            if ($path === null && $item['pageID'] > 0) {
-                $page = Page::getByID($item['pageID']);
-                if ($this->isDashboardPage($page)) {
-                    $path = $this->getPagePath($page);
-                }
-            }
-            $item['url'] = $path === null ? '' : $this->getDashboardFavoriteUrlFromPath($path);
-            $item['name'] = (string) ($item['name'] ?? '');
-            $item['isActive'] = (bool) ($item['isActive'] ?? false);
-
-            if (!empty($item['children']) && is_array($item['children'])) {
-                $item['children'] = $this->normalizeFavoriteItems($item['children']);
-            } else {
-                $item['children'] = [];
-            }
-
-            $normalized[] = $item;
-        }
-
-        return $normalized;
     }
 
     private function getCurrentUserID()
@@ -1220,23 +1120,6 @@ class FavoritesManager extends DashboardPageController
         $user = new User();
 
         return (int) $user->getUserID();
-    }
-
-    private function flattenFavoriteItems(array $items)
-    {
-        $flattened = [];
-        foreach ($items as $item) {
-            if (!is_array($item)) {
-                continue;
-            }
-
-            $flattened[] = $item;
-            if (!empty($item['children']) && is_array($item['children'])) {
-                $flattened = array_merge($flattened, $this->flattenFavoriteItems($item['children']));
-            }
-        }
-
-        return $flattened;
     }
 
     private function filterFavoriteItems(array $items, array $selected, &$removed)
