@@ -26,7 +26,7 @@ class DashboardFavoriteNormalizer
         return $path;
     }
 
-    public function stripApplicationBasePath($path)
+    private function stripApplicationBasePath($path)
     {
         $basePath = defined('DIR_REL') ? (string) DIR_REL : '';
         if ($basePath === '' || $basePath === '/') {

@@ -94,7 +94,7 @@ class DashboardFavoritesService
         ];
     }
 
-    public function mergeDashboardFavoritesManagerFavorite(array $items, array $favoriteItem)
+    private function mergeDashboardFavoritesManagerFavorite(array $items, array $favoriteItem)
     {
         $found = false;
         $merged = $this->mergeDashboardFavoritesManagerFavoriteItems($items, $favoriteItem, $found);
