@@ -141,6 +141,7 @@ class FavoritesManager extends DashboardPageController
 
         $returnAll = (string) $this->request->query->get('all', '') === '1';
         $query = $this->normalizeSearchText((string) $this->request->query->get('q', ''));
+        $searchBy = (string) $this->request->query->get('search_by', 'name') === 'path' ? 'path' : 'name';
         if (!$returnAll && strlen($query) < 2) {
             return new JsonResponse([
                 'success' => true,
@@ -150,7 +151,7 @@ class FavoritesManager extends DashboardPageController
 
         $pages = [];
         foreach ($this->getDashboardPageTree() as $page) {
-            if (!$returnAll && !str_contains($this->normalizeSearchText((string) $page['name']), $query)) {
+            if (!$returnAll && !str_contains($this->normalizeSearchText((string) $page[$searchBy]), $query)) {
                 continue;
             }
 

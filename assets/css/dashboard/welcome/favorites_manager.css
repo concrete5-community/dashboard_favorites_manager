@@ -469,11 +469,29 @@ html.dashboard-favorites-manager-options-panel-initializing [data-dashboard-favo
 .dashboard-favorites-manager-page-search-control {
     align-items: center;
     display: flex;
+    gap: 0.75rem;
     max-width: 50ch;
+}
+
+.dashboard-favorites-manager-page-search-mode {
+    align-items: center;
+    display: inline-flex;
+    flex: 0 0 auto;
+    gap: 0.6rem;
+}
+
+.dashboard-favorites-manager-page-search-mode-option {
+    align-items: center;
+    color: #495057;
+    display: inline-flex;
+    font-size: 0.8125rem;
+    gap: 0.25rem;
+    margin: 0;
 }
 
 .dashboard-favorites-manager-page-search-control .form-control {
     color: #212529;
+    flex: 1 1 auto;
     font-size: 0.9375rem;
     font-weight: 500;
     padding-right: 2rem;
@@ -492,7 +510,7 @@ html.dashboard-favorites-manager-options-panel-initializing [data-dashboard-favo
     height: 1.75rem;
     justify-content: center;
     line-height: 1;
-    margin-left: -2rem;
+    margin-left: -2.75rem;
     padding: 0;
     width: 1.75rem;
 }

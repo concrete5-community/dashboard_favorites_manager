@@ -122,6 +122,22 @@
     position: relative;
 }
 
+.dashboard-favorites-toolbar-search-mode {
+    align-items: center;
+    display: inline-flex;
+    gap: 0.6rem;
+    margin-bottom: 0.35rem;
+}
+
+.dashboard-favorites-toolbar-search-mode-option {
+    align-items: center;
+    color: #495057;
+    display: inline-flex;
+    font-size: 0.8125rem;
+    gap: 0.25rem;
+    margin: 0;
+}
+
 .dashboard-favorites-toolbar-search-input {
     border: 1px solid #ced4da;
     border-radius: 3px;

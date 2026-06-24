@@ -774,18 +774,20 @@
     function updateDashboardPageSearch() {
         var input = document.getElementById('dashboard-favorites-manager-page-search');
         var empty = document.querySelector('[data-dashboard-page-search-empty]');
-        var items = document.querySelectorAll('[data-dashboard-page-search-text]');
+        var items = document.querySelectorAll('[data-dashboard-page-search-name]');
         var clearButton = document.querySelector('[data-dashboard-page-search-clear]');
         if (!input || !empty || !items.length) {
             return;
         }
 
         var query = normalizeSearchText(input.value);
+        var modeInput = document.querySelector('[data-dashboard-page-search-mode]:checked');
+        var mode = modeInput && modeInput.value === 'path' ? 'path' : 'name';
         var shown = 0;
 
         for (var i = 0; i < items.length; i++) {
             var item = items[i];
-            var text = item.getAttribute('data-dashboard-page-search-text') || '';
+            var text = item.getAttribute('data-dashboard-page-search-' + mode) || '';
             var matches = query.length > 0 && text.indexOf(query) !== -1;
             item.classList.toggle('is-visible', matches);
             if (matches) {
@@ -976,6 +978,12 @@
 
     document.addEventListener('input', function (event) {
         if (event.target.id === 'dashboard-favorites-manager-page-search') {
+            updateDashboardPageSearch();
+        }
+    });
+
+    document.addEventListener('change', function (event) {
+        if (event.target.matches('[data-dashboard-page-search-mode]')) {
             updateDashboardPageSearch();
         }
     });

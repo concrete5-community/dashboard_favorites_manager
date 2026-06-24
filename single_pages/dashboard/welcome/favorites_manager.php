@@ -282,7 +282,7 @@ try {
         <div class="card-body dashboard-favorites-manager-favorites-management-body" data-dashboard-favorites-table-container data-dashboard-favorites-reorder-url="<?= h($view->action('reorder_favorites')) ?>" data-dashboard-favorites-reorder-token="<?= h($reorderFavoritesToken) ?>">
             <div class="dashboard-favorites-manager-page-search">
                 <div class="dashboard-favorites-manager-page-search-heading">
-                    <?= t('Search dashboard pages. Use the star ★ to add or remove favorites, and the arrow → to open the page.') ?>
+                    <?= t('Use ★ to add or remove favorites, and → to open the page.') ?>
                 </div>
                 <?php if (empty($dashboardPageTree)) { ?>
                     <div class="alert alert-info mb-0">
@@ -290,6 +290,16 @@ try {
                     </div>
                 <?php } else { ?>
                     <div class="dashboard-favorites-manager-page-search-control">
+                        <div class="dashboard-favorites-manager-page-search-mode" role="radiogroup" aria-label="<?= h(t('Search by')) ?>">
+                            <label class="dashboard-favorites-manager-page-search-mode-option">
+                                <input type="radio" name="dashboard_favorites_manager_page_search_mode" value="name" checked data-dashboard-page-search-mode>
+                                <span><?= t('Name') ?></span>
+                            </label>
+                            <label class="dashboard-favorites-manager-page-search-mode-option">
+                                <input type="radio" name="dashboard_favorites_manager_page_search_mode" value="path" data-dashboard-page-search-mode>
+                                <span><?= t('Path') ?></span>
+                            </label>
+                        </div>
                         <input type="text" class="form-control form-control-sm" id="dashboard-favorites-manager-page-search" placeholder="<?= h(t('Search dashboard pages')) ?>" autocomplete="off">
                         <button type="button" class="dashboard-favorites-manager-page-search-clear" title="<?= h(t('Clear search')) ?>" aria-label="<?= h(t('Clear search')) ?>" data-dashboard-page-search-clear hidden>
                             &times;
@@ -298,9 +308,10 @@ try {
                     <ul class="dashboard-favorites-manager-page-results" data-dashboard-page-results>
                         <?php foreach ($dashboardPageTree as $page) {
                             $isFavorite = !empty($page['isFavorite']);
-                            $searchText = strtolower($page['name']);
+                            $searchName = strtolower($page['name']);
+                            $searchPath = strtolower($page['path']);
                             ?>
-                            <li class="dashboard-favorites-manager-page-result<?= $isFavorite ? ' is-favorite' : '' ?>" data-dashboard-page-id="<?= (int) $page['id'] ?>" data-dashboard-page-search-text="<?= h($searchText) ?>">
+                            <li class="dashboard-favorites-manager-page-result<?= $isFavorite ? ' is-favorite' : '' ?>" data-dashboard-page-id="<?= (int) $page['id'] ?>" data-dashboard-page-search-name="<?= h($searchName) ?>" data-dashboard-page-search-path="<?= h($searchPath) ?>">
                                 <form method="post" action="<?= h($view->action('toggle_dashboard_page')) ?>" class="dashboard-favorites-manager-toggle-form">
                                     <input type="hidden" name="ccm_token" value="<?= h($toggleDashboardPageToken) ?>">
                                     <input type="hidden" name="page_id" value="<?= (int) $page['id'] ?>">

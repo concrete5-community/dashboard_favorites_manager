@@ -444,15 +444,16 @@
         return (value || '').toLowerCase().replace(/\s+/g, ' ').trim();
     }
 
-    function filterToolbarSearchPages(pages, query) {
+    function filterToolbarSearchPages(pages, query, mode) {
         var normalizedQuery = normalizeToolbarSearchText(query);
         var matches = [];
+        var searchProperty = mode === 'path' ? 'searchPath' : 'searchName';
         if (normalizedQuery.length < 2) {
             return matches;
         }
 
         for (var i = 0; i < pages.length; i++) {
-            if ((pages[i].searchText || '').indexOf(normalizedQuery) === -1) {
+            if ((pages[i][searchProperty] || '').indexOf(normalizedQuery) === -1) {
                 continue;
             }
 
@@ -501,11 +502,36 @@
         }
 
         var wrapper = createElement('div', 'dashboard-favorites-toolbar-search');
+        var mode = createElement('div', 'dashboard-favorites-toolbar-search-mode');
+        mode.setAttribute('role', 'radiogroup');
+        mode.setAttribute('aria-label', searchConfig.searchByText || 'Search by');
         var control = createElement('div', 'dashboard-favorites-toolbar-search-control');
         var input = createElement('input', 'dashboard-favorites-toolbar-search-input');
         input.type = 'search';
         input.placeholder = searchConfig.placeholder || '';
         input.autocomplete = 'off';
+
+        var modeName = 'dashboard_favorites_toolbar_search_mode_' + Math.random().toString(36).slice(2);
+        var nameModeLabel = createElement('label', 'dashboard-favorites-toolbar-search-mode-option');
+        var nameMode = document.createElement('input');
+        nameMode.type = 'radio';
+        nameMode.name = modeName;
+        nameMode.value = 'name';
+        nameMode.checked = true;
+        nameMode.setAttribute('data-dashboard-favorites-toolbar-search-mode', '1');
+        nameModeLabel.appendChild(nameMode);
+        nameModeLabel.appendChild(createElement('span', '', searchConfig.nameText || 'Name'));
+
+        var pathModeLabel = createElement('label', 'dashboard-favorites-toolbar-search-mode-option');
+        var pathMode = document.createElement('input');
+        pathMode.type = 'radio';
+        pathMode.name = modeName;
+        pathMode.value = 'path';
+        pathMode.setAttribute('data-dashboard-favorites-toolbar-search-mode', '1');
+        pathModeLabel.appendChild(pathMode);
+        pathModeLabel.appendChild(createElement('span', '', searchConfig.pathText || 'Path'));
+        mode.appendChild(nameModeLabel);
+        mode.appendChild(pathModeLabel);
 
         var clearButton = createElement('button', 'dashboard-favorites-toolbar-search-clear', 'x');
         clearButton.type = 'button';
@@ -544,7 +570,8 @@
                     }
 
                     cachedPages = (json.pages || []).map(function (page) {
-                        page.searchText = normalizeToolbarSearchText(page.name || '');
+                        page.searchName = normalizeToolbarSearchText(page.name || '');
+                        page.searchPath = normalizeToolbarSearchText(page.path || '');
 
                         return page;
                     });
@@ -578,6 +605,7 @@
 
         function updateToolbarSearchResults() {
             var query = input.value.replace(/\s+/g, ' ').trim();
+            var selectedMode = pathMode.checked ? 'path' : 'name';
             updateToolbarSearchClear();
             window.clearTimeout(timer);
             if (query.length < 2) {
@@ -593,7 +621,7 @@
                         return;
                     }
 
-                    renderToolbarSearchResults(results, filterToolbarSearchPages(pages, query), menu, config, searchConfig);
+                    renderToolbarSearchResults(results, filterToolbarSearchPages(pages, query, selectedMode), menu, config, searchConfig);
                 }).catch(function (json) {
                     if (currentRequestID === requestID) {
                         renderToolbarSearchStatus(results, getAjaxErrorMessage(json, searchConfig.errorText));
@@ -607,6 +635,8 @@
         });
 
         input.addEventListener('input', updateToolbarSearchResults);
+        nameMode.addEventListener('change', updateToolbarSearchResults);
+        pathMode.addEventListener('change', updateToolbarSearchResults);
 
         input.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') {
@@ -620,6 +650,7 @@
             clearToolbarSearch();
         });
 
+        wrapper.appendChild(mode);
         control.appendChild(input);
         control.appendChild(clearButton);
         wrapper.appendChild(control);
