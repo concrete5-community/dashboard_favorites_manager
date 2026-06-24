@@ -1,13 +1,14 @@
 .dashboard-favorites-overlay-messages {
-    align-items: flex-start;
+    align-items: center;
     display: flex;
     flex-direction: column;
     gap: 0.55rem;
-    left: 1rem;
+    left: 50%;
     max-width: min(26rem, calc(100vw - 2rem));
     pointer-events: none;
     position: fixed;
     top: 4.75rem;
+    transform: translateX(-50%);
     width: max-content;
     z-index: 2000;
 }
@@ -31,6 +32,7 @@
         max-width: none;
         right: 0.75rem;
         top: 4rem;
+        transform: none;
         width: auto;
     }
 
