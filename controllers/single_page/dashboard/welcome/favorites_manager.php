@@ -6,8 +6,6 @@ namespace Concrete\Package\DashboardFavoritesManager\Controller\SinglePage\Dashb
 
 defined('C5_EXECUTE') or die('Access Denied.');
 
-use Concrete\Core\Application\UserInterface\Dashboard\Navigation\FavoritesNavigationCache;
-use Concrete\Core\Application\UserInterface\Dashboard\Navigation\FavoritesNavigationFactory;
 use Concrete\Core\Cache\Command\ClearCacheCommand;
 use Concrete\Core\Package\PackageService;
 use Concrete\Core\Page\Controller\DashboardPageController;
@@ -16,6 +14,7 @@ use Concrete\Core\Page\PageList;
 use Concrete\Core\Permission\Checker;
 use Concrete\Core\User\User;
 use Concrete\Package\DashboardFavoritesManager\Favorites\DashboardFavoriteNormalizer;
+use Concrete\Package\DashboardFavoritesManager\Favorites\DashboardFavoritesService;
 use Concrete\Package\DashboardFavoritesManager\Message\OverlayMessageQueue;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -36,6 +35,8 @@ class FavoritesManager extends DashboardPageController
     private $dashboardParentActionCache = [];
 
     private $dashboardFavoriteNormalizer;
+
+    private $dashboardFavoritesService;
 
     public function view()
     {
@@ -323,41 +324,7 @@ class FavoritesManager extends DashboardPageController
 
     private function getDashboardFavoriteLinks()
     {
-        $normalizer = $this->getDashboardFavoriteNormalizer();
-        $favorites = [];
-        foreach ($normalizer->flattenItems($this->getCurrentUserDashboardFavoriteItems()) as $item) {
-            $pageID = (int) ($item['pageID'] ?? 0);
-            $url = (string) ($item['url'] ?? '');
-            $name = (string) ($item['name'] ?? '');
-            if ($pageID <= 0 && $url === '') {
-                continue;
-            }
-
-            $selectionKey = $this->getFavoriteSelectionKey($pageID, $url, $name);
-            if (!isset($favorites[$selectionKey])) {
-                $path = '';
-                if ($pageID > 0) {
-                    $page = Page::getByID($pageID);
-                    if ($normalizer->isDashboardPage($page)) {
-                        $path = $normalizer->getPagePath($page);
-                    }
-                }
-                $urlPath = $normalizer->sanitizeFavoriteUrl($url);
-                if ($urlPath === null && $path !== '') {
-                    $urlPath = $path;
-                }
-
-                $favorites[$selectionKey] = [
-                    'selectionKey' => $selectionKey,
-                    'pageID' => $pageID,
-                    'name' => $name,
-                    'path' => $path,
-                    'url' => $urlPath === null ? '' : $normalizer->getDashboardFavoriteUrlFromPath($urlPath),
-                ];
-            }
-        }
-
-        return array_values($favorites);
+        return $this->getDashboardFavoritesService()->getManagerFavoriteLinks();
     }
 
     private function getDashboardFavoriteExportItems()
@@ -858,6 +825,19 @@ class FavoritesManager extends DashboardPageController
         return $this->dashboardFavoriteNormalizer;
     }
 
+    private function getDashboardFavoritesService()
+    {
+        if (!$this->dashboardFavoritesService instanceof DashboardFavoritesService) {
+            $this->dashboardFavoritesService = new DashboardFavoritesService(
+                $this->app,
+                '/dashboard/welcome/favorites_manager',
+                $this->getDashboardFavoriteNormalizer()
+            );
+        }
+
+        return $this->dashboardFavoritesService;
+    }
+
     private function resolveImportedFavoriteItem($favorite)
     {
         if (!is_array($favorite)) {
@@ -885,7 +865,7 @@ class FavoritesManager extends DashboardPageController
 
     private function getFavoriteSelectionKey($pageID, $url, $name)
     {
-        return hash('sha256', (int) $pageID . '|' . (string) $url . '|' . (string) $name);
+        return $this->getDashboardFavoritesService()->getFavoriteSelectionKey($pageID, $url, $name);
     }
 
     private function isSearchableDashboardPage($page)
@@ -1100,30 +1080,12 @@ class FavoritesManager extends DashboardPageController
 
     private function getCurrentUserDashboardFavoriteItems()
     {
-        $user = new User();
-        $favorites = $user->config('DASHBOARD_FAVORITES');
-        if ($favorites) {
-            $items = json_decode((string) $favorites, true);
-            if (json_last_error() === JSON_ERROR_NONE && is_array($items)) {
-                return $items;
-            }
-        }
-
-        try {
-            $this->clearFavoritesCache();
-
-            return json_decode(json_encode($this->app->make(FavoritesNavigationFactory::class)->createNavigation()), true) ?: [];
-        } catch (\Throwable $e) {
-            // Fall back to no favorites if Concrete cannot build the navigation.
-            return [];
-        }
+        return $this->getDashboardFavoritesService()->getCurrentUserDashboardFavoriteItems();
     }
 
     private function saveCurrentUserDashboardFavorites(array $items)
     {
-        $user = new User();
-        $user->saveConfig('DASHBOARD_FAVORITES', json_encode($this->getDashboardFavoriteNormalizer()->normalizeItems($items)));
-        $this->clearFavoritesCache();
+        $this->getDashboardFavoritesService()->saveCurrentUserDashboardFavoriteItems($items);
     }
 
     private function getCurrentUserID()
@@ -1184,13 +1146,4 @@ class FavoritesManager extends DashboardPageController
         return $filtered;
     }
 
-    private function clearFavoritesCache()
-    {
-        try {
-            $this->app->make(FavoritesNavigationCache::class)->clear();
-        } catch (\Throwable $e) {
-            // Cache clearing is best-effort after saving favorites.
-            // A failure here should not block the user's requested change.
-        }
-    }
 }

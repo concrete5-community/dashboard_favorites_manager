@@ -19,6 +19,8 @@ class DashboardFavoritesService
 
     private $normalizer;
 
+    private $pageCache = [];
+
     public function __construct($app, $managerPath, DashboardFavoriteNormalizer $normalizer)
     {
         $this->app = $app;
@@ -144,23 +146,21 @@ class DashboardFavoritesService
     {
         $links = [];
         $seenUrls = [];
-        foreach ($this->normalizer->flattenItems($this->getCurrentUserDashboardFavoriteItems()) as $item) {
-            $pageID = (int) ($item['pageID'] ?? 0);
-            $name = trim((string) ($item['name'] ?? ''));
-            $path = $this->normalizer->sanitizeFavoriteUrl((string) ($item['url'] ?? ''));
+        foreach ($this->getResolvedFavoriteItems() as $favorite) {
+            $name = trim($favorite['name']);
+            $path = $favorite['urlPath'];
 
-            if ($pageID > 0) {
-                $page = Page::getByID($pageID);
-                if (!$this->normalizer->isDashboardPage($page) || !$this->canViewPage($page)) {
+            if ($favorite['pageID'] > 0) {
+                if (!$this->normalizer->isDashboardPage($favorite['page']) || !$this->canViewPage($favorite['page'])) {
                     continue;
                 }
 
                 if ($path === null) {
-                    $path = $this->normalizer->getPagePath($page);
+                    $path = $favorite['pagePath'];
                 }
 
                 if ($name === '') {
-                    $name = (string) $page->getCollectionName();
+                    $name = (string) $favorite['page']->getCollectionName();
                 }
             }
 
@@ -179,6 +179,41 @@ class DashboardFavoritesService
         return $links;
     }
 
+    public function getManagerFavoriteLinks()
+    {
+        $links = [];
+        foreach ($this->getResolvedFavoriteItems() as $favorite) {
+            if ($favorite['pageID'] <= 0 && $favorite['url'] === '') {
+                continue;
+            }
+
+            $selectionKey = $this->getFavoriteSelectionKey($favorite['pageID'], $favorite['url'], $favorite['name']);
+            if (isset($links[$selectionKey])) {
+                continue;
+            }
+
+            $urlPath = $favorite['urlPath'];
+            if ($urlPath === null && $favorite['pagePath'] !== '') {
+                $urlPath = $favorite['pagePath'];
+            }
+
+            $links[$selectionKey] = [
+                'selectionKey' => $selectionKey,
+                'pageID' => $favorite['pageID'],
+                'name' => $favorite['name'],
+                'path' => $favorite['pagePath'],
+                'url' => $urlPath === null ? '' : $this->normalizer->getDashboardFavoriteUrlFromPath($urlPath),
+            ];
+        }
+
+        return array_values($links);
+    }
+
+    public function getFavoriteSelectionKey($pageID, $url, $name)
+    {
+        return hash('sha256', (int) $pageID . '|' . (string) $url . '|' . (string) $name);
+    }
+
     public function getCurrentUserDashboardFavoriteItems()
     {
         $user = new User();
@@ -192,6 +227,48 @@ class DashboardFavoritesService
         }
 
         return $this->getDefaultFavoriteItems();
+    }
+
+    public function saveCurrentUserDashboardFavoriteItems(array $items)
+    {
+        $user = new User();
+        $user->saveConfig('DASHBOARD_FAVORITES', json_encode($this->normalizeItems($items)));
+        $this->clearFavoritesCache();
+    }
+
+    private function getResolvedFavoriteItems()
+    {
+        $favorites = [];
+        foreach ($this->normalizer->flattenItems($this->getCurrentUserDashboardFavoriteItems()) as $item) {
+            $pageID = (int) ($item['pageID'] ?? 0);
+            $page = $pageID > 0 ? $this->getPageByID($pageID) : null;
+            $pagePath = $this->normalizer->isDashboardPage($page) ? $this->normalizer->getPagePath($page) : '';
+
+            $favorites[] = [
+                'pageID' => $pageID,
+                'page' => $page,
+                'pagePath' => $pagePath,
+                'name' => (string) ($item['name'] ?? ''),
+                'url' => (string) ($item['url'] ?? ''),
+                'urlPath' => $this->normalizer->sanitizeFavoriteUrl((string) ($item['url'] ?? '')),
+            ];
+        }
+
+        return $favorites;
+    }
+
+    private function getPageByID($pageID)
+    {
+        $pageID = (int) $pageID;
+        if ($pageID <= 0) {
+            return null;
+        }
+
+        if (!array_key_exists($pageID, $this->pageCache)) {
+            $this->pageCache[$pageID] = Page::getByID($pageID);
+        }
+
+        return $this->pageCache[$pageID];
     }
 
     public function clearFavoritesCache()
