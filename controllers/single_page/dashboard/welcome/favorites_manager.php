@@ -443,6 +443,11 @@ class FavoritesManager extends DashboardPageController
         }
 
         usort($pages, static function ($a, $b) {
+            $nameComparison = strnatcasecmp($a['name'], $b['name']);
+            if ($nameComparison !== 0) {
+                return $nameComparison;
+            }
+
             return strnatcasecmp($a['path'], $b['path']);
         });
 

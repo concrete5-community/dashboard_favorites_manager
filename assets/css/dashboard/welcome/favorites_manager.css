@@ -473,6 +473,9 @@ html.dashboard-favorites-manager-options-panel-initializing [data-dashboard-favo
 }
 
 .dashboard-favorites-manager-page-search-control .form-control {
+    color: #212529;
+    font-size: 0.9375rem;
+    font-weight: 500;
     padding-right: 2rem;
     width: 100%;
 }

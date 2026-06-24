@@ -127,7 +127,8 @@
     border-radius: 3px;
     color: #212529;
     display: block;
-    font-size: 0.875rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
     line-height: 1.4;
     padding: 0.35rem 2rem 0.35rem 0.5rem;
     width: 100%;
