@@ -9,7 +9,7 @@
     font-size: 0.8125rem;
     gap: 0.35rem;
     line-height: 1.25;
-    margin-bottom: 0.65rem;
+    margin-bottom: 1.5rem;
     max-width: 100%;
 }
 
@@ -192,6 +192,10 @@
     width: max-content;
 }
 
+html.dashboard-favorites-manager-options-panel-hidden .dashboard-favorites-manager-options-panel-control {
+    margin-bottom: 1.5rem;
+}
+
 html.dashboard-favorites-manager-options-panel-hidden [data-dashboard-favorites-options-panel] {
     display: none !important;
 }
@@ -204,6 +208,7 @@ html.dashboard-favorites-manager-options-panel-initializing [data-dashboard-favo
     align-items: stretch;
     display: flex;
     gap: 0.75rem;
+    margin-bottom: 1.5rem !important;
 }
 
 .dashboard-favorites-manager-toolbar-settings-form {
@@ -443,8 +448,10 @@ html.dashboard-favorites-manager-options-panel-initializing [data-dashboard-favo
 }
 
 .dashboard-favorites-manager-favorites-management-heading {
-    background-color: var(--bs-secondary-bg);
+    background-color: #dee2e6;
+    font-size: 1.05rem;
     font-weight: 600;
+    text-align: center;
 }
 
 .dashboard-favorites-manager-page-search {
