@@ -25,6 +25,9 @@ class FavoritesManager extends DashboardPageController
     private const EXPORT_FORMAT = 'dashboard_favorites_manager';
     private const EXPORT_VERSION = 1;
 
+    private $dashboardDirectTargetCache = [];
+    private $dashboardParentActionCache = [];
+
     public function view()
     {
         $this->requireAsset('dashboard-favorites-manager/dashboard');
@@ -874,11 +877,129 @@ class FavoritesManager extends DashboardPageController
             return false;
         }
 
+        return $this->isDirectDashboardFavoriteTarget($page, $path);
+    }
+
+    private function isDirectDashboardFavoriteTarget(Page $page, $path)
+    {
+        $path = (string) $path;
+        if (isset($this->dashboardDirectTargetCache[$path])) {
+            return $this->dashboardDirectTargetCache[$path];
+        }
+
+        $this->dashboardDirectTargetCache[$path] = true;
+
+        if ($path === '/dashboard' || $this->hasDedicatedDashboardController($page)) {
+            return true;
+        }
+
+        $parentPath = $this->getDashboardParentPath($path);
+        if ($parentPath === '' || $parentPath === $path) {
+            return true;
+        }
+
+        $parentPage = Page::getByPath($parentPath);
+        if (!$this->isDashboardPage($parentPage)) {
+            return true;
+        }
+
+        $segment = basename($path);
+        if ($segment === '') {
+            return true;
+        }
+
+        $this->dashboardDirectTargetCache[$path] = !$this->parentDashboardControllerHandlesSegment($parentPage, $segment);
+
+        return $this->dashboardDirectTargetCache[$path];
+    }
+
+    private function hasDedicatedDashboardController(Page $page)
+    {
         try {
-            return !(bool) $page->getAttribute('exclude_nav');
+            $controller = $page->getPageController();
         } catch (\Throwable $e) {
             return false;
         }
+
+        return is_object($controller) && get_class($controller) !== 'Concrete\Core\Page\Controller\PageController';
+    }
+
+    private function getDashboardParentPath($path)
+    {
+        $path = trim((string) $path);
+        if ($path === '' || $path === '/dashboard') {
+            return '';
+        }
+
+        $parentPath = rtrim(dirname($path), '\\/');
+
+        return $parentPath === '' || $parentPath === '.' ? '' : $parentPath;
+    }
+
+    private function parentDashboardControllerHandlesSegment(Page $parentPage, $segment)
+    {
+        $parentPath = $this->getPagePath($parentPage);
+        $segment = trim((string) $segment);
+        if ($parentPath === '' || $segment === '') {
+            return false;
+        }
+
+        $cacheKey = $parentPath . '|' . $segment;
+        if (isset($this->dashboardParentActionCache[$cacheKey])) {
+            return $this->dashboardParentActionCache[$cacheKey];
+        }
+
+        $this->dashboardParentActionCache[$cacheKey] = false;
+
+        try {
+            $controller = $parentPage->getPageController();
+        } catch (\Throwable $e) {
+            return false;
+        }
+
+        if (!is_object($controller)) {
+            return false;
+        }
+
+        $normalizedSegment = str_replace('-', '_', $segment);
+        $methods = array_unique([
+            $segment,
+            $normalizedSegment,
+            $segment . '_page',
+            $normalizedSegment . '_page',
+        ]);
+
+        foreach ($methods as $method) {
+            if ($this->isPublicDashboardControllerAction($controller, $method)) {
+                $this->dashboardParentActionCache[$cacheKey] = true;
+                break;
+            }
+        }
+
+        return $this->dashboardParentActionCache[$cacheKey];
+    }
+
+    private function isPublicDashboardControllerAction($controller, $method)
+    {
+        try {
+            $reflection = new \ReflectionMethod(get_class($controller), (string) $method);
+        } catch (\ReflectionException $e) {
+            return false;
+        }
+
+        $declaringClass = $reflection->getDeclaringClass()->getName();
+        if (in_array($declaringClass, [
+            'Concrete\Core\Controller\Controller',
+            'Concrete\Core\Controller\AbstractController',
+            'Concrete\Core\Page\Controller\PageController',
+        ], true)) {
+            return false;
+        }
+
+        return $reflection->isPublic()
+            && !$reflection->isConstructor()
+            && strpos((string) $method, 'on_') !== 0
+            && strpos((string) $method, '__') !== 0;
     }
 
     private function canViewDashboardPage(Page $page)
