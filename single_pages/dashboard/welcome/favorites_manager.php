@@ -39,6 +39,23 @@ try {
     data-dashboard-favorites-order-error="<?= h(t('Unable to save favorite order.')) ?>"
     data-dashboard-page-search-empty-text="<?= h(t('No dashboard pages found.')) ?>"
     data-dashboard-favorites-file-large-error="<?= h(t('The selected file is too large.')) ?>"
+    data-dashboard-favorite-toggle-error="<?= h(t('Unable to update dashboard favorite.')) ?>"
+    data-dashboard-favorite-add-text="<?= h(t('Add to favorites')) ?>"
+    data-dashboard-favorite-remove-text="<?= h(t('Remove from favorites')) ?>"
+    data-dashboard-favorite-dismiss-text="<?= h(t('Dismiss message')) ?>"
+    data-dashboard-favorites-empty-text="<?= h(t('The favorites list is empty.')) ?>"
+    data-dashboard-favorites-select-all-text="<?= h(t('Select all')) ?>"
+    data-dashboard-favorites-remove-selected-text="<?= h(t('Remove selected')) ?>"
+    data-dashboard-favorites-confirm-remove-text="<?= h(t('Confirm remove?')) ?>"
+    data-dashboard-favorites-confirm-remove-one="<?= h(t('Confirm remove %s favorite?')) ?>"
+    data-dashboard-favorites-confirm-remove-many="<?= h(t('Confirm remove %s favorites?')) ?>"
+    data-dashboard-favorites-yes-text="<?= h(t('Yes')) ?>"
+    data-dashboard-favorites-no-text="<?= h(t('No')) ?>"
+    data-dashboard-favorites-position-heading="<?= h(t('#')) ?>"
+    data-dashboard-favorites-name-heading="<?= h(t('Name')) ?>"
+    data-dashboard-favorites-path-heading="<?= h(t('Path')) ?>"
+    data-dashboard-favorites-move-up-text="<?= h(t('Move up')) ?>"
+    data-dashboard-favorites-move-down-text="<?= h(t('Move down')) ?>"
 >
     <?php if (!empty($overlayMessages) && is_array($overlayMessages)) { ?>
         <div class="dashboard-favorites-overlay-messages" data-dashboard-favorites-overlay-messages aria-live="polite" aria-atomic="false">
@@ -262,7 +279,7 @@ try {
         <div class="card-header dashboard-favorites-manager-favorites-management-heading">
             <?= t('Favorites Management') ?>
         </div>
-        <div class="card-body dashboard-favorites-manager-favorites-management-body">
+        <div class="card-body dashboard-favorites-manager-favorites-management-body" data-dashboard-favorites-table-container data-dashboard-favorites-reorder-url="<?= h($view->action('reorder_favorites')) ?>" data-dashboard-favorites-reorder-token="<?= h($reorderFavoritesToken) ?>">
             <div class="dashboard-favorites-manager-page-search">
                 <div class="dashboard-favorites-manager-page-search-heading">
                     <?= t('Search dashboard pages. Use the star ★ to add or remove favorites, and the arrow → to open the page.') ?>

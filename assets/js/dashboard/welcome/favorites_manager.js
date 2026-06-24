@@ -14,6 +14,10 @@
             return getJsonErrorMessage(xhr.responseJSON, fallback);
         }
 
+        if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+            return xhr.responseJSON.message;
+        }
+
         if (xhr && xhr.responseText && xhr.responseText.indexOf('<') !== 0) {
             return xhr.responseText;
         }
@@ -34,6 +38,19 @@
         var wrapper = document.querySelector('.dashboard-favorites-manager');
 
         return wrapper ? (wrapper.getAttribute(name) || '') : '';
+    }
+
+    function getFavoritesTableContainer() {
+        return document.querySelector('[data-dashboard-favorites-table-container]');
+    }
+
+    function escapeHtml(value) {
+        return String(value === null || value === undefined ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
     }
 
     function removeOverlayMessage(message) {
@@ -58,6 +75,58 @@
         window.setTimeout(function () {
             removeOverlayMessage(message);
         }, 300);
+    }
+
+    function getOverlayMessagesContainer() {
+        var container = document.querySelector('[data-dashboard-favorites-overlay-messages]');
+        var wrapper = document.querySelector('.dashboard-favorites-manager');
+        if (container || !wrapper) {
+            return container;
+        }
+
+        container = document.createElement('div');
+        container.className = 'dashboard-favorites-overlay-messages';
+        container.setAttribute('data-dashboard-favorites-overlay-messages', '');
+        container.setAttribute('aria-live', 'polite');
+        container.setAttribute('aria-atomic', 'false');
+        wrapper.insertBefore(container, wrapper.firstChild);
+
+        return container;
+    }
+
+    function showOverlayMessage(type, message) {
+        if (!message) {
+            return;
+        }
+
+        var container = getOverlayMessagesContainer();
+        if (!container) {
+            showConcreteError(message);
+            return;
+        }
+
+        var messageClass = {
+            success: 'success',
+            warning: 'warning',
+            error: 'danger',
+            info: 'info'
+        }[type] || 'info';
+        var toast = document.createElement('div');
+        var button = document.createElement('button');
+        toast.className = 'dashboard-favorites-overlay-toast alert alert-' + messageClass + ' alert-dismissible';
+        toast.setAttribute('role', messageClass === 'danger' ? 'alert' : 'status');
+        toast.setAttribute('data-dashboard-favorites-overlay-message', '');
+        button.type = 'button';
+        button.className = 'btn-close';
+        button.setAttribute('aria-label', getManagerText('data-dashboard-favorite-dismiss-text') || 'Dismiss message');
+        button.setAttribute('data-dashboard-favorites-overlay-dismiss', '');
+        toast.appendChild(button);
+        toast.appendChild(document.createTextNode(message));
+        container.appendChild(toast);
+
+        window.setTimeout(function () {
+            hideOverlayMessage(toast);
+        }, 3000);
     }
 
     function setupOverlayMessages() {
@@ -188,6 +257,246 @@
         if (json && json.favorites && typeof window.DashboardFavoritesManagerToolbarUpdate === 'function') {
             window.DashboardFavoritesManagerToolbarUpdate(json.favorites);
         }
+    }
+
+    function getFavoritesReorderUrl() {
+        var container = getFavoritesTableContainer();
+
+        return container ? (container.getAttribute('data-dashboard-favorites-reorder-url') || '') : '';
+    }
+
+    function getFavoritesReorderToken() {
+        var container = getFavoritesTableContainer();
+
+        return container ? (container.getAttribute('data-dashboard-favorites-reorder-token') || '') : '';
+    }
+
+    function destroyFavoritesSortable(body) {
+        if (!body || body.getAttribute('data-dashboard-favorites-sort-ready') !== '1') {
+            return;
+        }
+
+        if (!window.jQuery || !window.jQuery.fn || !window.jQuery.fn.sortable) {
+            return;
+        }
+
+        try {
+            window.jQuery(body).sortable('destroy');
+        } catch (e) {
+            // Re-rendering the table should not fail because sortable was already detached.
+        }
+    }
+
+    function buildFavoriteTableActionsHtml() {
+        return ''
+            + '<div class="dashboard-favorites-manager-table-actions">'
+            + '<label class="dashboard-favorites-manager-mobile-select-all">'
+            + '<input type="checkbox" data-dashboard-favorites-select-all-mobile>'
+            + '<span>' + escapeHtml(getManagerText('data-dashboard-favorites-select-all-text')) + '</span>'
+            + '</label>'
+            + '<button type="button" class="btn btn-danger btn-sm" data-dashboard-favorites-remove disabled aria-disabled="true">'
+            + escapeHtml(getManagerText('data-dashboard-favorites-remove-selected-text'))
+            + '</button>'
+            + '<span class="dashboard-favorites-manager-remove-confirm" data-dashboard-favorites-remove-confirm'
+            + ' data-dashboard-favorites-remove-confirm-one="' + escapeHtml(getManagerText('data-dashboard-favorites-confirm-remove-one')) + '"'
+            + ' data-dashboard-favorites-remove-confirm-many="' + escapeHtml(getManagerText('data-dashboard-favorites-confirm-remove-many')) + '" hidden>'
+            + '<span data-dashboard-favorites-remove-confirm-text>' + escapeHtml(getManagerText('data-dashboard-favorites-confirm-remove-text')) + '</span>'
+            + '<button type="submit" class="btn btn-danger btn-sm" form="dashboard-favorites-manager-form" data-dashboard-favorites-remove-confirm-yes>'
+            + escapeHtml(getManagerText('data-dashboard-favorites-yes-text'))
+            + '</button>'
+            + '<button type="button" class="btn btn-secondary btn-sm dashboard-favorites-manager-remove-cancel" data-dashboard-favorites-remove-confirm-no>'
+            + escapeHtml(getManagerText('data-dashboard-favorites-no-text'))
+            + '</button>'
+            + '</span>'
+            + '</div>';
+    }
+
+    function buildFavoriteRowHtml(favorite, position) {
+        var selectionKey = favorite && favorite.selectionKey ? String(favorite.selectionKey) : '';
+        var name = favorite && favorite.name ? String(favorite.name) : '';
+        var path = favorite && favorite.path ? String(favorite.path) : '';
+        var url = favorite && favorite.url ? String(favorite.url) : '';
+        var displayPath = path || url;
+        var moveUpText = getManagerText('data-dashboard-favorites-move-up-text');
+        var moveDownText = getManagerText('data-dashboard-favorites-move-down-text');
+        var pathCell = url
+            ? '<a href="' + escapeHtml(url) + '" class="dashboard-favorites-manager-path-link">' + escapeHtml(displayPath) + '</a>'
+            : escapeHtml(displayPath);
+
+        return ''
+            + '<tr data-favorite-key="' + escapeHtml(selectionKey) + '">'
+            + '<td>'
+            + '<input type="checkbox" name="selected_favorites[]" value="' + escapeHtml(selectionKey) + '" class="dashboard-favorites-manager-checkbox" form="dashboard-favorites-manager-form">'
+            + '</td>'
+            + '<td class="dashboard-favorites-manager-position-cell" data-dashboard-favorites-position>' + position + '</td>'
+            + '<td class="dashboard-favorites-manager-sort-cell">'
+            + '<i class="fas fa-arrows-alt-v dashboard-favorites-manager-sort-handle" aria-hidden="true"></i>'
+            + '<span class="dashboard-favorites-manager-move-buttons">'
+            + '<button type="button" class="dashboard-favorites-manager-move-button" data-dashboard-favorites-move="up" title="' + escapeHtml(moveUpText) + '" aria-label="' + escapeHtml(moveUpText) + '">'
+            + '<i class="fas fa-chevron-up" aria-hidden="true"></i>'
+            + '</button>'
+            + '<button type="button" class="dashboard-favorites-manager-move-button" data-dashboard-favorites-move="down" title="' + escapeHtml(moveDownText) + '" aria-label="' + escapeHtml(moveDownText) + '">'
+            + '<i class="fas fa-chevron-down" aria-hidden="true"></i>'
+            + '</button>'
+            + '</span>'
+            + '</td>'
+            + '<td class="dashboard-favorites-manager-name-cell">' + escapeHtml(name) + '</td>'
+            + '<td class="dashboard-favorites-manager-path-cell">' + pathCell + '</td>'
+            + '</tr>';
+    }
+
+    function buildFavoritesTableHtml(favorites) {
+        var rows = '';
+        for (var i = 0; i < favorites.length; i++) {
+            rows += buildFavoriteRowHtml(favorites[i], i + 1);
+        }
+
+        return buildFavoriteTableActionsHtml()
+            + '<table class="table table-sm table-striped table-hover dashboard-favorites-manager-table">'
+            + '<colgroup>'
+            + '<col class="dashboard-favorites-manager-select-column">'
+            + '<col class="dashboard-favorites-manager-position-column">'
+            + '<col class="dashboard-favorites-manager-sort-column">'
+            + '<col class="dashboard-favorites-manager-name-column">'
+            + '<col class="dashboard-favorites-manager-path-column">'
+            + '</colgroup>'
+            + '<thead>'
+            + '<tr>'
+            + '<th><input type="checkbox" id="dashboard-favorites-manager-select-all"></th>'
+            + '<th class="dashboard-favorites-manager-position-cell">' + escapeHtml(getManagerText('data-dashboard-favorites-position-heading')) + '</th>'
+            + '<th></th>'
+            + '<th class="dashboard-favorites-manager-name-cell">' + escapeHtml(getManagerText('data-dashboard-favorites-name-heading')) + '</th>'
+            + '<th>' + escapeHtml(getManagerText('data-dashboard-favorites-path-heading')) + '</th>'
+            + '</tr>'
+            + '</thead>'
+            + '<tbody data-dashboard-favorites-sort-url="' + escapeHtml(getFavoritesReorderUrl()) + '" data-dashboard-favorites-sort-token="' + escapeHtml(getFavoritesReorderToken()) + '">'
+            + rows
+            + '</tbody>'
+            + '</table>';
+    }
+
+    function renderFavoritesTable(favorites) {
+        var container = getFavoritesTableContainer();
+        if (!container) {
+            return;
+        }
+
+        favorites = Array.isArray(favorites) ? favorites : [];
+        destroyFavoritesSortable(container.querySelector('tbody[data-dashboard-favorites-sort-url]'));
+
+        var existing = container.querySelectorAll('.dashboard-favorites-manager-empty-favorites, .dashboard-favorites-manager-table-actions, .dashboard-favorites-manager-table');
+        Array.prototype.forEach.call(existing, function (element) {
+            if (element.parentNode) {
+                element.parentNode.removeChild(element);
+            }
+        });
+
+        if (!favorites.length) {
+            container.insertAdjacentHTML(
+                'beforeend',
+                '<div class="alert alert-info dashboard-favorites-manager-empty-favorites">'
+                    + escapeHtml(getManagerText('data-dashboard-favorites-empty-text'))
+                    + '</div>'
+            );
+        } else {
+            container.insertAdjacentHTML('beforeend', buildFavoritesTableHtml(favorites));
+        }
+
+        updateRemoveState();
+        setupFavoritesSortableWhenReady(0);
+        syncFavoritesMoveMode();
+        updateMoveButtonState();
+    }
+
+    function setDashboardPageResultFavoriteState(item, isFavorite) {
+        var form = item.querySelector('.dashboard-favorites-manager-toggle-form');
+        var toggleValue = form ? form.querySelector('[data-dashboard-page-toggle-value]') : null;
+        var button = form ? form.querySelector('[data-dashboard-page-toggle]') : null;
+        var icon = button ? button.querySelector('i') : null;
+        var hiddenText = button ? button.querySelector('.visually-hidden') : null;
+        var label = getManagerText(isFavorite ? 'data-dashboard-favorite-remove-text' : 'data-dashboard-favorite-add-text');
+
+        item.classList.toggle('is-favorite', isFavorite);
+        if (toggleValue) {
+            toggleValue.value = isFavorite ? '0' : '1';
+        }
+        if (button) {
+            button.setAttribute('aria-pressed', isFavorite ? 'true' : 'false');
+            button.setAttribute('title', label);
+        }
+        if (icon) {
+            icon.classList.toggle('fas', isFavorite);
+            icon.classList.toggle('far', !isFavorite);
+        }
+        if (hiddenText) {
+            hiddenText.textContent = label;
+        }
+    }
+
+    function updateDashboardPageFavoriteState(pageID, isFavorite) {
+        pageID = parseInt(pageID, 10);
+        if (!pageID) {
+            return;
+        }
+
+        var items = document.querySelectorAll('[data-dashboard-page-id="' + pageID + '"]');
+        Array.prototype.forEach.call(items, function (item) {
+            setDashboardPageResultFavoriteState(item, isFavorite);
+        });
+    }
+
+    function setDashboardPageToggleBusy(form, isBusy) {
+        var button = form ? form.querySelector('[data-dashboard-page-toggle]') : null;
+        if (button) {
+            button.disabled = isBusy;
+            button.setAttribute('aria-disabled', isBusy ? 'true' : 'false');
+        }
+        if (form) {
+            form.classList.toggle('is-saving', isBusy);
+        }
+    }
+
+    function submitDashboardPageToggle(form) {
+        var data = new FormData(form);
+        var button = form.querySelector('[data-dashboard-page-toggle]');
+        setDashboardPageToggleBusy(form, true);
+
+        window.jQuery.ajax({
+            contentType: false,
+            data: data,
+            dataType: 'json',
+            processData: false,
+            type: 'POST',
+            url: form.getAttribute('action'),
+            success: function (json) {
+                if (!json || !json.success) {
+                    showOverlayMessage('warning', json && json.message ? json.message : getManagerText('data-dashboard-favorite-toggle-error'));
+                    return;
+                }
+
+                updateToolbarFavorites(json);
+                updateDashboardPageFavoriteState(json.pageID, !!json.favorite);
+                renderFavoritesTable(json.favorites || []);
+                showOverlayMessage('success', json.message);
+            },
+            error: function (xhr) {
+                var json = xhr && xhr.responseJSON ? xhr.responseJSON : null;
+                if (json && json.pageID) {
+                    updateDashboardPageFavoriteState(json.pageID, !!json.favorite);
+                }
+                if (json && json.favorites) {
+                    updateToolbarFavorites(json);
+                    renderFavoritesTable(json.favorites);
+                }
+                showOverlayMessage('error', getAjaxErrorMessage(xhr, getManagerText('data-dashboard-favorite-toggle-error')));
+            },
+            complete: function () {
+                setDashboardPageToggleBusy(form, false);
+                if (button) {
+                    button.focus();
+                }
+            }
+        });
     }
 
     function postFavoriteRequest(body, data, onSuccess, onError) {
@@ -669,6 +978,20 @@
         if (event.target.id === 'dashboard-favorites-manager-page-search') {
             updateDashboardPageSearch();
         }
+    });
+
+    document.addEventListener('submit', function (event) {
+        var form = event.target && event.target.matches('.dashboard-favorites-manager-toggle-form') ? event.target : null;
+        if (!form) {
+            return;
+        }
+
+        if (!window.jQuery || !window.FormData) {
+            return;
+        }
+
+        event.preventDefault();
+        submitDashboardPageToggle(form);
     });
 
     function isCoreDashboardFavoriteControl(target) {
