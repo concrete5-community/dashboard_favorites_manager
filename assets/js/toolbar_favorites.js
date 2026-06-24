@@ -233,11 +233,54 @@
         });
     }
 
+    function getFavoriteDisplayPath(favorite) {
+        var path = favorite && favorite.path ? String(favorite.path) : '';
+        if (!path && favorite && favorite.url) {
+            path = String(favorite.url);
+        }
+
+        try {
+            path = new URL(path, window.location.href).pathname || path;
+        } catch (e) {
+            // Keep the original string when URL parsing is not possible.
+        }
+
+        path = path.replace(/\/index\.php(?=\/|$)/, '').trim();
+
+        return path;
+    }
+
+    function getFavoriteNameCounts(favorites) {
+        var counts = {};
+        for (var i = 0; i < favorites.length; i++) {
+            var name = favorites[i] && favorites[i].name ? String(favorites[i].name) : '';
+            if (name) {
+                counts[name] = (counts[name] || 0) + 1;
+            }
+        }
+
+        return counts;
+    }
+
+    function renderFavoriteMenuLink(link, favorite, nameCounts) {
+        var name = favorite.name || favorite.url || '';
+        var displayPath = getFavoriteDisplayPath(favorite);
+        if (!name || !displayPath || nameCounts[name] <= 1) {
+            link.textContent = name;
+            return;
+        }
+
+        link.classList.add('dashboard-favorites-toolbar-link-has-path');
+        link.appendChild(createElement('span', 'dashboard-favorites-toolbar-link-name', name));
+        link.appendChild(createElement('span', 'dashboard-favorites-toolbar-link-path', displayPath));
+    }
+
     function renderFavoritesList(container, config) {
         while (container.firstChild) {
             container.removeChild(container.firstChild);
         }
         var favorites = config.favorites || [];
+        var nameCounts = getFavoriteNameCounts(favorites);
         if (!favorites.length) {
             container.appendChild(createElement('div', 'dashboard-favorites-toolbar-empty', config.emptyText || ''));
         } else {
@@ -248,8 +291,9 @@
                     continue;
                 }
 
-                var link = createElement('a', 'dashboard-favorites-toolbar-link', favorite.name || favorite.url || '');
+                var link = createElement('a', 'dashboard-favorites-toolbar-link');
                 link.href = favorite.url || '#';
+                renderFavoriteMenuLink(link, favorite, nameCounts);
                 container.appendChild(link);
                 addedFavorites++;
             }
