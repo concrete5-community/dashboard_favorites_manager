@@ -211,7 +211,6 @@ class DashboardFavoritesService
                 return $items;
             }
         }
-
     }
 
     private function getDefaultFavoriteItems()

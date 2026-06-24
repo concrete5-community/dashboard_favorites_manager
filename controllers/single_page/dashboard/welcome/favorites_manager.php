@@ -10,8 +10,8 @@ use Concrete\Core\Application\UserInterface\Dashboard\Navigation\FavoritesNaviga
 use Concrete\Core\Application\UserInterface\Dashboard\Navigation\FavoritesNavigationFactory;
 use Concrete\Core\Cache\Command\ClearCacheCommand;
 use Concrete\Core\Package\PackageService;
-use Concrete\Core\Page\Page;
 use Concrete\Core\Page\Controller\DashboardPageController;
+use Concrete\Core\Page\Page;
 use Concrete\Core\Page\PageList;
 use Concrete\Core\Permission\Checker;
 use Concrete\Core\User\User;
@@ -875,7 +875,6 @@ class FavoritesManager extends DashboardPageController
                 'children' => [],
             ];
         }
-
     }
 
     private function getFavoriteSelectionKey($pageID, $url, $name)
