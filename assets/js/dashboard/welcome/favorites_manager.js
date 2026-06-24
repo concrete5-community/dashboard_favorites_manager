@@ -809,7 +809,9 @@
         syncFavoritesMoveMode();
 
         var pageSearch = document.getElementById('dashboard-favorites-manager-page-search');
-        if (pageSearch) {
+        var importReport = document.querySelector('[data-dashboard-favorites-import-report]');
+        var shouldFocusPageSearch = !importReport || !window.matchMedia || window.matchMedia('(max-width: 767px)').matches;
+        if (pageSearch && shouldFocusPageSearch) {
             pageSearch.focus();
         }
     }
