@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Concrete\Package\DashboardFavoritesManager\Favorites;
 
 defined('C5_EXECUTE') or die('Access Denied.');
@@ -10,10 +12,15 @@ use Concrete\Package\DashboardFavoritesManager\Toolbar\ToolbarSettings;
 class DashboardFavoritesRepairer
 {
     private $app;
+
     private $config;
+
     private $favoritesService;
+
     private $toolbarSettings;
+
     private $repairVersion;
+
     private $repairConfigKey;
 
     public function __construct(

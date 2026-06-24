@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Concrete\Package\DashboardFavoritesManager\Message;
 
 defined('C5_EXECUTE') or die('Access Denied.');

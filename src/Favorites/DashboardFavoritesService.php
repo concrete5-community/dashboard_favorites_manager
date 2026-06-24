@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Concrete\Package\DashboardFavoritesManager\Favorites;
 
 defined('C5_EXECUTE') or die('Access Denied.');
@@ -12,7 +14,9 @@ use Concrete\Core\User\User;
 class DashboardFavoritesService
 {
     private $app;
+
     private $managerPath;
+
     private $normalizer;
 
     public function __construct($app, $managerPath, DashboardFavoriteNormalizer $normalizer)
@@ -208,7 +212,6 @@ class DashboardFavoritesService
             }
         }
 
-        return null;
     }
 
     private function getDefaultFavoriteItems()

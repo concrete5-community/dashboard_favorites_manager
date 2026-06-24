@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Concrete\Package\DashboardFavoritesManager\Controller\SinglePage\Dashboard\Welcome;
 
 defined('C5_EXECUTE') or die('Access Denied.');
@@ -22,12 +24,17 @@ use Symfony\Component\HttpFoundation\Response;
 class FavoritesManager extends DashboardPageController
 {
     private const IMPORT_REPORT_SESSION_KEY = 'dashboard_favorites_manager_import_report';
+
     private const IMPORT_FILE_MAX_BYTES = 65536;
+
     private const EXPORT_FORMAT = 'dashboard_favorites_manager';
+
     private const EXPORT_VERSION = 1;
 
     private $dashboardDirectTargetCache = [];
+
     private $dashboardParentActionCache = [];
+
     private $dashboardFavoriteNormalizer;
 
     public function view()
@@ -143,7 +150,7 @@ class FavoritesManager extends DashboardPageController
 
         $pages = [];
         foreach ($this->getDashboardPageTree() as $page) {
-            if (!$returnAll && strpos($this->normalizeSearchText((string) $page['name']), $query) === false) {
+            if (!$returnAll && !str_contains($this->normalizeSearchText((string) $page['name']), $query)) {
                 continue;
             }
 
@@ -384,17 +391,17 @@ class FavoritesManager extends DashboardPageController
     {
         $availableVersion = (string) $packageController->getPackageVersion();
         if ($availableVersion === '') {
-            return null;
+            return;
         }
 
         $packageEntity = $this->app->make(PackageService::class)->getByHandle($packageController->getPackageHandle());
         if (!$packageEntity || !$packageEntity->isPackageInstalled()) {
-            return null;
+            return;
         }
 
         $installedVersion = (string) $packageEntity->getPackageVersion();
         if ($installedVersion === '' || !version_compare($availableVersion, $installedVersion, '>')) {
-            return null;
+            return;
         }
 
         $permissions = new Checker();
@@ -746,7 +753,7 @@ class FavoritesManager extends DashboardPageController
             $reportedPath = is_array($favorite) ? trim((string) ($favorite['path'] ?? '')) : '';
             $item = $this->resolveImportedFavoriteItem($favorite);
             if ($item === null) {
-                ++$result['skippedInvalid'];
+                $result['skippedInvalid']++;
                 $result['rows'][] = [
                     'name' => $reportedName,
                     'path' => $reportedPath,
@@ -767,7 +774,7 @@ class FavoritesManager extends DashboardPageController
             }
             $selectionKey = $this->getFavoriteSelectionKey($pageID, $url, (string) $item['name']);
             if (($path !== '' && isset($existingPaths[$path])) || isset($existingSelectionKeys[$selectionKey])) {
-                ++$result['skippedExisting'];
+                $result['skippedExisting']++;
                 $result['rows'][] = [
                     'name' => (string) $item['name'],
                     'path' => $path,
@@ -782,7 +789,7 @@ class FavoritesManager extends DashboardPageController
                 $existingPaths[$path] = true;
             }
             $existingSelectionKeys[$selectionKey] = true;
-            ++$result['imported'];
+            $result['imported']++;
             $result['rows'][] = [
                 'name' => (string) $item['name'],
                 'path' => $path,
@@ -817,7 +824,7 @@ class FavoritesManager extends DashboardPageController
 
             return is_array($report) ? $report : null;
         } catch (\Throwable $e) {
-            return null;
+            return;
         }
     }
 
@@ -848,12 +855,12 @@ class FavoritesManager extends DashboardPageController
     private function resolveImportedFavoriteItem($favorite)
     {
         if (!is_array($favorite)) {
-            return null;
+            return;
         }
 
         $page = null;
         $path = trim((string) ($favorite['path'] ?? ''));
-        if ($path !== '' && ($path === '/dashboard' || strpos($path, '/dashboard/') === 0)) {
+        if ($path !== '' && ($path === '/dashboard' || str_starts_with($path, '/dashboard/'))) {
             $page = Page::getByPath($path);
         }
 
@@ -869,7 +876,6 @@ class FavoritesManager extends DashboardPageController
             ];
         }
 
-        return null;
     }
 
     private function getFavoriteSelectionKey($pageID, $url, $name)
@@ -1006,8 +1012,8 @@ class FavoritesManager extends DashboardPageController
 
         return $reflection->isPublic()
             && !$reflection->isConstructor()
-            && strpos((string) $method, 'on_') !== 0
-            && strpos((string) $method, '__') !== 0;
+            && !str_starts_with((string) $method, 'on_')
+            && !str_starts_with((string) $method, '__');
     }
 
     private function canViewDashboardPage(Page $page)
@@ -1135,7 +1141,7 @@ class FavoritesManager extends DashboardPageController
             $url = (string) ($item['url'] ?? '');
             $name = (string) ($item['name'] ?? '');
             if (isset($selected[$this->getFavoriteSelectionKey($pageID, $url, $name)])) {
-                ++$removed;
+                $removed++;
                 continue;
             }
 
@@ -1159,7 +1165,7 @@ class FavoritesManager extends DashboardPageController
             }
 
             if ((int) ($item['pageID'] ?? 0) === (int) $pageID) {
-                ++$removed;
+                $removed++;
                 continue;
             }
 

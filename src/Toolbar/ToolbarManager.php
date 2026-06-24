@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Concrete\Package\DashboardFavoritesManager\Toolbar;
 
 defined('C5_EXECUTE') or die('Access Denied.');
@@ -16,8 +18,11 @@ use Concrete\Package\DashboardFavoritesManager\Message\OverlayMessageQueue;
 class ToolbarManager
 {
     private $app;
+
     private $settings;
+
     private $favoritesService;
+
     private $managerPath;
 
     public function __construct(

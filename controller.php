@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Concrete\Package\DashboardFavoritesManager;
 
 defined('C5_EXECUTE') or die('Access Denied.');
@@ -17,12 +19,17 @@ use Concrete\Package\DashboardFavoritesManager\Toolbar\ToolbarSettings;
 class Controller extends Package
 {
     private const MANAGER_PATH = '/dashboard/welcome/favorites_manager';
+
     private const DASHBOARD_FAVORITES_REPAIR_VERSION = '2';
+
     private const CONFIG_DASHBOARD_FAVORITES_REPAIR_VERSION = 'repair.dashboard_favorites.version';
+
     private const SESSION_FAVORITES_CACHE_USER_ID = 'dashboard_favorites_manager.favorites_cache_user_id';
 
     protected $pkgHandle = 'dashboard_favorites_manager';
+
     protected $appVersionRequired = '9.2.0';
+
     protected $pkgVersion = '1.2.0-rc3';
 
     public function getPackageName()

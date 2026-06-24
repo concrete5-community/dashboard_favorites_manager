@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Concrete\Package\DashboardFavoritesManager\Favorites;
 
 defined('C5_EXECUTE') or die('Access Denied.');
@@ -17,7 +19,7 @@ class DashboardFavoriteNormalizer
 
         $path = $this->stripApplicationBasePath($path);
 
-        if (strpos($path, '/index.php/') === 0) {
+        if (str_starts_with($path, '/index.php/')) {
             $path = substr($path, strlen('/index.php'));
         } elseif ($path === '/index.php') {
             $path = '/';
@@ -38,7 +40,7 @@ class DashboardFavoriteNormalizer
             return '/';
         }
 
-        if (strpos($path, $basePath . '/') === 0) {
+        if (str_starts_with($path, $basePath . '/')) {
             return substr($path, strlen($basePath));
         }
 
@@ -49,21 +51,21 @@ class DashboardFavoriteNormalizer
     {
         $url = trim((string) $url);
         if ($url === '' || preg_match('/[\x00-\x1F\x7F]/', $url)) {
-            return null;
+            return;
         }
 
         if (preg_match('/^(?:javascript|data|vbscript):/i', $url)) {
-            return null;
+            return;
         }
 
         $parts = parse_url($url);
         if ($parts === false) {
-            return null;
+            return;
         }
 
         $path = $this->normalizeUrlPath($url);
-        if ($path !== '/dashboard' && strpos($path, '/dashboard/') !== 0) {
-            return null;
+        if ($path !== '/dashboard' && !str_starts_with($path, '/dashboard/')) {
+            return;
         }
 
         return $path;
@@ -131,7 +133,7 @@ class DashboardFavoriteNormalizer
 
         $path = $this->getPagePath($page);
 
-        return $path === '/dashboard' || strpos($path, '/dashboard/') === 0;
+        return $path === '/dashboard' || str_starts_with($path, '/dashboard/');
     }
 
     public function getPagePath(Page $page)
