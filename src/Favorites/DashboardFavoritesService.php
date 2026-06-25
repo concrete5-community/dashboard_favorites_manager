@@ -261,7 +261,7 @@ class DashboardFavoritesService
     {
         $pageID = (int) $pageID;
         if ($pageID <= 0) {
-            return null;
+            return;
         }
 
         if (!array_key_exists($pageID, $this->pageCache)) {

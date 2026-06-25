@@ -1165,5 +1165,4 @@ class FavoritesManager extends DashboardPageController
 
         return $filtered;
     }
-
 }
