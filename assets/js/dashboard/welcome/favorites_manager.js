@@ -270,6 +270,36 @@
         }
     }
 
+    function isFavoritesReorderBusy(body) {
+        return body && body.getAttribute('data-dashboard-favorites-reorder-busy') === '1';
+    }
+
+    function setFavoritesReorderBusy(body, isBusy) {
+        if (!body) {
+            return;
+        }
+
+        if (isBusy) {
+            body.setAttribute('data-dashboard-favorites-reorder-busy', '1');
+        } else {
+            body.removeAttribute('data-dashboard-favorites-reorder-busy');
+        }
+
+        var buttons = body.querySelectorAll('[data-dashboard-favorites-move]');
+        Array.prototype.forEach.call(buttons, function (button) {
+            button.disabled = !!isBusy;
+            button.setAttribute('aria-disabled', isBusy ? 'true' : 'false');
+        });
+
+        if (window.jQuery && window.jQuery.fn && window.jQuery.fn.sortable && body.getAttribute('data-dashboard-favorites-sort-ready') === '1') {
+            try {
+                window.jQuery(body).sortable(isBusy ? 'disable' : 'enable');
+            } catch (e) {
+                // Sortable can already be detached during a table re-render.
+            }
+        }
+    }
+
     function syncToolbarFavorites(favorites) {
         if (Array.isArray(favorites) && typeof window.DashboardFavoritesManagerToolbarUpdate === 'function') {
             window.DashboardFavoritesManagerToolbarUpdate(favorites);
@@ -673,7 +703,7 @@
         var body = document.querySelector('[data-dashboard-favorites-sort-url]');
         var row = button.closest('tr[data-favorite-key]');
         var direction = button.getAttribute('data-dashboard-favorites-move');
-        if (!body || !row || (direction !== 'up' && direction !== 'down')) {
+        if (!body || !row || isFavoritesReorderBusy(body) || (direction !== 'up' && direction !== 'down')) {
             return;
         }
 
@@ -690,10 +720,10 @@
         }
 
         updateFavoritePositions(body);
-        button.disabled = true;
+        setFavoritesReorderBusy(body, true);
         postFavoriteMove(body, row.getAttribute('data-favorite-key'), direction, function () {
             showMovedRow(row);
-            button.disabled = false;
+            setFavoritesReorderBusy(body, false);
             updateMoveButtonState();
             row.querySelector('[data-dashboard-favorites-move="' + direction + '"]').focus();
         }, function () {
@@ -701,7 +731,7 @@
                 body.appendChild(oldRows[i]);
             }
             updateFavoritePositions(body);
-            button.disabled = false;
+            setFavoritesReorderBusy(body, false);
             updateMoveButtonState();
         });
     }
@@ -713,14 +743,27 @@
         }
 
         var rows = getFavoriteRows(body);
+        if (isFavoritesReorderBusy(body)) {
+            for (var busyIndex = 0; busyIndex < rows.length; busyIndex++) {
+                var busyButtons = rows[busyIndex].querySelectorAll('[data-dashboard-favorites-move]');
+                Array.prototype.forEach.call(busyButtons, function (button) {
+                    button.disabled = true;
+                    button.setAttribute('aria-disabled', 'true');
+                });
+            }
+            return;
+        }
+
         for (var i = 0; i < rows.length; i++) {
             var up = rows[i].querySelector('[data-dashboard-favorites-move="up"]');
             var down = rows[i].querySelector('[data-dashboard-favorites-move="down"]');
             if (up) {
                 up.disabled = i === 0;
+                up.setAttribute('aria-disabled', i === 0 ? 'true' : 'false');
             }
             if (down) {
                 down.disabled = i === rows.length - 1;
+                down.setAttribute('aria-disabled', i === rows.length - 1 ? 'true' : 'false');
             }
         }
     }
@@ -810,17 +853,24 @@
                 updateFavoritePositionsDuringSort(body, ui);
             },
             stop: function (event, ui) {
-                $body.sortable('disable');
+                if (isFavoritesReorderBusy(body)) {
+                    $body.sortable('cancel');
+                    return;
+                }
+
+                setFavoritesReorderBusy(body, true);
                 window.jQuery(ui.item).css({left: '', top: '', position: ''});
                 updateFavoritePositions(body);
 
                 postFavoriteOrder(body, getFavoriteKeys(body), function () {
                     showMovedRow(ui.item[0]);
-                    $body.sortable('enable');
+                    setFavoritesReorderBusy(body, false);
+                    updateMoveButtonState();
                 }, function () {
                     $body.sortable('cancel');
                     updateFavoritePositions(body);
-                    $body.sortable('enable');
+                    setFavoritesReorderBusy(body, false);
+                    updateMoveButtonState();
                 });
             }
         });
