@@ -140,7 +140,7 @@ class ToolbarSettings
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_SEARCH_ENABLED, 1);
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_CLEAR_CACHE_ENABLED, 1);
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_LOGOUT_ENABLED, 1);
-        $user->saveConfig(self::USER_CONFIG_TOOLBAR_CONCRETE_VERSION_ENABLED, 0);
+        $user->saveConfig(self::USER_CONFIG_TOOLBAR_CONCRETE_VERSION_ENABLED, 1);
     }
 
     public function clearAllUserSettings($app)
