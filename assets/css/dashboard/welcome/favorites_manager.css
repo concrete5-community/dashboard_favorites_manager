@@ -3,8 +3,8 @@
     --dfm-search-focus-shadow: 0 0 0 0.18rem rgba(13, 110, 253, 0.26);
     --dfm-search-input-color: #212529;
     --dfm-search-input-font-size: 0.9375rem;
-    --dfm-search-mode-color: #495057;
-    --dfm-search-mode-font-size: 0.8125rem;
+    --dfm-search-order-color: #495057;
+    --dfm-search-order-font-size: 0.8125rem;
     --dfm-search-muted-color: #6c757d;
 }
 
@@ -483,18 +483,23 @@ html.dashboard-favorites-manager-options-panel-initializing [data-dashboard-favo
     max-width: 50ch;
 }
 
-.dashboard-favorites-manager-page-search-mode {
+.dashboard-favorites-manager-page-search-order {
     align-items: center;
     display: inline-flex;
     flex: 0 0 auto;
     gap: 0.6rem;
 }
 
-.dashboard-favorites-manager-page-search-mode-option {
+.dashboard-favorites-manager-page-search-order-label {
+    color: var(--dfm-search-order-color);
+    font-size: var(--dfm-search-order-font-size);
+}
+
+.dashboard-favorites-manager-page-search-order-option {
     align-items: center;
-    color: var(--dfm-search-mode-color);
+    color: var(--dfm-search-order-color);
     display: inline-flex;
-    font-size: var(--dfm-search-mode-font-size);
+    font-size: var(--dfm-search-order-font-size);
     gap: 0.25rem;
     margin: 0;
 }
@@ -547,6 +552,18 @@ html.dashboard-favorites-manager-options-panel-initializing [data-dashboard-favo
     overflow-y: auto;
     padding: 0;
     width: 100%;
+}
+
+.dashboard-favorites-manager-page-search-order-row {
+    align-items: center;
+    border-bottom: 1px solid #edf0f2;
+    display: flex;
+    min-height: 2.15rem;
+    padding: 0.35rem 0.75rem;
+}
+
+.dashboard-favorites-manager-page-search-order-row[hidden] {
+    display: none;
 }
 
 .dashboard-favorites-manager-page-result {
@@ -606,6 +623,12 @@ html.dashboard-favorites-manager-options-panel-initializing [data-dashboard-favo
     font-size: 0.78rem;
     line-height: 1.2;
     overflow-wrap: anywhere;
+}
+
+.dashboard-favorites-manager-search-highlight {
+    background: #d9eaff;
+    color: inherit;
+    padding: 0 0.08em;
 }
 
 .dashboard-favorites-manager-page-result-link {

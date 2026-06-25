@@ -138,7 +138,8 @@ class FavoritesManager extends DashboardPageController
 
         $returnAll = (string) $this->request->query->get('all', '') === '1';
         $query = $this->normalizeSearchText((string) $this->request->query->get('q', ''));
-        $searchBy = (string) $this->request->query->get('search_by', 'name') === 'path' ? 'path' : 'name';
+        $orderByParameter = $this->request->query->get('order_by', $this->request->query->get('search_by', 'name'));
+        $orderBy = (string) $orderByParameter === 'path' ? 'path' : 'name';
         if (!$returnAll && strlen($query) < 2) {
             return new JsonResponse([
                 'success' => true,
@@ -148,7 +149,11 @@ class FavoritesManager extends DashboardPageController
 
         $pages = [];
         foreach ($this->getDashboardPageTree() as $page) {
-            if (!$returnAll && !str_contains($this->normalizeSearchText((string) $page[$searchBy]), $query)) {
+            if (
+                !$returnAll
+                && !str_contains($this->normalizeSearchText((string) $page['name']), $query)
+                && !str_contains($this->normalizeSearchText((string) $page['path']), $query)
+            ) {
                 continue;
             }
 
@@ -156,7 +161,7 @@ class FavoritesManager extends DashboardPageController
         }
 
         if (!$returnAll) {
-            $pages = $this->sortDashboardSearchPages($pages, $searchBy);
+            $pages = $this->sortDashboardSearchPages($pages, $orderBy, $query);
             if (count($pages) > 12) {
                 $pages = array_slice($pages, 0, 12);
             }
@@ -430,11 +435,18 @@ class FavoritesManager extends DashboardPageController
         return trim((string) preg_replace('/\s+/', ' ', strtolower((string) $value)));
     }
 
-    private function sortDashboardSearchPages(array $pages, $searchBy)
+    private function sortDashboardSearchPages(array $pages, $orderBy, $query)
     {
-        $primaryKey = (string) $searchBy === 'path' ? 'path' : 'name';
+        $primaryKey = (string) $orderBy === 'path' ? 'path' : 'name';
         $secondaryKey = $primaryKey === 'path' ? 'name' : 'path';
-        usort($pages, static function ($a, $b) use ($primaryKey, $secondaryKey) {
+        $query = $this->normalizeSearchText($query);
+        usort($pages, function ($a, $b) use ($primaryKey, $secondaryKey, $query) {
+            $aMatchesPrimary = $query !== '' && str_contains($this->normalizeSearchText((string) $a[$primaryKey]), $query);
+            $bMatchesPrimary = $query !== '' && str_contains($this->normalizeSearchText((string) $b[$primaryKey]), $query);
+            if ($aMatchesPrimary !== $bMatchesPrimary) {
+                return $aMatchesPrimary ? -1 : 1;
+            }
+
             $primaryComparison = strnatcasecmp((string) $a[$primaryKey], (string) $b[$primaryKey]);
             if ($primaryComparison !== 0) {
                 return $primaryComparison;

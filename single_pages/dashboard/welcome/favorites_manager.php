@@ -309,22 +309,25 @@ if ($initialFavoriteLinksJson === false) {
                     </div>
                 <?php } else { ?>
                     <div class="dashboard-favorites-manager-page-search-control">
-                        <div class="dashboard-favorites-manager-page-search-mode" role="radiogroup" aria-label="<?= h(t('Search by')) ?>">
-                            <label class="dashboard-favorites-manager-page-search-mode-option">
-                                <input type="radio" name="dashboard_favorites_manager_page_search_mode" value="name" checked data-dashboard-page-search-mode>
-                                <span><?= t('name') ?></span>
-                            </label>
-                            <label class="dashboard-favorites-manager-page-search-mode-option">
-                                <input type="radio" name="dashboard_favorites_manager_page_search_mode" value="path" data-dashboard-page-search-mode>
-                                <span><?= t('path') ?></span>
-                            </label>
-                        </div>
-                        <input type="text" class="form-control form-control-sm" id="dashboard-favorites-manager-page-search" placeholder="<?= h(t('Search dashboard pages')) ?>" autocomplete="off">
+                        <input type="text" class="form-control form-control-sm" id="dashboard-favorites-manager-page-search" placeholder="<?= h(t('Search dashboard pages by name or path')) ?>" autocomplete="off">
                         <button type="button" class="dashboard-favorites-manager-page-search-clear" title="<?= h(t('Clear search')) ?>" aria-label="<?= h(t('Clear search')) ?>" data-dashboard-page-search-clear hidden>
                             &times;
                         </button>
                     </div>
                     <ul class="dashboard-favorites-manager-page-results" data-dashboard-page-results>
+                        <li class="dashboard-favorites-manager-page-search-order-row" data-dashboard-page-search-order-row hidden>
+                            <div class="dashboard-favorites-manager-page-search-order" role="radiogroup" aria-label="<?= h(t('Order by')) ?>">
+                                <span class="dashboard-favorites-manager-page-search-order-label"><?= t('order by: ') ?></span>
+                                <label class="dashboard-favorites-manager-page-search-order-option">
+                                    <input type="radio" name="dashboard_favorites_manager_page_search_order" value="name" checked data-dashboard-page-search-order>
+                                    <span><?= t('name') ?></span>
+                                </label>
+                                <label class="dashboard-favorites-manager-page-search-order-option">
+                                    <input type="radio" name="dashboard_favorites_manager_page_search_order" value="path" data-dashboard-page-search-order>
+                                    <span><?= t('path') ?></span>
+                                </label>
+                            </div>
+                        </li>
                         <?php foreach ($dashboardPageTree as $page) {
                             $isFavorite = !empty($page['isFavorite']);
                             $searchName = strtolower($page['name']);

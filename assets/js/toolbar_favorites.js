@@ -443,7 +443,29 @@
         });
     }
 
-    function renderToolbarSearchResult(page, menu, config, searchConfig) {
+    function appendHighlightedToolbarSearchText(element, text, query) {
+        var value = text || '';
+        if (!query) {
+            element.appendChild(document.createTextNode(value));
+            return;
+        }
+
+        var lowerValue = value.toLowerCase();
+        var index = lowerValue.indexOf(query);
+        if (index === -1) {
+            element.appendChild(document.createTextNode(value));
+            return;
+        }
+
+        element.appendChild(document.createTextNode(value.slice(0, index)));
+        var mark = document.createElement('mark');
+        mark.className = 'dashboard-favorites-toolbar-search-highlight';
+        mark.textContent = value.slice(index, index + query.length);
+        element.appendChild(mark);
+        element.appendChild(document.createTextNode(value.slice(index + query.length)));
+    }
+
+    function renderToolbarSearchResult(page, menu, config, searchConfig, query) {
         var item = createElement('div', 'dashboard-favorites-toolbar-search-result');
         item.setAttribute('data-dashboard-favorites-toolbar-search-result', '1');
         item.setAttribute('data-dashboard-favorites-toolbar-search-page-id', page.id || '');
@@ -486,8 +508,12 @@
         });
 
         var main = createElement('div', 'dashboard-favorites-toolbar-search-result-main');
-        main.appendChild(createElement('div', 'dashboard-favorites-toolbar-search-result-name', page.name || ''));
-        main.appendChild(createElement('div', 'dashboard-favorites-toolbar-search-result-path', page.path || ''));
+        var name = createElement('div', 'dashboard-favorites-toolbar-search-result-name');
+        var path = createElement('div', 'dashboard-favorites-toolbar-search-result-path');
+        appendHighlightedToolbarSearchText(name, page.name || '', query);
+        appendHighlightedToolbarSearchText(path, page.path || '', query);
+        main.appendChild(name);
+        main.appendChild(path);
 
         var link = createElement('a', 'dashboard-favorites-toolbar-search-result-link');
         link.href = isSafeUrl(page.url || '') ? page.url : '#';
@@ -509,9 +535,15 @@
         return (value || '').toLowerCase().replace(/\s+/g, ' ').trim();
     }
 
-    function compareToolbarSearchPages(a, b, mode) {
-        var firstProperty = mode === 'path' ? 'searchPath' : 'searchName';
-        var secondProperty = mode === 'path' ? 'searchName' : 'searchPath';
+    function compareToolbarSearchPages(a, b, orderBy, query) {
+        var firstProperty = orderBy === 'path' ? 'searchPath' : 'searchName';
+        var secondProperty = orderBy === 'path' ? 'searchName' : 'searchPath';
+        var aMatchesPrimary = query.length > 0 && (a[firstProperty] || '').indexOf(query) !== -1;
+        var bMatchesPrimary = query.length > 0 && (b[firstProperty] || '').indexOf(query) !== -1;
+        if (aMatchesPrimary !== bMatchesPrimary) {
+            return aMatchesPrimary ? -1 : 1;
+        }
+
         var firstComparison = (a[firstProperty] || '').localeCompare(b[firstProperty] || '', undefined, { numeric: true });
         if (firstComparison !== 0) {
             return firstComparison;
@@ -520,16 +552,18 @@
         return (a[secondProperty] || '').localeCompare(b[secondProperty] || '', undefined, { numeric: true });
     }
 
-    function filterToolbarSearchPages(pages, query, mode) {
+    function filterToolbarSearchPages(pages, query, orderBy) {
         var normalizedQuery = normalizeToolbarSearchText(query);
         var matches = [];
-        var searchProperty = mode === 'path' ? 'searchPath' : 'searchName';
         if (normalizedQuery.length < 2) {
             return matches;
         }
 
         for (var i = 0; i < pages.length; i++) {
-            if ((pages[i][searchProperty] || '').indexOf(normalizedQuery) === -1) {
+            if (
+                (pages[i].searchName || '').indexOf(normalizedQuery) === -1
+                && (pages[i].searchPath || '').indexOf(normalizedQuery) === -1
+            ) {
                 continue;
             }
 
@@ -537,7 +571,7 @@
         }
 
         matches.sort(function (a, b) {
-            return compareToolbarSearchPages(a, b, mode);
+            return compareToolbarSearchPages(a, b, orderBy, normalizedQuery);
         });
 
         return matches.slice(0, 12);
@@ -553,7 +587,7 @@
         results.hidden = !text;
     }
 
-    function renderToolbarSearchResults(results, pages, menu, config, searchConfig) {
+    function renderToolbarSearchResults(results, pages, menu, config, searchConfig, query) {
         while (results.firstChild) {
             results.removeChild(results.firstChild);
         }
@@ -563,20 +597,21 @@
             return;
         }
 
+        results.appendChild(searchConfig.order.element);
         for (var i = 0; i < pages.length; i++) {
-            results.appendChild(renderToolbarSearchResult(pages[i], menu, config, searchConfig));
+            results.appendChild(renderToolbarSearchResult(pages[i], menu, config, searchConfig, query));
         }
         results.hidden = false;
     }
 
-    function createToolbarSearchModeOption(modeName, value, text, checked) {
-        var label = createElement('label', 'dashboard-favorites-toolbar-search-mode-option');
+    function createToolbarSearchOrderOption(orderName, value, text, checked) {
+        var label = createElement('label', 'dashboard-favorites-toolbar-search-order-option');
         var input = document.createElement('input');
         input.type = 'radio';
-        input.name = modeName;
+        input.name = orderName;
         input.value = value;
         input.checked = checked === true;
-        input.setAttribute('data-dashboard-favorites-toolbar-search-mode', '1');
+        input.setAttribute('data-dashboard-favorites-toolbar-search-order', '1');
         label.appendChild(input);
         label.appendChild(createElement('span', '', text));
 
@@ -586,21 +621,22 @@
         };
     }
 
-    function renderToolbarSearchMode(searchConfig) {
-        var mode = createElement('div', 'dashboard-favorites-toolbar-search-mode');
-        var modeName = 'dashboard_favorites_toolbar_search_mode_' + Math.random().toString(36).slice(2);
-        var nameMode = createToolbarSearchModeOption(modeName, 'name', searchConfig.nameText || 'Name', true);
-        var pathMode = createToolbarSearchModeOption(modeName, 'path', searchConfig.pathText || 'Path', false);
+    function renderToolbarSearchOrder(searchConfig) {
+        var order = createElement('div', 'dashboard-favorites-toolbar-search-order');
+        var orderName = 'dashboard_favorites_toolbar_search_order_' + Math.random().toString(36).slice(2);
+        var nameOrder = createToolbarSearchOrderOption(orderName, 'name', searchConfig.nameText || 'Name', true);
+        var pathOrder = createToolbarSearchOrderOption(orderName, 'path', searchConfig.pathText || 'Path', false);
 
-        mode.setAttribute('role', 'radiogroup');
-        mode.setAttribute('aria-label', searchConfig.searchByText || 'Search by');
-        mode.appendChild(nameMode.label);
-        mode.appendChild(pathMode.label);
+        order.setAttribute('role', 'radiogroup');
+        order.setAttribute('aria-label', searchConfig.orderByText || 'Order by');
+        order.appendChild(createElement('span', 'dashboard-favorites-toolbar-search-order-label', searchConfig.orderByLabelText || 'order by: '));
+        order.appendChild(nameOrder.label);
+        order.appendChild(pathOrder.label);
 
         return {
-            element: mode,
-            nameMode: nameMode.input,
-            pathMode: pathMode.input
+            element: order,
+            nameOrder: nameOrder.input,
+            pathOrder: pathOrder.input
         };
     }
 
@@ -632,7 +668,8 @@
         }
 
         var wrapper = createElement('div', 'dashboard-favorites-toolbar-search');
-        var mode = renderToolbarSearchMode(searchConfig);
+        var order = renderToolbarSearchOrder(searchConfig);
+        searchConfig.order = order;
         var control = createElement('div', 'dashboard-favorites-toolbar-search-control');
         var input = createToolbarSearchInput(searchConfig);
         var clearButton = createToolbarSearchClearButton(searchConfig);
@@ -703,7 +740,7 @@
 
         function updateToolbarSearchResults() {
             var query = input.value.replace(/\s+/g, ' ').trim();
-            var selectedMode = mode.pathMode.checked ? 'path' : 'name';
+            var orderBy = order.pathOrder.checked ? 'path' : 'name';
             updateToolbarSearchClear();
             window.clearTimeout(timer);
             if (query.length < 2) {
@@ -719,7 +756,7 @@
                         return;
                     }
 
-                    renderToolbarSearchResults(results, filterToolbarSearchPages(pages, query, selectedMode), menu, config, searchConfig);
+                    renderToolbarSearchResults(results, filterToolbarSearchPages(pages, query, orderBy), menu, config, searchConfig, normalizeToolbarSearchText(query));
                 }).catch(function (json) {
                     if (currentRequestID === requestID) {
                         renderToolbarSearchStatus(results, getAjaxErrorMessage(json, searchConfig.errorText));
@@ -747,8 +784,8 @@
         });
 
         input.addEventListener('input', updateToolbarSearchResults);
-        mode.nameMode.addEventListener('change', updateToolbarSearchResults);
-        mode.pathMode.addEventListener('change', updateToolbarSearchResults);
+        order.nameOrder.addEventListener('change', updateToolbarSearchResults);
+        order.pathOrder.addEventListener('change', updateToolbarSearchResults);
 
         input.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') {
@@ -762,7 +799,6 @@
             clearToolbarSearch();
         });
 
-        wrapper.appendChild(mode.element);
         control.appendChild(input);
         control.appendChild(clearButton);
         wrapper.appendChild(control);
