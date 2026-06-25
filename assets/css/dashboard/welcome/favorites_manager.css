@@ -628,7 +628,7 @@ html.dashboard-favorites-manager-options-panel-initializing [data-dashboard-favo
 .dashboard-favorites-manager-search-highlight {
     background: #d9eaff;
     color: inherit;
-    padding: 0 0.08em;
+    padding: 0;
 }
 
 .dashboard-favorites-manager-page-result-link {

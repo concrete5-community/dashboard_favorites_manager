@@ -288,7 +288,7 @@
 .dashboard-favorites-toolbar-search-highlight {
     background: #d9eaff;
     color: inherit;
-    padding: 0 0.08em;
+    padding: 0;
 }
 
 .dashboard-favorites-toolbar-search-result-link {
