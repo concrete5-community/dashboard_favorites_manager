@@ -160,6 +160,7 @@ class ToolbarManager
 
             return (bool) $permissions->canViewPage();
         } catch (\Throwable $e) {
+            // Permission failures should hide toolbar actions instead of breaking the toolbar.
             return false;
         }
     }

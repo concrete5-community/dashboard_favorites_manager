@@ -817,6 +817,7 @@ class FavoritesManager extends DashboardPageController
 
             return is_array($report) ? $report : null;
         } catch (\Throwable $e) {
+            // Import reports are optional UI feedback; missing session data is harmless.
             return;
         }
     }
@@ -937,6 +938,7 @@ class FavoritesManager extends DashboardPageController
         try {
             $controller = $page->getPageController();
         } catch (\Throwable $e) {
+            // Pages whose controller cannot be built are not safe direct search targets.
             return false;
         }
 
@@ -973,6 +975,7 @@ class FavoritesManager extends DashboardPageController
         try {
             $controller = $parentPage->getPageController();
         } catch (\Throwable $e) {
+            // If the parent controller cannot load, treat the segment as unsupported.
             return false;
         }
 
@@ -1003,6 +1006,7 @@ class FavoritesManager extends DashboardPageController
         try {
             $reflection = new \ReflectionMethod(get_class($controller), (string) $method);
         } catch (\ReflectionException $e) {
+            // Missing methods simply mean the dashboard segment is not a public action.
             return false;
         }
 
@@ -1028,6 +1032,7 @@ class FavoritesManager extends DashboardPageController
 
             return (bool) $permissions->canViewPage();
         } catch (\Throwable $e) {
+            // Permission failures should hide the page from search instead of breaking it.
             return false;
         }
     }
@@ -1064,6 +1069,7 @@ class FavoritesManager extends DashboardPageController
             $logger = $this->app->make('log/factory')->createLogger('operations');
             $logger->notice(t('Dashboard Favorites Manager cleared cache from the toolbar. User ID: %s', $userID));
         } catch (\Throwable $e) {
+            // Logging is optional; never fail the clear-cache action because of it.
         }
     }
 

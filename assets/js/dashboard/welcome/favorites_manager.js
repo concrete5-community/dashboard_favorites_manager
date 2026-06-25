@@ -148,11 +148,11 @@
                 return true;
             }
         } catch (e) {
-            // Storage can be unavailable; keep the panel visible in that case.
-            return true;
+            // Storage can be unavailable; keep the panel closed in that case.
+            return false;
         }
 
-        return true;
+        return false;
     }
 
     function storeOptionsPanelVisible(isVisible) {

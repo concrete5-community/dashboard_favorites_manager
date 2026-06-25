@@ -46,6 +46,7 @@ class OverlayMessageQueue
             $messages = $this->session->get(self::SESSION_KEY, []);
             $this->session->remove(self::SESSION_KEY);
         } catch (\Throwable $e) {
+            // Overlay messages are optional feedback; missing session data is harmless.
             return [];
         }
 

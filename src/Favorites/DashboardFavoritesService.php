@@ -59,6 +59,7 @@ class DashboardFavoritesService
                 ['DASHBOARD_FAVORITES']
             );
         } catch (\Throwable $e) {
+            // Uninstall cleanup is best-effort if user favorites cannot be queried.
             return;
         }
 
@@ -356,6 +357,7 @@ class DashboardFavoritesService
 
             return (bool) $permissions->canViewPage();
         } catch (\Throwable $e) {
+            // Permission failures should hide the page from search instead of breaking it.
             return false;
         }
     }

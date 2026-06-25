@@ -20,8 +20,8 @@
 ?>
 
 <script>
-try {
-    if (window.localStorage.getItem('dashboardFavoritesManager.optionsPanelVisible') === '0') {
+(function () {
+    function hideOptionsPanelEarly() {
         document.documentElement.classList.add('dashboard-favorites-manager-options-panel-hidden', 'dashboard-favorites-manager-options-panel-initializing');
         document.write('<style id="dashboard-favorites-manager-options-panel-early-style">html.dashboard-favorites-manager-options-panel-hidden [data-dashboard-favorites-options-panel]{display:none!important}html.dashboard-favorites-manager-options-panel-initializing [data-dashboard-favorites-options-panel-control]{visibility:hidden!important}</style>');
         document.addEventListener('DOMContentLoaded', function () {
@@ -32,7 +32,16 @@ try {
             }
         }, {once: true});
     }
-} catch (e) {}
+
+    try {
+        if (window.localStorage.getItem('dashboardFavoritesManager.optionsPanelVisible') !== '1') {
+            hideOptionsPanelEarly();
+        }
+    } catch (e) {
+        // Storage can be unavailable; keep the default closed state.
+        hideOptionsPanelEarly();
+    }
+}());
 </script>
 
 <div class="dashboard-favorites-manager"
@@ -122,13 +131,13 @@ try {
     </form>
 
     <div class="form-check form-switch dashboard-favorites-manager-options-panel-control" data-dashboard-favorites-options-panel-control>
-        <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-options-panel-toggle" data-dashboard-favorites-options-panel-toggle aria-controls="dashboard-favorites-manager-options-panel" aria-expanded="true" checked>
+        <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-options-panel-toggle" data-dashboard-favorites-options-panel-toggle aria-controls="dashboard-favorites-manager-options-panel" aria-expanded="false">
         <label class="form-check-label" for="dashboard-favorites-manager-options-panel-toggle">
             <strong><?= t('Show options panel') ?></strong>
         </label>
     </div>
 
-    <div class="dashboard-favorites-manager-tools mb-3" id="dashboard-favorites-manager-options-panel" data-dashboard-favorites-options-panel>
+    <div class="dashboard-favorites-manager-tools mb-3" id="dashboard-favorites-manager-options-panel" data-dashboard-favorites-options-panel hidden>
         <div class="dashboard-favorites-manager-toolbar-toggle">
             <div class="dashboard-favorites-manager-toolbar-options">
                 <div class="dashboard-favorites-manager-options-heading">

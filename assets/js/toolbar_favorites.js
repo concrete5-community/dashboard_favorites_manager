@@ -664,7 +664,9 @@
         }
 
         input.addEventListener('focus', function () {
-            fetchToolbarSearchPages().catch(function () {});
+            fetchToolbarSearchPages().catch(function () {
+                // Search errors are shown when rendering results; focus should stay usable.
+            });
         });
 
         input.addEventListener('input', updateToolbarSearchResults);
