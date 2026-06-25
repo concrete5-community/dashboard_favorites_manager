@@ -17,6 +17,11 @@
 /** @var array|null $importReport */
 /** @var array|null $pendingPackageUpdate */
 /** @var array $overlayMessages */
+
+$initialFavoriteLinksJson = json_encode($favoriteLinks, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+if ($initialFavoriteLinksJson === false) {
+    $initialFavoriteLinksJson = '[]';
+}
 ?>
 
 <script>
@@ -289,7 +294,11 @@
         <div class="card-header dashboard-favorites-manager-favorites-management-heading">
             <?= t('Favorites Management') ?>
         </div>
-        <div class="card-body dashboard-favorites-manager-favorites-management-body" data-dashboard-favorites-table-container data-dashboard-favorites-reorder-url="<?= h($view->action('reorder_favorites')) ?>" data-dashboard-favorites-reorder-token="<?= h($reorderFavoritesToken) ?>">
+        <div class="card-body dashboard-favorites-manager-favorites-management-body"
+            data-dashboard-favorites-table-container
+            data-dashboard-favorites-reorder-url="<?= h($view->action('reorder_favorites')) ?>"
+            data-dashboard-favorites-reorder-token="<?= h($reorderFavoritesToken) ?>"
+            data-dashboard-favorites-initial="<?= h($initialFavoriteLinksJson) ?>">
             <div class="dashboard-favorites-manager-page-search">
                 <div class="dashboard-favorites-manager-page-search-heading">
                     <?= t('Use ★ to add or remove favorites, and → to open the page.') ?>
@@ -344,86 +353,6 @@
                     <div class="dashboard-favorites-manager-page-search-empty text-muted small" data-dashboard-page-search-empty></div>
                 <?php } ?>
             </div>
-
-            <?php if (empty($favoriteLinks)) { ?>
-                <div class="alert alert-info dashboard-favorites-manager-empty-favorites">
-                    <?= t('The favorites list is empty.') ?>
-                </div>
-            <?php } else { ?>
-                <div class="dashboard-favorites-manager-table-actions">
-                    <label class="dashboard-favorites-manager-mobile-select-all">
-                        <input type="checkbox" data-dashboard-favorites-select-all-mobile>
-                        <span><?= t('Select all') ?></span>
-                    </label>
-                    <button type="button" class="btn btn-danger btn-sm" data-dashboard-favorites-remove disabled aria-disabled="true">
-                        <?= t('Remove selected') ?>
-                    </button>
-                    <span class="dashboard-favorites-manager-remove-confirm" data-dashboard-favorites-remove-confirm data-dashboard-favorites-remove-confirm-one="<?= h(t('Confirm remove %s favorite?')) ?>" data-dashboard-favorites-remove-confirm-many="<?= h(t('Confirm remove %s favorites?')) ?>" hidden>
-                        <span data-dashboard-favorites-remove-confirm-text><?= t('Confirm remove?') ?></span>
-                        <button type="submit" class="btn btn-danger btn-sm" form="dashboard-favorites-manager-form" data-dashboard-favorites-remove-confirm-yes>
-                            <?= t('Yes') ?>
-                        </button>
-                        <button type="button" class="btn btn-secondary btn-sm dashboard-favorites-manager-remove-cancel" data-dashboard-favorites-remove-confirm-no>
-                            <?= t('No') ?>
-                        </button>
-                    </span>
-                </div>
-                <table class="table table-sm table-striped table-hover dashboard-favorites-manager-table">
-                    <colgroup>
-                        <col class="dashboard-favorites-manager-select-column">
-                        <col class="dashboard-favorites-manager-position-column">
-                        <col class="dashboard-favorites-manager-sort-column">
-                        <col class="dashboard-favorites-manager-name-column">
-                        <col class="dashboard-favorites-manager-path-column">
-                    </colgroup>
-                    <thead>
-                        <tr>
-                            <th>
-                                <input type="checkbox" id="dashboard-favorites-manager-select-all">
-                            </th>
-                            <th class="dashboard-favorites-manager-position-cell"><?= t('#') ?></th>
-                            <th></th>
-                            <th class="dashboard-favorites-manager-name-cell"><?= t('Name') ?></th>
-                            <th><?= t('Path') ?></th>
-                        </tr>
-                    </thead>
-                    <tbody data-dashboard-favorites-sort-url="<?= h($view->action('reorder_favorites')) ?>" data-dashboard-favorites-sort-token="<?= h($reorderFavoritesToken) ?>">
-                        <?php foreach ($favoriteLinks as $position => $favorite) { ?>
-                            <tr data-favorite-key="<?= h($favorite['selectionKey']) ?>">
-                                <td>
-                                    <input type="checkbox" name="selected_favorites[]" value="<?= h($favorite['selectionKey']) ?>" class="dashboard-favorites-manager-checkbox" form="dashboard-favorites-manager-form">
-                                </td>
-                                <td class="dashboard-favorites-manager-position-cell" data-dashboard-favorites-position><?= $position + 1 ?></td>
-                                <td class="dashboard-favorites-manager-sort-cell">
-                                    <i class="fas fa-arrows-alt-v dashboard-favorites-manager-sort-handle" aria-hidden="true"></i>
-                                    <span class="dashboard-favorites-manager-move-buttons">
-                                        <button type="button" class="dashboard-favorites-manager-move-button" data-dashboard-favorites-move="up" title="<?= h(t('Move up')) ?>" aria-label="<?= h(t('Move up')) ?>">
-                                            <i class="fas fa-chevron-up" aria-hidden="true"></i>
-                                        </button>
-                                        <button type="button" class="dashboard-favorites-manager-move-button" data-dashboard-favorites-move="down" title="<?= h(t('Move down')) ?>" aria-label="<?= h(t('Move down')) ?>">
-                                            <i class="fas fa-chevron-down" aria-hidden="true"></i>
-                                        </button>
-                                    </span>
-                                </td>
-                                <td class="dashboard-favorites-manager-name-cell"><?= h($favorite['name']) ?></td>
-                                <td class="dashboard-favorites-manager-path-cell">
-                                    <?php
-                                    $favoritePath = (string) ($favorite['path'] ?? '');
-                                    $favoriteUrl = (string) ($favorite['url'] ?? '');
-                                    ?>
-                                    <?php if ($favoriteUrl !== '') { ?>
-                                        <a href="<?= h($favoriteUrl) ?>" class="dashboard-favorites-manager-path-link">
-                                            <?= h($favoritePath !== '' ? $favoritePath : $favoriteUrl) ?>
-                                        </a>
-                                    <?php } else { ?>
-                                        <?= h($favoritePath) ?>
-                                    <?php } ?>
-                                </td>
-                            </tr>
-                        <?php } ?>
-                    </tbody>
-                </table>
-            <?php } ?>
         </div>
     </div>
 </div>

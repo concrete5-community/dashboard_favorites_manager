@@ -44,6 +44,23 @@
         return document.querySelector('[data-dashboard-favorites-table-container]');
     }
 
+    function getInitialFavoriteItems() {
+        var container = getFavoritesTableContainer();
+        var raw = container ? (container.getAttribute('data-dashboard-favorites-initial') || '') : '';
+        if (!raw) {
+            return [];
+        }
+
+        try {
+            var parsed = JSON.parse(raw);
+
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+            // Ignore malformed embedded state and start with an empty table.
+            return [];
+        }
+    }
+
     function escapeHtml(value) {
         return String(value === null || value === undefined ? '' : value)
             .replace(/&/g, '&amp;')
@@ -1270,12 +1287,9 @@
     function initDashboardFavoritesManager() {
         setupOverlayMessages();
         setupOptionsPanelToggle();
-        setupFavoritesSortableWhenReady(0);
+        renderFavoritesTable(getInitialFavoriteItems());
         updateDashboardPageSearch();
-        updateRemoveState();
-        updateMoveButtonState();
         setupFavoritesMoveModeSync();
-        syncFavoritesMoveMode();
         window.addEventListener('dashboardFavoritesManager:favoritesChanged', handleToolbarFavoritesChanged);
 
         var pageSearch = document.getElementById('dashboard-favorites-manager-page-search');
