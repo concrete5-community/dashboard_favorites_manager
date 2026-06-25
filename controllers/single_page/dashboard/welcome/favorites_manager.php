@@ -189,7 +189,7 @@ class FavoritesManager extends DashboardPageController
             return $this->handleRemoveFavoritesResponse(false, t('No favorites selected.'));
         }
 
-        $result = $this->removeDashboardFavorites($selected);
+        $result = $this->getDashboardFavoritesService()->removeCurrentUserDashboardFavorites($selected);
         $data = [
             'removed' => (int) $result['removed'],
             'favorites' => $this->getDashboardFavoriteLinks(),
@@ -296,7 +296,7 @@ class FavoritesManager extends DashboardPageController
         $favoriteKey = trim((string) $this->request->request->get('favorite_key', ''));
         $direction = trim((string) $this->request->request->get('direction', ''));
         if ($favoriteKey !== '' || $direction !== '') {
-            $result = $this->moveCurrentUserDashboardFavorite($favoriteKey, $direction);
+            $result = $this->getDashboardFavoritesService()->moveCurrentUserDashboardFavorite($favoriteKey, $direction);
             if (!$result['success']) {
                 return new JsonResponse([
                     'error' => [
@@ -320,7 +320,7 @@ class FavoritesManager extends DashboardPageController
             ], 400);
         }
 
-        $result = $this->reorderCurrentUserDashboardFavorites($favoriteKeys);
+        $result = $this->getDashboardFavoritesService()->reorderCurrentUserDashboardFavorites($favoriteKeys);
         if (!$result['success']) {
             return new JsonResponse([
                 'error' => [
@@ -519,27 +519,6 @@ class FavoritesManager extends DashboardPageController
         return new RedirectResponse((string) \URL::to('/dashboard/welcome/favorites_manager'));
     }
 
-    private function removeDashboardFavorites(array $selectedKeys)
-    {
-        $selected = array_fill_keys($selectedKeys, true);
-        $items = $this->getCurrentUserDashboardFavoriteItems();
-        if ($this->getCurrentUserID() <= 0 || empty($items)) {
-            return [
-                'removed' => 0,
-            ];
-        }
-
-        $removed = 0;
-        $filtered = $this->filterFavoriteItems($items, $selected, $removed);
-        if ($removed > 0) {
-            $this->saveCurrentUserDashboardFavorites($filtered);
-        }
-
-        return [
-            'removed' => $removed,
-        ];
-    }
-
     private function addDashboardPageFavorite($pageID)
     {
         if ($this->getCurrentUserID() <= 0) {
@@ -557,194 +536,12 @@ class FavoritesManager extends DashboardPageController
             ];
         }
 
-        $items = $this->getCurrentUserDashboardFavoriteItems();
-        $normalizer = $this->getDashboardFavoriteNormalizer();
-        $name = (string) $page->getCollectionName();
-        $url = $normalizer->getDashboardFavoriteUrlFromPath($normalizer->getPagePath($page));
-        $selectionKey = $this->getFavoriteSelectionKey((int) $pageID, $url, $name);
-
-        foreach ($normalizer->flattenItems($items) as $item) {
-            $existingPageID = (int) ($item['pageID'] ?? 0);
-            $existingUrl = (string) ($item['url'] ?? '');
-            $existingName = (string) ($item['name'] ?? '');
-            if ($existingPageID === (int) $pageID || $this->getFavoriteSelectionKey($existingPageID, $existingUrl, $existingName) === $selectionKey) {
-                return [
-                    'success' => false,
-                    'message' => t('That dashboard page is already in your favorites.'),
-                ];
-            }
-        }
-
-        $items[] = [
-            'name' => $name,
-            'url' => $url,
-            'pageID' => (int) $pageID,
-            'isActive' => false,
-            'children' => [],
-        ];
-
-        $this->saveCurrentUserDashboardFavorites($items);
-
-        return [
-            'success' => true,
-            'message' => t('Added "%s" to your dashboard favorites.', $name),
-            'name' => $name,
-        ];
+        return $this->getDashboardFavoritesService()->addCurrentUserDashboardPageFavorite($page);
     }
 
     private function removeDashboardPageFavorite($pageID)
     {
-        if ($this->getCurrentUserID() <= 0) {
-            return [
-                'success' => false,
-                'message' => t('You must be logged in to update dashboard favorites.'),
-            ];
-        }
-
-        $page = Page::getByID((int) $pageID);
-        if (!$this->getDashboardFavoriteNormalizer()->isDashboardPage($page)) {
-            return [
-                'success' => false,
-                'message' => t('Invalid dashboard page selected.'),
-            ];
-        }
-
-        $removed = 0;
-        $filtered = $this->filterFavoriteItemsByPageID($this->getCurrentUserDashboardFavoriteItems(), (int) $pageID, $removed);
-        if ($removed <= 0) {
-            return [
-                'success' => false,
-                'message' => t('That dashboard page is not in your favorites.'),
-            ];
-        }
-
-        $this->saveCurrentUserDashboardFavorites($filtered);
-
-        return [
-            'success' => true,
-            'message' => t('Removed "%s" from your dashboard favorites.', (string) $page->getCollectionName()),
-        ];
-    }
-
-    private function reorderCurrentUserDashboardFavorites(array $favoriteKeys)
-    {
-        $items = $this->getCurrentUserDashboardFavoriteItems();
-        if ($this->getCurrentUserID() <= 0 || empty($items)) {
-            return [
-                'success' => false,
-                'message' => t('The favorites list is empty.'),
-            ];
-        }
-
-        $submittedKeys = [];
-        foreach ($favoriteKeys as $favoriteKey) {
-            $favoriteKey = (string) $favoriteKey;
-            if ($favoriteKey === '' || isset($submittedKeys[$favoriteKey])) {
-                return [
-                    'success' => false,
-                    'message' => t('Invalid favorite order.'),
-                ];
-            }
-
-            $submittedKeys[$favoriteKey] = true;
-        }
-
-        $favoritesByKey = [];
-        foreach ($this->getDashboardFavoriteNormalizer()->flattenItems($items) as $item) {
-            $pageID = (int) ($item['pageID'] ?? 0);
-            $url = (string) ($item['url'] ?? '');
-            $name = (string) ($item['name'] ?? '');
-            if ($pageID <= 0 && $url === '') {
-                continue;
-            }
-
-            $favoritesByKey[$this->getFavoriteSelectionKey($pageID, $url, $name)] = $item;
-        }
-
-        $ordered = [];
-        foreach (array_keys($submittedKeys) as $selectionKey) {
-            if (!isset($favoritesByKey[$selectionKey])) {
-                return [
-                    'success' => false,
-                    'message' => t('Invalid favorite order.'),
-                ];
-            }
-
-            $ordered[] = $favoritesByKey[$selectionKey];
-        }
-
-        foreach ($favoritesByKey as $selectionKey => $item) {
-            if (!isset($submittedKeys[$selectionKey])) {
-                $ordered[] = $item;
-            }
-        }
-
-        $this->saveCurrentUserDashboardFavorites($ordered);
-
-        return [
-            'success' => true,
-            'message' => '',
-        ];
-    }
-
-    private function moveCurrentUserDashboardFavorite($favoriteKey, $direction)
-    {
-        $items = $this->getCurrentUserDashboardFavoriteItems();
-        if ($this->getCurrentUserID() <= 0 || empty($items)) {
-            return [
-                'success' => false,
-                'message' => t('The favorites list is empty.'),
-            ];
-        }
-
-        $favoriteKey = (string) $favoriteKey;
-        if ($favoriteKey === '' || !in_array($direction, ['up', 'down'], true)) {
-            return [
-                'success' => false,
-                'message' => t('Invalid favorite order.'),
-            ];
-        }
-
-        $ordered = [];
-        $currentIndex = null;
-        foreach ($this->getDashboardFavoriteNormalizer()->flattenItems($items) as $item) {
-            $pageID = (int) ($item['pageID'] ?? 0);
-            $url = (string) ($item['url'] ?? '');
-            $name = (string) ($item['name'] ?? '');
-            if ($pageID <= 0 && $url === '') {
-                continue;
-            }
-
-            $ordered[] = $item;
-            if ($this->getFavoriteSelectionKey($pageID, $url, $name) === $favoriteKey) {
-                $currentIndex = count($ordered) - 1;
-            }
-        }
-
-        if ($currentIndex === null) {
-            return [
-                'success' => false,
-                'message' => t('Invalid favorite order.'),
-            ];
-        }
-
-        $targetIndex = $direction === 'up' ? $currentIndex - 1 : $currentIndex + 1;
-        if (!isset($ordered[$targetIndex])) {
-            return [
-                'success' => true,
-                'message' => '',
-            ];
-        }
-
-        $current = $ordered[$currentIndex];
-        $ordered[$currentIndex] = $ordered[$targetIndex];
-        $ordered[$targetIndex] = $current;
-        $this->saveCurrentUserDashboardFavorites($ordered);
-
-        return [
-            'success' => true,
-            'message' => '',
-        ];
+        return $this->getDashboardFavoritesService()->removeCurrentUserDashboardPageFavorite($pageID);
     }
 
     private function importDashboardFavorites(array $favorites)
@@ -1153,60 +950,5 @@ class FavoritesManager extends DashboardPageController
         $user = new User();
 
         return (int) $user->getUserID();
-    }
-
-    private function filterFavoriteItems(array $items, array $selected, &$removed)
-    {
-        $filtered = [];
-        foreach ($items as $item) {
-            if (!is_array($item)) {
-                $filtered[] = $item;
-                continue;
-            }
-
-            $pageID = (int) ($item['pageID'] ?? 0);
-            $url = (string) ($item['url'] ?? '');
-            $name = (string) ($item['name'] ?? '');
-            if (isset($selected[$this->getFavoriteSelectionKey($pageID, $url, $name)])) {
-                $removed++;
-                continue;
-            }
-
-            if (!empty($item['children']) && is_array($item['children'])) {
-                $item['children'] = array_values($this->filterFavoriteItems(
-                    $item['children'],
-                    $selected,
-                    $removed
-                ));
-            }
-
-            $filtered[] = $item;
-        }
-
-        return $filtered;
-    }
-
-    private function filterFavoriteItemsByPageID(array $items, $pageID, &$removed)
-    {
-        $filtered = [];
-        foreach ($items as $item) {
-            if (!is_array($item)) {
-                $filtered[] = $item;
-                continue;
-            }
-
-            if ((int) ($item['pageID'] ?? 0) === (int) $pageID) {
-                $removed++;
-                continue;
-            }
-
-            if (!empty($item['children']) && is_array($item['children'])) {
-                $item['children'] = array_values($this->filterFavoriteItemsByPageID($item['children'], $pageID, $removed));
-            }
-
-            $filtered[] = $item;
-        }
-
-        return $filtered;
     }
 }
