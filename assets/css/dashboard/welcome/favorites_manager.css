@@ -498,6 +498,11 @@ html.dashboard-favorites-manager-options-panel-initializing [data-dashboard-favo
     width: 100%;
 }
 
+.dashboard-favorites-manager-page-search-control .form-control:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.22rem rgba(13, 110, 253, 0.26);
+}
+
 .dashboard-favorites-manager-page-search-clear {
     align-items: center;
     background: transparent;

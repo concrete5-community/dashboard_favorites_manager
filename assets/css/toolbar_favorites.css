@@ -155,9 +155,15 @@
     -webkit-appearance: none;
 }
 
+.dashboard-favorites-toolbar-search-input::placeholder {
+    color: #6c757d;
+    font-style: italic;
+    opacity: 0.65;
+}
+
 .dashboard-favorites-toolbar-search-input:focus {
     border-color: #86b7fe;
-    box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.18);
+    box-shadow: 0 0 0 0.22rem rgba(13, 110, 253, 0.26);
     outline: 0;
 }
 

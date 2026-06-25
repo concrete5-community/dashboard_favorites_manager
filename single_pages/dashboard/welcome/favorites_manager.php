@@ -293,11 +293,11 @@ try {
                         <div class="dashboard-favorites-manager-page-search-mode" role="radiogroup" aria-label="<?= h(t('Search by')) ?>">
                             <label class="dashboard-favorites-manager-page-search-mode-option">
                                 <input type="radio" name="dashboard_favorites_manager_page_search_mode" value="name" checked data-dashboard-page-search-mode>
-                                <span><?= t('Name') ?></span>
+                                <span><?= t('name') ?></span>
                             </label>
                             <label class="dashboard-favorites-manager-page-search-mode-option">
                                 <input type="radio" name="dashboard_favorites_manager_page_search_mode" value="path" data-dashboard-page-search-mode>
-                                <span><?= t('Path') ?></span>
+                                <span><?= t('path') ?></span>
                             </label>
                         </div>
                         <input type="text" class="form-control form-control-sm" id="dashboard-favorites-manager-page-search" placeholder="<?= h(t('Search dashboard pages')) ?>" autocomplete="off">
