@@ -250,6 +250,60 @@
         return path;
     }
 
+    function getFavoritePageLookup(favorites) {
+        var lookup = {
+            pageIDs: {},
+            paths: {}
+        };
+
+        for (var i = 0; i < favorites.length; i++) {
+            var favorite = favorites[i] || {};
+            var pageID = parseInt(favorite.pageID, 10);
+            var path = getFavoriteDisplayPath(favorite);
+            if (pageID > 0) {
+                lookup.pageIDs[String(pageID)] = true;
+            }
+            if (path) {
+                lookup.paths[path] = true;
+            }
+        }
+
+        return lookup;
+    }
+
+    function isToolbarSearchPageFavorite(page, lookup) {
+        var pageID = parseInt(page && page.id, 10);
+        if (pageID > 0 && lookup.pageIDs[String(pageID)]) {
+            return true;
+        }
+
+        var path = getFavoriteDisplayPath(page);
+
+        return !!(path && lookup.paths[path]);
+    }
+
+    function isToolbarSearchResultFavorite(item, lookup) {
+        var pageID = parseInt(item.getAttribute('data-dashboard-favorites-toolbar-search-page-id'), 10);
+        if (pageID > 0 && lookup.pageIDs[String(pageID)]) {
+            return true;
+        }
+
+        var path = item.getAttribute('data-dashboard-favorites-toolbar-search-page-path') || '';
+
+        return !!(path && lookup.paths[path]);
+    }
+
+    function updateToolbarSearchResultFavorites(results, favorites, searchConfig) {
+        var lookup = getFavoritePageLookup(favorites || []);
+        var items = results.querySelectorAll('[data-dashboard-favorites-toolbar-search-result]');
+
+        for (var i = 0; i < items.length; i++) {
+            updateToolbarSearchStar(items[i], isToolbarSearchResultFavorite(items[i], lookup), searchConfig);
+        }
+
+        return lookup;
+    }
+
     function getFavoriteNameCounts(favorites) {
         var counts = {};
         for (var i = 0; i < favorites.length; i++) {
@@ -361,11 +415,7 @@
                     page.isFavorite = json.favorite === true;
                 }
                 if (json.favorites) {
-                    config.favorites = json.favorites;
-                    var favoritesList = menu.querySelector('[data-dashboard-favorites-toolbar-list]');
-                    if (favoritesList) {
-                        renderFavoritesList(favoritesList, config);
-                    }
+                    updateToolbarFavorites(json.favorites);
                 }
                 if (typeof window.CustomEvent === 'function') {
                     window.dispatchEvent(new window.CustomEvent('dashboardFavoritesManager:favoritesChanged', {
@@ -388,6 +438,8 @@
     function renderToolbarSearchResult(page, menu, config, searchConfig) {
         var item = createElement('div', 'dashboard-favorites-toolbar-search-result');
         item.setAttribute('data-dashboard-favorites-toolbar-search-result', '1');
+        item.setAttribute('data-dashboard-favorites-toolbar-search-page-id', page.id || '');
+        item.setAttribute('data-dashboard-favorites-toolbar-search-page-path', getFavoriteDisplayPath(page));
 
         var form = createElement('form', 'dashboard-favorites-toolbar-search-toggle-form');
         form.method = 'post';
@@ -668,6 +720,18 @@
             }, 120);
         }
 
+        function refreshToolbarSearchFavorites(favorites) {
+            var lookup = updateToolbarSearchResultFavorites(results, favorites || [], searchConfig);
+
+            if (!cachedPages) {
+                return;
+            }
+
+            for (var i = 0; i < cachedPages.length; i++) {
+                cachedPages[i].isFavorite = isToolbarSearchPageFavorite(cachedPages[i], lookup);
+            }
+        }
+
         input.addEventListener('focus', function () {
             fetchToolbarSearchPages().catch(function () {
                 // Search errors are shown when rendering results; focus should stay usable.
@@ -695,6 +759,7 @@
         control.appendChild(clearButton);
         wrapper.appendChild(control);
         wrapper.appendChild(results);
+        wrapper._dashboardFavoritesRefreshSearchFavorites = refreshToolbarSearchFavorites;
 
         return wrapper;
     }
@@ -806,6 +871,10 @@
         var favoritesList = menu.querySelector('[data-dashboard-favorites-toolbar-list]');
         if (favoritesList) {
             renderFavoritesList(favoritesList, config);
+            var search = menu.querySelector('.dashboard-favorites-toolbar-search');
+            if (search && typeof search._dashboardFavoritesRefreshSearchFavorites === 'function') {
+                search._dashboardFavoritesRefreshSearchFavorites(config.favorites);
+            }
         } else {
             renderMenuItems(menu, config);
         }
