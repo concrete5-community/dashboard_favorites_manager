@@ -253,20 +253,63 @@
         }
     }
 
-    function updateToolbarFavorites(json) {
-        if (json && json.favorites && typeof window.DashboardFavoritesManagerToolbarUpdate === 'function') {
-            window.DashboardFavoritesManagerToolbarUpdate(json.favorites);
+    function syncToolbarFavorites(favorites) {
+        if (Array.isArray(favorites) && typeof window.DashboardFavoritesManagerToolbarUpdate === 'function') {
+            window.DashboardFavoritesManagerToolbarUpdate(favorites);
+        }
+    }
+
+    function getFavoritePageIDLookup(favorites) {
+        var lookup = {};
+        for (var i = 0; i < favorites.length; i++) {
+            var pageID = parseInt(favorites[i] && favorites[i].pageID, 10);
+            if (pageID > 0) {
+                lookup[String(pageID)] = true;
+            }
+        }
+
+        return lookup;
+    }
+
+    function syncDashboardPageFavoriteStates(favorites) {
+        var lookup = getFavoritePageIDLookup(favorites);
+        var items = document.querySelectorAll('[data-dashboard-page-id]');
+        Array.prototype.forEach.call(items, function (item) {
+            var pageID = parseInt(item.getAttribute('data-dashboard-page-id'), 10);
+            if (pageID > 0) {
+                setDashboardPageResultFavoriteState(item, lookup[String(pageID)] === true);
+            }
+        });
+    }
+
+    function setFavoritesState(json, options) {
+        options = options || {};
+        if (!json) {
+            return;
+        }
+
+        if (Array.isArray(json.favorites)) {
+            if (options.toolbar !== false) {
+                syncToolbarFavorites(json.favorites);
+            }
+            if (options.table !== false) {
+                renderFavoritesTable(json.favorites);
+            }
+            if (options.pageSearch !== false) {
+                syncDashboardPageFavoriteStates(json.favorites);
+            }
+            return;
+        }
+
+        if (json.pageID && options.pageSearch !== false) {
+            updateDashboardPageFavoriteState(json.pageID, !!json.favorite);
         }
     }
 
     function handleToolbarFavoritesChanged(event) {
-        var json = event && event.detail ? event.detail : {};
-        if (json.pageID) {
-            updateDashboardPageFavoriteState(json.pageID, !!json.favorite);
-        }
-        if (json.favorites) {
-            renderFavoritesTable(json.favorites);
-        }
+        setFavoritesState(event && event.detail ? event.detail : {}, {
+            toolbar: false
+        });
     }
 
     function getFavoritesReorderUrl() {
@@ -484,20 +527,12 @@
                     return;
                 }
 
-                updateToolbarFavorites(json);
-                updateDashboardPageFavoriteState(json.pageID, !!json.favorite);
-                renderFavoritesTable(json.favorites || []);
+                setFavoritesState(json);
                 showOverlayMessage('success', json.message);
             },
             error: function (xhr) {
                 var json = xhr && xhr.responseJSON ? xhr.responseJSON : null;
-                if (json && json.pageID) {
-                    updateDashboardPageFavoriteState(json.pageID, !!json.favorite);
-                }
-                if (json && json.favorites) {
-                    updateToolbarFavorites(json);
-                    renderFavoritesTable(json.favorites);
-                }
+                setFavoritesState(json);
                 showOverlayMessage('error', getAjaxErrorMessage(xhr, getManagerText('data-dashboard-favorite-toggle-error')));
             },
             complete: function () {
@@ -538,20 +573,13 @@
             success: function (json) {
                 if (!json || !json.success) {
                     if (json && json.favorites) {
-                        updateToolbarFavorites(json);
-                        renderFavoritesTable(json.favorites);
+                        setFavoritesState(json);
                     }
                     showOverlayMessage('warning', json && json.message ? json.message : fallback);
                     return;
                 }
 
-                updateToolbarFavorites(json);
-                if (Array.isArray(json.removedPageIDs)) {
-                    json.removedPageIDs.forEach(function (pageID) {
-                        updateDashboardPageFavoriteState(pageID, false);
-                    });
-                }
-                renderFavoritesTable(json.favorites || []);
+                setFavoritesState(json);
                 showOverlayMessage('success', json.message);
             },
             error: function (xhr) {
@@ -583,7 +611,10 @@
             type: 'POST',
             url: body.getAttribute('data-dashboard-favorites-sort-url'),
             success: function (json) {
-                updateToolbarFavorites(json);
+                setFavoritesState(json, {
+                    table: false,
+                    pageSearch: false
+                });
                 if (typeof onSuccess === 'function') {
                     onSuccess(json);
                 }

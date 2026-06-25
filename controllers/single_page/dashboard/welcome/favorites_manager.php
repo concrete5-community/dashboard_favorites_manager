@@ -192,7 +192,6 @@ class FavoritesManager extends DashboardPageController
         $result = $this->removeDashboardFavorites($selected);
         $data = [
             'removed' => (int) $result['removed'],
-            'removedPageIDs' => array_values($result['removedPageIDs']),
             'favorites' => $this->getDashboardFavoriteLinks(),
         ];
         if ($result['removed'] > 0) {
@@ -527,20 +526,17 @@ class FavoritesManager extends DashboardPageController
         if ($this->getCurrentUserID() <= 0 || empty($items)) {
             return [
                 'removed' => 0,
-                'removedPageIDs' => [],
             ];
         }
 
         $removed = 0;
-        $removedPageIDs = [];
-        $filtered = $this->filterFavoriteItems($items, $selected, $removed, $removedPageIDs);
+        $filtered = $this->filterFavoriteItems($items, $selected, $removed);
         if ($removed > 0) {
             $this->saveCurrentUserDashboardFavorites($filtered);
         }
 
         return [
             'removed' => $removed,
-            'removedPageIDs' => $removedPageIDs,
         ];
     }
 
@@ -1159,7 +1155,7 @@ class FavoritesManager extends DashboardPageController
         return (int) $user->getUserID();
     }
 
-    private function filterFavoriteItems(array $items, array $selected, &$removed, array &$removedPageIDs)
+    private function filterFavoriteItems(array $items, array $selected, &$removed)
     {
         $filtered = [];
         foreach ($items as $item) {
@@ -1173,9 +1169,6 @@ class FavoritesManager extends DashboardPageController
             $name = (string) ($item['name'] ?? '');
             if (isset($selected[$this->getFavoriteSelectionKey($pageID, $url, $name)])) {
                 $removed++;
-                if ($pageID > 0) {
-                    $removedPageIDs[$pageID] = $pageID;
-                }
                 continue;
             }
 
@@ -1183,8 +1176,7 @@ class FavoritesManager extends DashboardPageController
                 $item['children'] = array_values($this->filterFavoriteItems(
                     $item['children'],
                     $selected,
-                    $removed,
-                    $removedPageIDs
+                    $removed
                 ));
             }
 

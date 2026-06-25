@@ -381,7 +381,7 @@
         }
     }
 
-    function submitToolbarSearchToggle(event, item, page, menu, config, searchConfig) {
+    function submitToolbarSearchToggle(event, menu, config, searchConfig) {
         if (!window.fetch || !window.FormData) {
             return;
         }
@@ -410,10 +410,6 @@
                     throw json;
                 }
 
-                updateToolbarSearchStar(item, json.favorite === true, searchConfig);
-                if (page) {
-                    page.isFavorite = json.favorite === true;
-                }
                 if (json.favorites) {
                     updateToolbarFavorites(json.favorites);
                 }
@@ -474,7 +470,7 @@
         form.appendChild(favorite);
         form.appendChild(button);
         form.addEventListener('submit', function (event) {
-            submitToolbarSearchToggle(event, item, page, menu, config, searchConfig);
+            submitToolbarSearchToggle(event, menu, config, searchConfig);
         });
 
         var main = createElement('div', 'dashboard-favorites-toolbar-search-result-main');
