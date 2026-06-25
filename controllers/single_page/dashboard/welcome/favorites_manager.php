@@ -26,10 +26,6 @@ class FavoritesManager extends DashboardPageController
 
     private const IMPORT_FILE_MAX_BYTES = 65536;
 
-    private const EXPORT_FORMAT = 'dashboard_favorites_manager';
-
-    private const EXPORT_VERSION = 1;
-
     private $dashboardDirectTargetCache = [];
 
     private $dashboardParentActionCache = [];
@@ -214,12 +210,7 @@ class FavoritesManager extends DashboardPageController
             return $this->redirectToManager();
         }
 
-        $payload = [
-            'format' => self::EXPORT_FORMAT,
-            'version' => self::EXPORT_VERSION,
-            'exportedAt' => gmdate('c'),
-            'favorites' => $this->getDashboardFavoriteExportItems(),
-        ];
+        $payload = $this->getDashboardFavoritesService()->getDashboardFavoriteExportPayload();
         $json = json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
         if ($json === false) {
             $this->queueOverlayMessage('error', t('Unable to export dashboard favorites.'));
@@ -265,20 +256,19 @@ class FavoritesManager extends DashboardPageController
             return $this->redirectToManager();
         }
 
-        if (($payload['format'] ?? '') !== self::EXPORT_FORMAT || (int) ($payload['version'] ?? 0) !== self::EXPORT_VERSION) {
-            $this->queueOverlayMessage('error', t('The selected file is not a supported dashboard favorites export.'));
+        $payloadFavorites = $this->getDashboardFavoritesService()->getImportPayloadFavorites($payload);
+        if (empty($payloadFavorites['success'])) {
+            $this->queueOverlayMessage('error', (string) ($payloadFavorites['message'] ?? ''));
 
             return $this->redirectToManager();
         }
 
-        $favorites = $payload['favorites'] ?? null;
-        if (!is_array($favorites)) {
-            $this->queueOverlayMessage('error', t('The selected file does not contain dashboard favorites.'));
-
-            return $this->redirectToManager();
-        }
-
-        $this->storeImportReport($this->importDashboardFavorites($favorites));
+        $this->storeImportReport($this->getDashboardFavoritesService()->importDashboardFavorites(
+            $payloadFavorites['favorites'],
+            function (Page $page) {
+                return $this->isSearchableDashboardPage($page) && $this->canViewDashboardPage($page);
+            }
+        ));
 
         return $this->redirectToManager();
     }
@@ -338,29 +328,6 @@ class FavoritesManager extends DashboardPageController
     private function getDashboardFavoriteLinks()
     {
         return $this->getDashboardFavoritesService()->getManagerFavoriteLinks();
-    }
-
-    private function getDashboardFavoriteExportItems()
-    {
-        $normalizer = $this->getDashboardFavoriteNormalizer();
-        $favorites = [];
-        foreach ($this->getDashboardFavoriteLinks() as $favorite) {
-            $pageID = (int) ($favorite['pageID'] ?? 0);
-            $path = '';
-            if ($pageID > 0) {
-                $page = Page::getByID($pageID);
-                if ($normalizer->isDashboardPage($page)) {
-                    $path = $normalizer->getPagePath($page);
-                }
-            }
-
-            $favorites[] = [
-                'name' => (string) ($favorite['name'] ?? ''),
-                'path' => $path,
-            ];
-        }
-
-        return $favorites;
     }
 
     private function getManagerPackageController()
@@ -544,94 +511,6 @@ class FavoritesManager extends DashboardPageController
         return $this->getDashboardFavoritesService()->removeCurrentUserDashboardPageFavorite($pageID);
     }
 
-    private function importDashboardFavorites(array $favorites)
-    {
-        $items = $this->getCurrentUserDashboardFavoriteItems();
-        $existingPaths = [];
-        $existingSelectionKeys = [];
-        $normalizer = $this->getDashboardFavoriteNormalizer();
-
-        foreach ($normalizer->flattenItems($items) as $item) {
-            $pageID = (int) ($item['pageID'] ?? 0);
-            $url = $normalizer->sanitizeFavoriteUrl($item['url'] ?? '') ?? '';
-            $name = (string) ($item['name'] ?? '');
-            if ($pageID > 0) {
-                $page = Page::getByID($pageID);
-                if ($normalizer->isDashboardPage($page)) {
-                    $existingPaths[$normalizer->getPagePath($page)] = true;
-                }
-            }
-            $existingSelectionKeys[$this->getFavoriteSelectionKeyFromItem([
-                'pageID' => $pageID,
-                'url' => $url,
-                'name' => $name,
-            ])] = true;
-        }
-
-        $result = [
-            'imported' => 0,
-            'skippedExisting' => 0,
-            'skippedInvalid' => 0,
-            'message' => empty($favorites) ? t('No favorites found in the selected file.') : '',
-            'rows' => [],
-        ];
-
-        foreach ($favorites as $favorite) {
-            $reportedName = is_array($favorite) ? trim((string) ($favorite['name'] ?? '')) : '';
-            $reportedPath = is_array($favorite) ? trim((string) ($favorite['path'] ?? '')) : '';
-            $item = $this->resolveImportedFavoriteItem($favorite);
-            if ($item === null) {
-                $result['skippedInvalid']++;
-                $result['rows'][] = [
-                    'name' => $reportedName,
-                    'path' => $reportedPath,
-                    'status' => 'unavailable',
-                    'message' => t('Dashboard page not found or not visible.'),
-                ];
-                continue;
-            }
-
-            $pageID = (int) $item['pageID'];
-            $path = '';
-            if ($pageID > 0) {
-                $page = Page::getByID($pageID);
-                if ($normalizer->isDashboardPage($page)) {
-                    $path = $normalizer->getPagePath($page);
-                }
-            }
-            $selectionKey = $this->getFavoriteSelectionKeyFromItem($item);
-            if (($path !== '' && isset($existingPaths[$path])) || isset($existingSelectionKeys[$selectionKey])) {
-                $result['skippedExisting']++;
-                $result['rows'][] = [
-                    'name' => (string) $item['name'],
-                    'path' => $path,
-                    'status' => 'existing',
-                    'message' => t('Already in favorites.'),
-                ];
-                continue;
-            }
-
-            $items[] = $item;
-            if ($path !== '') {
-                $existingPaths[$path] = true;
-            }
-            $existingSelectionKeys[$selectionKey] = true;
-            $result['imported']++;
-            $result['rows'][] = [
-                'name' => (string) $item['name'],
-                'path' => $path,
-                'status' => 'imported',
-                'message' => t('Imported.'),
-            ];
-        }
-
-        if ($result['imported'] > 0) {
-            $this->saveCurrentUserDashboardFavorites($items);
-        }
-
-        return $result;
-    }
-
     private function storeImportReport(array $report)
     {
         try {
@@ -691,36 +570,6 @@ class FavoritesManager extends DashboardPageController
         }
 
         return $this->dashboardFavoritesService;
-    }
-
-    private function resolveImportedFavoriteItem($favorite)
-    {
-        if (!is_array($favorite)) {
-            return;
-        }
-
-        $page = null;
-        $path = trim((string) ($favorite['path'] ?? ''));
-        if ($path !== '' && ($path === '/dashboard' || str_starts_with($path, '/dashboard/'))) {
-            $page = Page::getByPath($path);
-        }
-
-        if ($this->isSearchableDashboardPage($page) && $this->canViewDashboardPage($page)) {
-            $normalizer = $this->getDashboardFavoriteNormalizer();
-
-            return [
-                'name' => (string) $page->getCollectionName(),
-                'url' => $normalizer->getDashboardFavoriteUrlFromPath($normalizer->getPagePath($page)),
-                'pageID' => (int) $page->getCollectionID(),
-                'isActive' => false,
-                'children' => [],
-            ];
-        }
-    }
-
-    private function getFavoriteSelectionKeyFromItem(array $item)
-    {
-        return $this->getDashboardFavoritesService()->getFavoriteSelectionKeyFromItem($item);
     }
 
     private function isSearchableDashboardPage($page)
@@ -936,16 +785,6 @@ class FavoritesManager extends DashboardPageController
         }
 
         return (string) \URL::to('/dashboard');
-    }
-
-    private function getCurrentUserDashboardFavoriteItems()
-    {
-        return $this->getDashboardFavoritesService()->getCurrentUserDashboardFavoriteItems();
-    }
-
-    private function saveCurrentUserDashboardFavorites(array $items)
-    {
-        $this->getDashboardFavoritesService()->saveCurrentUserDashboardFavoriteItems($items);
     }
 
     private function getCurrentUserID()
