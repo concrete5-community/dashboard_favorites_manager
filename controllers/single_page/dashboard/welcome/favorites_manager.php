@@ -157,8 +157,12 @@ class FavoritesManager extends DashboardPageController
             }
 
             $pages[] = $page;
-            if (!$returnAll && count($pages) >= 12) {
-                break;
+        }
+
+        if (!$returnAll) {
+            $pages = $this->sortDashboardSearchPages($pages, $searchBy);
+            if (count($pages) > 12) {
+                $pages = array_slice($pages, 0, 12);
             }
         }
 
@@ -448,6 +452,22 @@ class FavoritesManager extends DashboardPageController
     private function normalizeSearchText($value)
     {
         return trim((string) preg_replace('/\s+/', ' ', strtolower((string) $value)));
+    }
+
+    private function sortDashboardSearchPages(array $pages, $searchBy)
+    {
+        $primaryKey = (string) $searchBy === 'path' ? 'path' : 'name';
+        $secondaryKey = $primaryKey === 'path' ? 'name' : 'path';
+        usort($pages, static function ($a, $b) use ($primaryKey, $secondaryKey) {
+            $primaryComparison = strnatcasecmp((string) $a[$primaryKey], (string) $b[$primaryKey]);
+            if ($primaryComparison !== 0) {
+                return $primaryComparison;
+            }
+
+            return strnatcasecmp((string) $a[$secondaryKey], (string) $b[$secondaryKey]);
+        });
+
+        return $pages;
     }
 
     private function handleToggleDashboardPageResponse($success, $message, array $data = [])

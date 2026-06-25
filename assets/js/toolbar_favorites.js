@@ -444,6 +444,17 @@
         return (value || '').toLowerCase().replace(/\s+/g, ' ').trim();
     }
 
+    function compareToolbarSearchPages(a, b, mode) {
+        var firstProperty = mode === 'path' ? 'searchPath' : 'searchName';
+        var secondProperty = mode === 'path' ? 'searchName' : 'searchPath';
+        var firstComparison = (a[firstProperty] || '').localeCompare(b[firstProperty] || '', undefined, { numeric: true });
+        if (firstComparison !== 0) {
+            return firstComparison;
+        }
+
+        return (a[secondProperty] || '').localeCompare(b[secondProperty] || '', undefined, { numeric: true });
+    }
+
     function filterToolbarSearchPages(pages, query, mode) {
         var normalizedQuery = normalizeToolbarSearchText(query);
         var matches = [];
@@ -458,12 +469,13 @@
             }
 
             matches.push(pages[i]);
-            if (matches.length >= 12) {
-                break;
-            }
         }
 
-        return matches;
+        matches.sort(function (a, b) {
+            return compareToolbarSearchPages(a, b, mode);
+        });
+
+        return matches.slice(0, 12);
     }
 
     function renderToolbarSearchStatus(results, text) {
@@ -492,6 +504,59 @@
         results.hidden = false;
     }
 
+    function createToolbarSearchModeOption(modeName, value, text, checked) {
+        var label = createElement('label', 'dashboard-favorites-toolbar-search-mode-option');
+        var input = document.createElement('input');
+        input.type = 'radio';
+        input.name = modeName;
+        input.value = value;
+        input.checked = checked === true;
+        input.setAttribute('data-dashboard-favorites-toolbar-search-mode', '1');
+        label.appendChild(input);
+        label.appendChild(createElement('span', '', text));
+
+        return {
+            input: input,
+            label: label
+        };
+    }
+
+    function renderToolbarSearchMode(searchConfig) {
+        var mode = createElement('div', 'dashboard-favorites-toolbar-search-mode');
+        var modeName = 'dashboard_favorites_toolbar_search_mode_' + Math.random().toString(36).slice(2);
+        var nameMode = createToolbarSearchModeOption(modeName, 'name', searchConfig.nameText || 'Name', true);
+        var pathMode = createToolbarSearchModeOption(modeName, 'path', searchConfig.pathText || 'Path', false);
+
+        mode.setAttribute('role', 'radiogroup');
+        mode.setAttribute('aria-label', searchConfig.searchByText || 'Search by');
+        mode.appendChild(nameMode.label);
+        mode.appendChild(pathMode.label);
+
+        return {
+            element: mode,
+            nameMode: nameMode.input,
+            pathMode: pathMode.input
+        };
+    }
+
+    function createToolbarSearchInput(searchConfig) {
+        var input = createElement('input', 'dashboard-favorites-toolbar-search-input');
+        input.type = 'search';
+        input.placeholder = searchConfig.placeholder || '';
+        input.autocomplete = 'off';
+
+        return input;
+    }
+
+    function createToolbarSearchClearButton(searchConfig) {
+        var clearButton = createElement('button', 'dashboard-favorites-toolbar-search-clear', 'x');
+        clearButton.type = 'button';
+        clearButton.hidden = true;
+        clearButton.setAttribute('aria-label', searchConfig.clearText || 'Clear search');
+
+        return clearButton;
+    }
+
     function renderToolbarSearch(menu, config) {
         var searchConfig = config.search || null;
         if (!searchConfig || !searchConfig.url || !searchConfig.toggleUrl || !searchConfig.token) {
@@ -502,42 +567,10 @@
         }
 
         var wrapper = createElement('div', 'dashboard-favorites-toolbar-search');
-        var mode = createElement('div', 'dashboard-favorites-toolbar-search-mode');
-        mode.setAttribute('role', 'radiogroup');
-        mode.setAttribute('aria-label', searchConfig.searchByText || 'Search by');
+        var mode = renderToolbarSearchMode(searchConfig);
         var control = createElement('div', 'dashboard-favorites-toolbar-search-control');
-        var input = createElement('input', 'dashboard-favorites-toolbar-search-input');
-        input.type = 'search';
-        input.placeholder = searchConfig.placeholder || '';
-        input.autocomplete = 'off';
-
-        var modeName = 'dashboard_favorites_toolbar_search_mode_' + Math.random().toString(36).slice(2);
-        var nameModeLabel = createElement('label', 'dashboard-favorites-toolbar-search-mode-option');
-        var nameMode = document.createElement('input');
-        nameMode.type = 'radio';
-        nameMode.name = modeName;
-        nameMode.value = 'name';
-        nameMode.checked = true;
-        nameMode.setAttribute('data-dashboard-favorites-toolbar-search-mode', '1');
-        nameModeLabel.appendChild(nameMode);
-        nameModeLabel.appendChild(createElement('span', '', searchConfig.nameText || 'Name'));
-
-        var pathModeLabel = createElement('label', 'dashboard-favorites-toolbar-search-mode-option');
-        var pathMode = document.createElement('input');
-        pathMode.type = 'radio';
-        pathMode.name = modeName;
-        pathMode.value = 'path';
-        pathMode.setAttribute('data-dashboard-favorites-toolbar-search-mode', '1');
-        pathModeLabel.appendChild(pathMode);
-        pathModeLabel.appendChild(createElement('span', '', searchConfig.pathText || 'Path'));
-        mode.appendChild(nameModeLabel);
-        mode.appendChild(pathModeLabel);
-
-        var clearButton = createElement('button', 'dashboard-favorites-toolbar-search-clear', 'x');
-        clearButton.type = 'button';
-        clearButton.hidden = true;
-        clearButton.setAttribute('aria-label', searchConfig.clearText || 'Clear search');
-
+        var input = createToolbarSearchInput(searchConfig);
+        var clearButton = createToolbarSearchClearButton(searchConfig);
         var results = createElement('div', 'dashboard-favorites-toolbar-search-results');
         results.hidden = true;
 
@@ -605,7 +638,7 @@
 
         function updateToolbarSearchResults() {
             var query = input.value.replace(/\s+/g, ' ').trim();
-            var selectedMode = pathMode.checked ? 'path' : 'name';
+            var selectedMode = mode.pathMode.checked ? 'path' : 'name';
             updateToolbarSearchClear();
             window.clearTimeout(timer);
             if (query.length < 2) {
@@ -635,8 +668,8 @@
         });
 
         input.addEventListener('input', updateToolbarSearchResults);
-        nameMode.addEventListener('change', updateToolbarSearchResults);
-        pathMode.addEventListener('change', updateToolbarSearchResults);
+        mode.nameMode.addEventListener('change', updateToolbarSearchResults);
+        mode.pathMode.addEventListener('change', updateToolbarSearchResults);
 
         input.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') {
@@ -650,7 +683,7 @@
             clearToolbarSearch();
         });
 
-        wrapper.appendChild(mode);
+        wrapper.appendChild(mode.element);
         control.appendChild(input);
         control.appendChild(clearButton);
         wrapper.appendChild(control);
