@@ -175,6 +175,9 @@
         dismissButton.addEventListener('click', function (event) {
             event.preventDefault();
             event.stopPropagation();
+            if (notice._dashboardFavoritesNoticeTimer) {
+                window.clearTimeout(notice._dashboardFavoritesNoticeTimer);
+            }
             if (notice.parentNode) {
                 notice.parentNode.removeChild(notice);
             }
@@ -186,6 +189,15 @@
         notice.style.animation = 'none';
         notice.offsetHeight;
         notice.style.animation = '';
+
+        if (notice._dashboardFavoritesNoticeTimer) {
+            window.clearTimeout(notice._dashboardFavoritesNoticeTimer);
+        }
+        notice._dashboardFavoritesNoticeTimer = window.setTimeout(function () {
+            if (notice.parentNode) {
+                notice.parentNode.removeChild(notice);
+            }
+        }, 6000);
     }
 
     function getAjaxErrorMessage(response, fallback) {
