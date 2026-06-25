@@ -184,11 +184,11 @@ class DashboardFavoritesService
     {
         $links = [];
         foreach ($this->getResolvedFavoriteItems() as $favorite) {
-            if ($favorite['pageID'] <= 0 && $favorite['url'] === '') {
+            if (!$this->hasFavoriteSelectionIdentity($favorite)) {
                 continue;
             }
 
-            $selectionKey = $this->getFavoriteSelectionKey($favorite['pageID'], $favorite['url'], $favorite['name']);
+            $selectionKey = $this->getFavoriteSelectionKeyFromItem($favorite);
             if (isset($links[$selectionKey])) {
                 continue;
             }
@@ -213,6 +213,15 @@ class DashboardFavoritesService
     public function getFavoriteSelectionKey($pageID, $url, $name)
     {
         return hash('sha256', (int) $pageID . '|' . (string) $url . '|' . (string) $name);
+    }
+
+    public function getFavoriteSelectionKeyFromItem(array $item)
+    {
+        return $this->getFavoriteSelectionKey(
+            $this->getFavoriteItemPageID($item),
+            $this->getFavoriteItemUrl($item),
+            $this->getFavoriteItemName($item)
+        );
     }
 
     public function getCurrentUserDashboardFavoriteItems()
@@ -250,13 +259,17 @@ class DashboardFavoritesService
         $items = $this->getCurrentUserDashboardFavoriteItems();
         $name = (string) $page->getCollectionName();
         $url = $this->normalizer->getDashboardFavoriteUrlFromPath($this->normalizer->getPagePath($page));
-        $selectionKey = $this->getFavoriteSelectionKey($pageID, $url, $name);
+        $favoriteItem = [
+            'name' => $name,
+            'url' => $url,
+            'pageID' => $pageID,
+            'isActive' => false,
+            'children' => [],
+        ];
+        $selectionKey = $this->getFavoriteSelectionKeyFromItem($favoriteItem);
 
         foreach ($this->normalizer->flattenItems($items) as $item) {
-            $existingPageID = (int) ($item['pageID'] ?? 0);
-            $existingUrl = (string) ($item['url'] ?? '');
-            $existingName = (string) ($item['name'] ?? '');
-            if ($existingPageID === $pageID || $this->getFavoriteSelectionKey($existingPageID, $existingUrl, $existingName) === $selectionKey) {
+            if ($this->getFavoriteItemPageID($item) === $pageID || $this->getFavoriteSelectionKeyFromItem($item) === $selectionKey) {
                 return [
                     'success' => false,
                     'message' => t('That dashboard page is already in your favorites.'),
@@ -264,13 +277,7 @@ class DashboardFavoritesService
             }
         }
 
-        $items[] = [
-            'name' => $name,
-            'url' => $url,
-            'pageID' => $pageID,
-            'isActive' => false,
-            'children' => [],
-        ];
+        $items[] = $favoriteItem;
 
         $this->saveCurrentUserDashboardFavoriteItems($items);
 
@@ -361,14 +368,11 @@ class DashboardFavoritesService
 
         $favoritesByKey = [];
         foreach ($this->normalizer->flattenItems($items) as $item) {
-            $pageID = (int) ($item['pageID'] ?? 0);
-            $url = (string) ($item['url'] ?? '');
-            $name = (string) ($item['name'] ?? '');
-            if ($pageID <= 0 && $url === '') {
+            if (!$this->hasFavoriteSelectionIdentity($item)) {
                 continue;
             }
 
-            $favoritesByKey[$this->getFavoriteSelectionKey($pageID, $url, $name)] = $item;
+            $favoritesByKey[$this->getFavoriteSelectionKeyFromItem($item)] = $item;
         }
 
         $ordered = [];
@@ -418,15 +422,12 @@ class DashboardFavoritesService
         $ordered = [];
         $currentIndex = null;
         foreach ($this->normalizer->flattenItems($items) as $item) {
-            $pageID = (int) ($item['pageID'] ?? 0);
-            $url = (string) ($item['url'] ?? '');
-            $name = (string) ($item['name'] ?? '');
-            if ($pageID <= 0 && $url === '') {
+            if (!$this->hasFavoriteSelectionIdentity($item)) {
                 continue;
             }
 
             $ordered[] = $item;
-            if ($this->getFavoriteSelectionKey($pageID, $url, $name) === $favoriteKey) {
+            if ($this->getFavoriteSelectionKeyFromItem($item) === $favoriteKey) {
                 $currentIndex = count($ordered) - 1;
             }
         }
@@ -461,7 +462,7 @@ class DashboardFavoritesService
     {
         $favorites = [];
         foreach ($this->normalizer->flattenItems($this->getCurrentUserDashboardFavoriteItems()) as $item) {
-            $pageID = (int) ($item['pageID'] ?? 0);
+            $pageID = $this->getFavoriteItemPageID($item);
             $page = $pageID > 0 ? $this->getPageByID($pageID) : null;
             $pagePath = $this->normalizer->isDashboardPage($page) ? $this->normalizer->getPagePath($page) : '';
 
@@ -469,9 +470,9 @@ class DashboardFavoritesService
                 'pageID' => $pageID,
                 'page' => $page,
                 'pagePath' => $pagePath,
-                'name' => (string) ($item['name'] ?? ''),
-                'url' => (string) ($item['url'] ?? ''),
-                'urlPath' => $this->normalizer->sanitizeFavoriteUrl((string) ($item['url'] ?? '')),
+                'name' => $this->getFavoriteItemName($item),
+                'url' => $this->getFavoriteItemUrl($item),
+                'urlPath' => $this->normalizer->sanitizeFavoriteUrl($this->getFavoriteItemUrl($item)),
             ];
         }
 
@@ -492,6 +493,26 @@ class DashboardFavoritesService
         return $this->pageCache[$pageID];
     }
 
+    private function hasFavoriteSelectionIdentity(array $item)
+    {
+        return $this->getFavoriteItemPageID($item) > 0 || $this->getFavoriteItemUrl($item) !== '';
+    }
+
+    private function getFavoriteItemPageID(array $item)
+    {
+        return (int) ($item['pageID'] ?? 0);
+    }
+
+    private function getFavoriteItemUrl(array $item)
+    {
+        return (string) ($item['url'] ?? '');
+    }
+
+    private function getFavoriteItemName(array $item)
+    {
+        return (string) ($item['name'] ?? '');
+    }
+
     private function getCurrentUserID()
     {
         $user = new User();
@@ -508,10 +529,7 @@ class DashboardFavoritesService
                 continue;
             }
 
-            $pageID = (int) ($item['pageID'] ?? 0);
-            $url = (string) ($item['url'] ?? '');
-            $name = (string) ($item['name'] ?? '');
-            if (isset($selected[$this->getFavoriteSelectionKey($pageID, $url, $name)])) {
+            if (isset($selected[$this->getFavoriteSelectionKeyFromItem($item)])) {
                 $removed++;
                 continue;
             }
@@ -539,7 +557,7 @@ class DashboardFavoritesService
                 continue;
             }
 
-            if ((int) ($item['pageID'] ?? 0) === (int) $pageID) {
+            if ($this->getFavoriteItemPageID($item) === (int) $pageID) {
                 $removed++;
                 continue;
             }
@@ -588,11 +606,11 @@ class DashboardFavoritesService
 
     private function isDashboardFavoritesManagerFavoriteItem(array $item, array $favoriteItem)
     {
-        if ($this->normalizer->normalizeUrlPath((string) ($item['url'] ?? '')) === $this->managerPath) {
+        if ($this->normalizer->normalizeUrlPath($this->getFavoriteItemUrl($item)) === $this->managerPath) {
             return true;
         }
 
-        if ((int) ($item['pageID'] ?? 0) === (int) ($favoriteItem['pageID'] ?? 0)) {
+        if ($this->getFavoriteItemPageID($item) === $this->getFavoriteItemPageID($favoriteItem)) {
             return true;
         }
 
@@ -607,8 +625,8 @@ class DashboardFavoritesService
                 continue;
             }
 
-            $path = $this->normalizer->normalizeUrlPath((string) ($item['url'] ?? ''));
-            $pageID = (int) ($item['pageID'] ?? 0);
+            $path = $this->normalizer->normalizeUrlPath($this->getFavoriteItemUrl($item));
+            $pageID = $this->getFavoriteItemPageID($item);
             if ($path === $this->managerPath || ($managerPageID > 0 && $pageID === $managerPageID)) {
                 $removed = true;
                 continue;

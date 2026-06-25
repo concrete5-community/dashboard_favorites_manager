@@ -561,7 +561,11 @@ class FavoritesManager extends DashboardPageController
                     $existingPaths[$normalizer->getPagePath($page)] = true;
                 }
             }
-            $existingSelectionKeys[$this->getFavoriteSelectionKey($pageID, $url, $name)] = true;
+            $existingSelectionKeys[$this->getFavoriteSelectionKeyFromItem([
+                'pageID' => $pageID,
+                'url' => $url,
+                'name' => $name,
+            ])] = true;
         }
 
         $result = [
@@ -588,7 +592,6 @@ class FavoritesManager extends DashboardPageController
             }
 
             $pageID = (int) $item['pageID'];
-            $url = (string) $item['url'];
             $path = '';
             if ($pageID > 0) {
                 $page = Page::getByID($pageID);
@@ -596,7 +599,7 @@ class FavoritesManager extends DashboardPageController
                     $path = $normalizer->getPagePath($page);
                 }
             }
-            $selectionKey = $this->getFavoriteSelectionKey($pageID, $url, (string) $item['name']);
+            $selectionKey = $this->getFavoriteSelectionKeyFromItem($item);
             if (($path !== '' && isset($existingPaths[$path])) || isset($existingSelectionKeys[$selectionKey])) {
                 $result['skippedExisting']++;
                 $result['rows'][] = [
@@ -715,9 +718,9 @@ class FavoritesManager extends DashboardPageController
         }
     }
 
-    private function getFavoriteSelectionKey($pageID, $url, $name)
+    private function getFavoriteSelectionKeyFromItem(array $item)
     {
-        return $this->getDashboardFavoritesService()->getFavoriteSelectionKey($pageID, $url, $name);
+        return $this->getDashboardFavoritesService()->getFavoriteSelectionKeyFromItem($item);
     }
 
     private function isSearchableDashboardPage($page)
