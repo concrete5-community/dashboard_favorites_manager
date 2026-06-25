@@ -367,6 +367,11 @@
                         renderFavoritesList(favoritesList, config);
                     }
                 }
+                if (typeof window.CustomEvent === 'function') {
+                    window.dispatchEvent(new window.CustomEvent('dashboardFavoritesManager:favoritesChanged', {
+                        detail: json
+                    }));
+                }
                 if (json.message) {
                     showToolbarNotice(menu, 'success', json.message, config);
                 }

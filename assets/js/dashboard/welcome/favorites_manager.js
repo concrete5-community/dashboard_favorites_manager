@@ -259,6 +259,16 @@
         }
     }
 
+    function handleToolbarFavoritesChanged(event) {
+        var json = event && event.detail ? event.detail : {};
+        if (json.pageID) {
+            updateDashboardPageFavoriteState(json.pageID, !!json.favorite);
+        }
+        if (json.favorites) {
+            renderFavoritesTable(json.favorites);
+        }
+    }
+
     function getFavoritesReorderUrl() {
         var container = getFavoritesTableContainer();
 
@@ -1166,6 +1176,7 @@
         updateMoveButtonState();
         setupFavoritesMoveModeSync();
         syncFavoritesMoveMode();
+        window.addEventListener('dashboardFavoritesManager:favoritesChanged', handleToolbarFavoritesChanged);
 
         var pageSearch = document.getElementById('dashboard-favorites-manager-page-search');
         var importReport = document.querySelector('[data-dashboard-favorites-import-report]');
