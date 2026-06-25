@@ -53,6 +53,7 @@
     data-dashboard-favorite-remove-text="<?= h(t('Remove from favorites')) ?>"
     data-dashboard-favorite-dismiss-text="<?= h(t('Dismiss message')) ?>"
     data-dashboard-favorites-empty-text="<?= h(t('The favorites list is empty.')) ?>"
+    data-dashboard-favorites-remove-error="<?= h(t('Unable to remove dashboard favorites.')) ?>"
     data-dashboard-favorites-select-all-text="<?= h(t('Select all')) ?>"
     data-dashboard-favorites-remove-selected-text="<?= h(t('Remove selected')) ?>"
     data-dashboard-favorites-confirm-remove-text="<?= h(t('Confirm remove?')) ?>"

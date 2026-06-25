@@ -509,6 +509,61 @@
         });
     }
 
+    function setBulkRemoveBusy(form, isBusy) {
+        var removeButton = document.querySelector('[data-dashboard-favorites-remove]');
+        var confirmButton = document.querySelector('[data-dashboard-favorites-remove-confirm-yes]');
+        [removeButton, confirmButton].forEach(function (button) {
+            if (!button) {
+                return;
+            }
+            button.disabled = isBusy;
+            button.setAttribute('aria-disabled', isBusy ? 'true' : 'false');
+        });
+        if (form) {
+            form.classList.toggle('is-saving', isBusy);
+        }
+    }
+
+    function submitBulkRemoveFavorites(form) {
+        var fallback = getManagerText('data-dashboard-favorites-remove-error');
+        setBulkRemoveBusy(form, true);
+
+        window.jQuery.ajax({
+            contentType: false,
+            data: new FormData(form),
+            dataType: 'json',
+            processData: false,
+            type: 'POST',
+            url: form.getAttribute('action'),
+            success: function (json) {
+                if (!json || !json.success) {
+                    if (json && json.favorites) {
+                        updateToolbarFavorites(json);
+                        renderFavoritesTable(json.favorites);
+                    }
+                    showOverlayMessage('warning', json && json.message ? json.message : fallback);
+                    return;
+                }
+
+                updateToolbarFavorites(json);
+                if (Array.isArray(json.removedPageIDs)) {
+                    json.removedPageIDs.forEach(function (pageID) {
+                        updateDashboardPageFavoriteState(pageID, false);
+                    });
+                }
+                renderFavoritesTable(json.favorites || []);
+                showOverlayMessage('success', json.message);
+            },
+            error: function (xhr) {
+                showOverlayMessage('error', getAjaxErrorMessage(xhr, fallback));
+            },
+            complete: function () {
+                setBulkRemoveBusy(form, false);
+                updateRemoveState();
+            }
+        });
+    }
+
     function postFavoriteRequest(body, data, onSuccess, onError) {
         if (!window.jQuery) {
             showConcreteError(getManagerText('data-dashboard-favorites-order-error'));
@@ -1038,6 +1093,20 @@
 
         event.preventDefault();
         submitDashboardPageToggle(form);
+    });
+
+    document.addEventListener('submit', function (event) {
+        var form = event.target && event.target.id === 'dashboard-favorites-manager-form' ? event.target : null;
+        if (!form) {
+            return;
+        }
+
+        if (!window.jQuery || !window.FormData) {
+            return;
+        }
+
+        event.preventDefault();
+        submitBulkRemoveFavorites(form);
     });
 
     function isCoreDashboardFavoriteControl(target) {

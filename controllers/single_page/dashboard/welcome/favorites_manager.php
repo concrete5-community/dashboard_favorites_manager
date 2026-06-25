@@ -175,26 +175,36 @@ class FavoritesManager extends DashboardPageController
     public function remove_favorites()
     {
         if (!$this->app->make('token')->validate('dashboard_favorites_manager_remove', $this->request->request->get('ccm_token'))) {
-            $this->queueOverlayMessage('error', $this->app->make('token')->getErrorMessage());
-
-            return $this->redirectToManager();
+            return $this->handleRemoveFavoritesResponse(
+                false,
+                $this->app->make('token')->getErrorMessage(),
+                [],
+                'error',
+                400
+            );
         }
 
         $selected = $this->request->request->get('selected_favorites', []);
         if (!is_array($selected) || empty($selected)) {
-            $this->queueOverlayMessage('warning', t('No favorites selected.'));
-
-            return $this->redirectToManager();
+            return $this->handleRemoveFavoritesResponse(false, t('No favorites selected.'));
         }
 
         $result = $this->removeDashboardFavorites($selected);
+        $data = [
+            'removed' => (int) $result['removed'],
+            'removedPageIDs' => array_values($result['removedPageIDs']),
+            'favorites' => $this->getDashboardFavoriteLinks(),
+        ];
         if ($result['removed'] > 0) {
-            $this->queueOverlayMessage('success', t('Removed %s dashboard favorites.', $result['removed']));
-        } else {
-            $this->queueOverlayMessage('warning', t('No matching dashboard favorites found.'));
+            return $this->handleRemoveFavoritesResponse(
+                true,
+                t('Removed %s dashboard favorites.', $result['removed']),
+                $data,
+                'success'
+            );
         }
 
-        return $this->redirectToManager();
+        return $this->handleRemoveFavoritesResponse(false, t('No matching dashboard favorites found.'), $data);
     }
 
     public function export_favorites()
@@ -484,6 +494,27 @@ class FavoritesManager extends DashboardPageController
         return $this->redirectToManager();
     }
 
+    private function handleRemoveFavoritesResponse($success, $message, array $data = [], $type = 'warning', $status = 200)
+    {
+        if ($this->request->isXmlHttpRequest()) {
+            $payload = array_merge([
+                'success' => (bool) $success,
+                'message' => (string) $message,
+            ], $data);
+            if (!$success && $type === 'error') {
+                $payload['error'] = [
+                    'message' => (string) $message,
+                ];
+            }
+
+            return new JsonResponse($payload, $status);
+        }
+
+        $this->queueOverlayMessage($type, (string) $message);
+
+        return $this->redirectToManager();
+    }
+
     private function redirectToManager()
     {
         return new RedirectResponse((string) \URL::to('/dashboard/welcome/favorites_manager'));
@@ -494,16 +525,23 @@ class FavoritesManager extends DashboardPageController
         $selected = array_fill_keys($selectedKeys, true);
         $items = $this->getCurrentUserDashboardFavoriteItems();
         if ($this->getCurrentUserID() <= 0 || empty($items)) {
-            return ['removed' => 0];
+            return [
+                'removed' => 0,
+                'removedPageIDs' => [],
+            ];
         }
 
         $removed = 0;
-        $filtered = $this->filterFavoriteItems($items, $selected, $removed);
+        $removedPageIDs = [];
+        $filtered = $this->filterFavoriteItems($items, $selected, $removed, $removedPageIDs);
         if ($removed > 0) {
             $this->saveCurrentUserDashboardFavorites($filtered);
         }
 
-        return ['removed' => $removed];
+        return [
+            'removed' => $removed,
+            'removedPageIDs' => $removedPageIDs,
+        ];
     }
 
     private function addDashboardPageFavorite($pageID)
@@ -1121,7 +1159,7 @@ class FavoritesManager extends DashboardPageController
         return (int) $user->getUserID();
     }
 
-    private function filterFavoriteItems(array $items, array $selected, &$removed)
+    private function filterFavoriteItems(array $items, array $selected, &$removed, array &$removedPageIDs)
     {
         $filtered = [];
         foreach ($items as $item) {
@@ -1135,11 +1173,19 @@ class FavoritesManager extends DashboardPageController
             $name = (string) ($item['name'] ?? '');
             if (isset($selected[$this->getFavoriteSelectionKey($pageID, $url, $name)])) {
                 $removed++;
+                if ($pageID > 0) {
+                    $removedPageIDs[$pageID] = $pageID;
+                }
                 continue;
             }
 
             if (!empty($item['children']) && is_array($item['children'])) {
-                $item['children'] = array_values($this->filterFavoriteItems($item['children'], $selected, $removed));
+                $item['children'] = array_values($this->filterFavoriteItems(
+                    $item['children'],
+                    $selected,
+                    $removed,
+                    $removedPageIDs
+                ));
             }
 
             $filtered[] = $item;
