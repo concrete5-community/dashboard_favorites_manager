@@ -258,6 +258,13 @@ html.dashboard-favorites-manager-options-panel-initializing [data-dashboard-favo
     margin-top: 0.35rem;
 }
 
+.dashboard-favorites-manager-search-note {
+    color: #6c757d;
+    font-size: 0.875em;
+    line-height: 1.25;
+    margin-top: 0.5rem;
+}
+
 .dashboard-favorites-manager-label-star {
     color: #0d6efd;
 }

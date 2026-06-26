@@ -594,9 +594,10 @@
         return (a[secondProperty] || '').localeCompare(b[secondProperty] || '', undefined, { numeric: true });
     }
 
-    function filterToolbarSearchPages(pages, query, orderBy) {
+    function filterToolbarSearchPages(pages, query, orderBy, maxResults) {
         var normalizedQuery = normalizeToolbarSearchText(query);
         var matches = [];
+        var limit = parseInt(maxResults, 10);
         if (normalizedQuery.length < 2) {
             return matches;
         }
@@ -616,7 +617,7 @@
             return compareToolbarSearchPages(a, b, orderBy, normalizedQuery);
         });
 
-        return matches.slice(0, 12);
+        return matches.slice(0, limit > 0 ? limit : 12);
     }
 
     function renderToolbarSearchStatus(results, text, type) {
@@ -800,7 +801,7 @@
                         return;
                     }
 
-                    renderToolbarSearchResults(results, filterToolbarSearchPages(pages, query, orderBy), menu, config, searchConfig, normalizeToolbarSearchText(query));
+                    renderToolbarSearchResults(results, filterToolbarSearchPages(pages, query, orderBy, searchConfig.maxResults), menu, config, searchConfig, normalizeToolbarSearchText(query));
                 }).catch(function (json) {
                     if (currentRequestID === requestID) {
                         renderToolbarSearchStatus(results, getAjaxErrorMessage(json, searchConfig.errorText), 'error');

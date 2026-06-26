@@ -9,6 +9,7 @@
 /** @var bool $toolbarLogoutEnabled */
 /** @var bool $toolbarConcreteVersionEnabled */
 /** @var bool $canUseToolbarClearCache */
+/** @var int $toolbarSearchMaxResults */
 /** @var string $toolbarSettingsToken */
 /** @var string $toggleDashboardPageToken */
 /** @var string $removeFavoritesToken */
@@ -201,9 +202,9 @@ if ($initialFavoriteLinksJson === false) {
                     <?= t('Menu options') ?>
                 </div>
                 <div class="form-check form-switch dashboard-favorites-manager-dependent-switch<?= $toolbarFavoritesEnabled ? '' : ' is-disabled' ?>">
-                    <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-search-enabled" name="toolbar_search_enabled" value="1" aria-label="<?= h(t('Show dashboard page search - may be slow on low-cost or overloaded hosting')) ?>" form="dashboard-favorites-manager-toolbar-settings" onchange="this.form.submit()" <?= $toolbarFavoritesEnabled && $toolbarSearchEnabled ? 'checked' : '' ?> <?= $toolbarFavoritesEnabled ? '' : 'disabled' ?>>
+                    <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-search-enabled" name="toolbar_search_enabled" value="1" aria-label="<?= h(t('Show dashboard page search')) ?>" form="dashboard-favorites-manager-toolbar-settings" onchange="this.form.submit()" <?= $toolbarFavoritesEnabled && $toolbarSearchEnabled ? 'checked' : '' ?> <?= $toolbarFavoritesEnabled ? '' : 'disabled' ?>>
                     <span class="form-check-label">
-                        <?= t('Show dashboard page search - may be slow on low-cost or overloaded hosting') ?>
+                        <?= t('Show dashboard page search') ?> <strong aria-hidden="true">*</strong>
                     </span>
                 </div>
                 <?php if ($canUseToolbarClearCache) { ?>
@@ -219,6 +220,9 @@ if ($initialFavoriteLinksJson === false) {
                     <span class="form-check-label">
                         <?= t('Show "Log out" action') ?>
                     </span>
+                </div>
+                <div class="dashboard-favorites-manager-search-note">
+                    <?= t('* Menu search may be slow on low-cost or overloaded hosting. Max results displayed in menu: %s.', (int) $toolbarSearchMaxResults) ?>
                 </div>
             </div>
         </div>
