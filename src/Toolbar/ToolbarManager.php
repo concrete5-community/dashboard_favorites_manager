@@ -63,6 +63,7 @@ class ToolbarManager
                 'emptyText' => t('The favorites list is empty.'),
                 'title' => t('Dashboard favorites'),
                 'dismissText' => t('Dismiss message'),
+                'sessionExpiredText' => t('Session expired. Please sign in again.'),
                 'overlayMessages' => $this->pullOverlayMessages(),
             ];
             if ($concreteVersionEnabled) {

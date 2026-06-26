@@ -208,6 +208,52 @@
         return fallback || 'Unable to clear cache.';
     }
 
+    function isSessionExpiredResponse(response) {
+        if (!response) {
+            return false;
+        }
+
+        var url = String(response.url || '').toLowerCase();
+
+        return response.status === 401
+            || response.status === 403
+            || response.redirected
+            || url.indexOf('/login') !== -1
+            || url.indexOf('session_invalidated') !== -1;
+    }
+
+    function getSessionExpiredMessage(config) {
+        return (config && config.sessionExpiredText) || 'Session expired. Please sign in again.';
+    }
+
+    function parseAjaxJsonResponse(response, config) {
+        if (isSessionExpiredResponse(response)) {
+            return window.Promise.reject({
+                message: getSessionExpiredMessage(config)
+            });
+        }
+
+        var contentType = response.headers && response.headers.get ? String(response.headers.get('Content-Type') || '') : '';
+        if (contentType && contentType.toLowerCase().indexOf('application/json') === -1) {
+            return response.text().catch(function () {
+                return '';
+            }).then(function (text) {
+                var lowerText = String(text || '').toLowerCase();
+                if (lowerText.indexOf('/login') !== -1 || lowerText.indexOf('session_invalidated') !== -1) {
+                    return window.Promise.reject({
+                        message: getSessionExpiredMessage(config)
+                    });
+                }
+
+                return window.Promise.reject({});
+            });
+        }
+
+        return response.json().catch(function () {
+            return window.Promise.reject({});
+        });
+    }
+
     function submitClearCacheForm(event, menu, config, button) {
         if (!window.fetch || !window.FormData) {
             return;
@@ -228,9 +274,7 @@
                 'X-Requested-With': 'XMLHttpRequest'
             }
         }).then(function (response) {
-            return response.json().catch(function () {
-                return {};
-            }).then(function (json) {
+            return parseAjaxJsonResponse(response, config).then(function (json) {
                 if (!response.ok || !json.success) {
                     throw json;
                 }
@@ -415,9 +459,7 @@
                 'X-Requested-With': 'XMLHttpRequest'
             }
         }).then(function (response) {
-            return response.json().catch(function () {
-                return {};
-            }).then(function (json) {
+            return parseAjaxJsonResponse(response, config).then(function (json) {
                 if (!response.ok || !json.success) {
                     throw json;
                 }
@@ -697,9 +739,7 @@
                     'X-Requested-With': 'XMLHttpRequest'
                 }
             }).then(function (response) {
-                return response.json().catch(function () {
-                    return {};
-                }).then(function (json) {
+                return parseAjaxJsonResponse(response, config).then(function (json) {
                     if (!response.ok || !json.success) {
                         throw json;
                     }
