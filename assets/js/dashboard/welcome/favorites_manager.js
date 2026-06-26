@@ -1019,6 +1019,7 @@
         var items = Array.prototype.slice.call(document.querySelectorAll('[data-dashboard-page-search-name]'));
         var clearButton = document.querySelector('[data-dashboard-page-search-clear]');
         var orderRow = document.querySelector('[data-dashboard-page-search-order-row]');
+        var resultCount = document.querySelector('[data-dashboard-page-search-result-count]');
         if (!input || !empty || !items.length) {
             return;
         }
@@ -1054,6 +1055,9 @@
         }
         if (orderRow) {
             orderRow.hidden = shown === 0;
+        }
+        if (resultCount) {
+            resultCount.textContent = shown > 0 ? 'results: ' + shown : '';
         }
     }
 

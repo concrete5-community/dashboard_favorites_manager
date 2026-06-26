@@ -331,6 +331,7 @@ if ($initialFavoriteLinksJson === false) {
                                     <span><?= t('path') ?></span>
                                 </label>
                             </div>
+                            <span class="dashboard-favorites-manager-page-search-result-count" data-dashboard-page-search-result-count></span>
                         </li>
                         <?php foreach ($dashboardPageTree as $page) {
                             $isFavorite = !empty($page['isFavorite']);

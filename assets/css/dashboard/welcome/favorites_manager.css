@@ -497,6 +497,12 @@ html.dashboard-favorites-manager-options-panel-initializing [data-dashboard-favo
     gap: 0.6rem;
 }
 
+.dashboard-favorites-manager-page-search-result-count {
+    color: var(--dfm-search-order-color);
+    font-size: var(--dfm-search-order-font-size);
+    margin-left: auto;
+}
+
 .dashboard-favorites-manager-page-search-order-label {
     color: var(--dfm-search-order-color);
     font-size: var(--dfm-search-order-font-size);
@@ -563,10 +569,14 @@ html.dashboard-favorites-manager-options-panel-initializing [data-dashboard-favo
 
 .dashboard-favorites-manager-page-search-order-row {
     align-items: center;
+    background: #fff;
     border-bottom: 1px solid #edf0f2;
     display: flex;
     min-height: 2.15rem;
     padding: 0.35rem 0.75rem;
+    position: sticky;
+    top: 0;
+    z-index: 2;
 }
 
 .dashboard-favorites-manager-page-search-order-row[hidden] {

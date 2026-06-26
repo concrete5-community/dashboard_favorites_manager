@@ -599,7 +599,10 @@
         var matches = [];
         var limit = parseInt(maxResults, 10);
         if (normalizedQuery.length < 2) {
-            return matches;
+            return {
+                pages: [],
+                total: 0
+            };
         }
 
         for (var i = 0; i < pages.length; i++) {
@@ -617,7 +620,10 @@
             return compareToolbarSearchPages(a, b, orderBy, normalizedQuery);
         });
 
-        return matches.slice(0, limit > 0 ? limit : 12);
+        return {
+            pages: matches.slice(0, limit > 0 ? limit : 12),
+            total: matches.length
+        };
     }
 
     function renderToolbarSearchStatus(results, text, type) {
@@ -634,16 +640,18 @@
         results.hidden = !text;
     }
 
-    function renderToolbarSearchResults(results, pages, menu, config, searchConfig, query) {
+    function renderToolbarSearchResults(results, searchResult, menu, config, searchConfig, query) {
         while (results.firstChild) {
             results.removeChild(results.firstChild);
         }
 
+        var pages = searchResult.pages || [];
         if (!pages.length) {
             renderToolbarSearchStatus(results, searchConfig.emptyText || '');
             return;
         }
 
+        searchConfig.order.count.textContent = 'results: ' + (searchResult.total || pages.length);
         results.appendChild(searchConfig.order.element);
         for (var i = 0; i < pages.length; i++) {
             results.appendChild(renderToolbarSearchResult(pages[i], menu, config, searchConfig, query));
@@ -670,20 +678,25 @@
 
     function renderToolbarSearchOrder(searchConfig) {
         var order = createElement('div', 'dashboard-favorites-toolbar-search-order');
+        var controls = createElement('div', 'dashboard-favorites-toolbar-search-order-controls');
+        var count = createElement('span', 'dashboard-favorites-toolbar-search-result-count');
         var orderName = 'dashboard_favorites_toolbar_search_order_' + Math.random().toString(36).slice(2);
         var nameOrder = createToolbarSearchOrderOption(orderName, 'name', searchConfig.nameText || 'Name', true);
         var pathOrder = createToolbarSearchOrderOption(orderName, 'path', searchConfig.pathText || 'Path', false);
 
-        order.setAttribute('role', 'radiogroup');
-        order.setAttribute('aria-label', searchConfig.orderByText || 'Order by');
-        order.appendChild(createElement('span', 'dashboard-favorites-toolbar-search-order-label', searchConfig.orderByLabelText || 'order by: '));
-        order.appendChild(nameOrder.label);
-        order.appendChild(pathOrder.label);
+        controls.setAttribute('role', 'radiogroup');
+        controls.setAttribute('aria-label', searchConfig.orderByText || 'Order by');
+        controls.appendChild(createElement('span', 'dashboard-favorites-toolbar-search-order-label', searchConfig.orderByLabelText || 'order by: '));
+        controls.appendChild(nameOrder.label);
+        controls.appendChild(pathOrder.label);
+        order.appendChild(controls);
+        order.appendChild(count);
 
         return {
             element: order,
             nameOrder: nameOrder.input,
-            pathOrder: pathOrder.input
+            pathOrder: pathOrder.input,
+            count: count
         };
     }
 

@@ -132,13 +132,24 @@
 
 .dashboard-favorites-toolbar-search-order {
     align-items: center;
-    display: inline-flex;
+    background: #fff;
+    display: flex;
     gap: 0.6rem;
     padding: 0.35rem 0.45rem;
+    position: sticky;
+    top: 0;
+    width: 100%;
+    z-index: 2;
 }
 
 .dashboard-favorites-toolbar-search-results .dashboard-favorites-toolbar-search-order {
     border-bottom: 1px solid #edf0f2;
+}
+
+.dashboard-favorites-toolbar-search-order-controls {
+    align-items: center;
+    display: inline-flex;
+    gap: 0.6rem;
 }
 
 .dashboard-favorites-toolbar-search-order-label {
@@ -153,6 +164,12 @@
     font-size: var(--dfm-search-order-font-size);
     gap: 0.25rem;
     margin: 0;
+}
+
+.dashboard-favorites-toolbar-search-result-count {
+    color: var(--dfm-search-order-color);
+    font-size: var(--dfm-search-order-font-size);
+    margin-left: auto;
 }
 
 .dashboard-favorites-toolbar-search-input {
