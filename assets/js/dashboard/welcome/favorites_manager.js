@@ -1,5 +1,10 @@
 (function () {
     var OPTIONS_PANEL_STORAGE_KEY = 'dashboardFavoritesManager.optionsPanelVisible';
+    var SEARCH_MAX_RESULTS_FALLBACK = '15';
+    var searchMaxResultsStepDelayTimer = null;
+    var searchMaxResultsStepIntervalTimer = null;
+    var searchMaxResultsSuppressClickTimer = null;
+    var suppressNextSearchMaxResultsStepClick = false;
 
     function getJsonErrorMessage(json, fallback) {
         if (json && json.error) {
@@ -38,6 +43,129 @@
         var wrapper = document.querySelector('.dashboard-favorites-manager');
 
         return wrapper ? (wrapper.getAttribute(name) || '') : '';
+    }
+
+    function isSearchMaxResultsInput(target) {
+        return target && target.matches('[data-dashboard-favorites-search-max-results]');
+    }
+
+    function getSearchMaxResultsStepButton(target) {
+        return target ? target.closest('[data-dashboard-favorites-search-max-results-step]') : null;
+    }
+
+    function getSearchMaxResultsStep(button) {
+        var step = parseInt(button.getAttribute('data-dashboard-favorites-search-max-results-step') || '0', 10);
+
+        return isNaN(step) ? 0 : step;
+    }
+
+    function normalizeSearchMaxResultsInput(input, emptyValue) {
+        var value = String(input.value || '').replace(/\D/g, '');
+        var min = parseInt(input.getAttribute('data-dashboard-favorites-search-max-results-min') || '1', 10);
+        var max = parseInt(input.getAttribute('data-dashboard-favorites-search-max-results-max') || '50', 10);
+        var number;
+
+        if (!value) {
+            input.value = emptyValue;
+            return;
+        }
+
+        number = parseInt(value, 10);
+        if (number < min) {
+            number = min;
+        } else if (number > max) {
+            number = max;
+        }
+
+        input.value = String(number);
+    }
+
+    function selectSearchMaxResultsInput(input) {
+        window.setTimeout(function () {
+            if (document.activeElement !== input || typeof input.select !== 'function') {
+                return;
+            }
+
+            input.select();
+        }, 0);
+    }
+
+    function isAllowedSearchMaxResultsKey(event) {
+        if (event.ctrlKey || event.metaKey || event.altKey) {
+            return true;
+        }
+
+        return [
+            'Backspace',
+            'Delete',
+            'Tab',
+            'Enter',
+            'Escape',
+            'ArrowLeft',
+            'ArrowRight',
+            'ArrowUp',
+            'ArrowDown',
+            'Home',
+            'End',
+        ].indexOf(event.key) !== -1 || /^[0-9]$/.test(event.key);
+    }
+
+    function stepSearchMaxResultsInput(step) {
+        var input = document.querySelector('[data-dashboard-favorites-search-max-results]');
+        var number;
+
+        if (!input || input.disabled) {
+            return;
+        }
+
+        normalizeSearchMaxResultsInput(input, input.defaultValue || SEARCH_MAX_RESULTS_FALLBACK);
+        number = parseInt(input.value || input.defaultValue || SEARCH_MAX_RESULTS_FALLBACK, 10);
+        if (isNaN(number)) {
+            number = parseInt(input.defaultValue || SEARCH_MAX_RESULTS_FALLBACK, 10);
+        }
+
+        input.value = String(number + step);
+        normalizeSearchMaxResultsInput(input, input.defaultValue || SEARCH_MAX_RESULTS_FALLBACK);
+        input.focus();
+    }
+
+    function stopSearchMaxResultsStepRepeat() {
+        if (searchMaxResultsStepDelayTimer) {
+            window.clearTimeout(searchMaxResultsStepDelayTimer);
+            searchMaxResultsStepDelayTimer = null;
+        }
+        if (searchMaxResultsStepIntervalTimer) {
+            window.clearInterval(searchMaxResultsStepIntervalTimer);
+            searchMaxResultsStepIntervalTimer = null;
+        }
+    }
+
+    function markSearchMaxResultsStepClickHandledByPointer() {
+        suppressNextSearchMaxResultsStepClick = true;
+        if (searchMaxResultsSuppressClickTimer) {
+            window.clearTimeout(searchMaxResultsSuppressClickTimer);
+        }
+        searchMaxResultsSuppressClickTimer = window.setTimeout(function () {
+            suppressNextSearchMaxResultsStepClick = false;
+            searchMaxResultsSuppressClickTimer = null;
+        }, 500);
+    }
+
+    function startSearchMaxResultsStepRepeat(button) {
+        var step = getSearchMaxResultsStep(button);
+
+        if (!step || button.disabled) {
+            return;
+        }
+
+        stopSearchMaxResultsStepRepeat();
+        markSearchMaxResultsStepClickHandledByPointer();
+        stepSearchMaxResultsInput(step);
+        searchMaxResultsStepDelayTimer = window.setTimeout(function () {
+            searchMaxResultsStepIntervalTimer = window.setInterval(function () {
+                stepSearchMaxResultsInput(step);
+            }, 110);
+        }, 350);
     }
 
     function getFavoritesTableContainer() {
@@ -1176,7 +1304,56 @@
         }
     }
 
+    document.addEventListener('keydown', function (event) {
+        if (!isSearchMaxResultsInput(event.target)) {
+            return;
+        }
+
+        if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+            event.preventDefault();
+            stepSearchMaxResultsInput(event.key === 'ArrowUp' ? 1 : -1);
+            return;
+        }
+
+        if (!isAllowedSearchMaxResultsKey(event)) {
+            event.preventDefault();
+        }
+    });
+
+    document.addEventListener('focusin', function (event) {
+        if (isSearchMaxResultsInput(event.target)) {
+            selectSearchMaxResultsInput(event.target);
+        }
+    });
+
+    document.addEventListener('pointerdown', function (event) {
+        var searchMaxResultsStep = getSearchMaxResultsStepButton(event.target);
+        if (!searchMaxResultsStep || (event.button !== undefined && event.button !== 0)) {
+            return;
+        }
+
+        event.preventDefault();
+        if (searchMaxResultsStep.setPointerCapture && event.pointerId !== undefined) {
+            try {
+                searchMaxResultsStep.setPointerCapture(event.pointerId);
+            } catch (e) {
+                // Pointer capture is a convenience only; repeating still works without it.
+            }
+        }
+        startSearchMaxResultsStepRepeat(searchMaxResultsStep);
+    });
+
+    document.addEventListener('pointerup', stopSearchMaxResultsStepRepeat);
+    document.addEventListener('pointercancel', stopSearchMaxResultsStepRepeat);
+    document.addEventListener('lostpointercapture', stopSearchMaxResultsStepRepeat);
+    window.addEventListener('blur', stopSearchMaxResultsStepRepeat);
+
     document.addEventListener('change', function (event) {
+        if (isSearchMaxResultsInput(event.target)) {
+            normalizeSearchMaxResultsInput(event.target, event.target.defaultValue || SEARCH_MAX_RESULTS_FALLBACK);
+            return;
+        }
+
         if (event.target.matches('[data-dashboard-favorites-import-file]')) {
             var fileName = document.querySelector('[data-dashboard-favorites-file-name]');
             var uploadButton = document.querySelector('[data-dashboard-favorites-upload]');
@@ -1229,6 +1406,11 @@
     });
 
     document.addEventListener('input', function (event) {
+        if (isSearchMaxResultsInput(event.target)) {
+            normalizeSearchMaxResultsInput(event.target, '');
+            return;
+        }
+
         if (event.target.id === 'dashboard-favorites-manager-page-search') {
             updateDashboardPageSearch();
         }
@@ -1241,6 +1423,14 @@
     });
 
     document.addEventListener('submit', function (event) {
+        if (event.target && event.target.id === 'dashboard-favorites-manager-toolbar-settings') {
+            var searchMaxResults = document.querySelector('[data-dashboard-favorites-search-max-results]');
+            if (searchMaxResults && !searchMaxResults.disabled) {
+                normalizeSearchMaxResultsInput(searchMaxResults, searchMaxResults.defaultValue || SEARCH_MAX_RESULTS_FALLBACK);
+            }
+            return;
+        }
+
         var form = event.target && event.target.matches('.dashboard-favorites-manager-toggle-form') ? event.target : null;
         if (!form) {
             return;
@@ -1310,6 +1500,27 @@
     }
 
     document.addEventListener('click', function (event) {
+        var searchMaxResultsStep = getSearchMaxResultsStepButton(event.target);
+        if (searchMaxResultsStep) {
+            event.preventDefault();
+            if (suppressNextSearchMaxResultsStepClick) {
+                suppressNextSearchMaxResultsStepClick = false;
+                if (searchMaxResultsSuppressClickTimer) {
+                    window.clearTimeout(searchMaxResultsSuppressClickTimer);
+                    searchMaxResultsSuppressClickTimer = null;
+                }
+                return;
+            }
+
+            stepSearchMaxResultsInput(getSearchMaxResultsStep(searchMaxResultsStep));
+            return;
+        }
+
+        if (isSearchMaxResultsInput(event.target)) {
+            selectSearchMaxResultsInput(event.target);
+            return;
+        }
+
         if (event.target.closest('[data-dashboard-favorites-import-open]')) {
             event.preventDefault();
             openImportControls();

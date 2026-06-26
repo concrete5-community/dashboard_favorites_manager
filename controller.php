@@ -76,6 +76,16 @@ class Controller extends Package
         $this->getToolbarSettings()->setSearchEnabled($enabled);
     }
 
+    public function getToolbarSearchMaxResults()
+    {
+        return $this->getToolbarSettings()->getSearchMaxResults();
+    }
+
+    public function setToolbarSearchMaxResults($maxResults)
+    {
+        $this->getToolbarSettings()->setSearchMaxResults($maxResults);
+    }
+
     public function isToolbarClearCacheEnabled()
     {
         return $this->getToolbarSettings()->isClearCacheEnabled();

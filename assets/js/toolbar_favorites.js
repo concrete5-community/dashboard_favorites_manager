@@ -621,7 +621,7 @@
         });
 
         return {
-            pages: matches.slice(0, limit > 0 ? limit : 12),
+            pages: matches.slice(0, limit > 0 ? limit : 15),
             total: matches.length
         };
     }
@@ -651,7 +651,8 @@
             return;
         }
 
-        searchConfig.order.count.textContent = 'results: ' + (searchResult.total || pages.length);
+        var total = searchResult.total || pages.length;
+        searchConfig.order.count.textContent = 'results: ' + pages.length + '/' + total;
         results.appendChild(searchConfig.order.element);
         for (var i = 0; i < pages.length; i++) {
             results.appendChild(renderToolbarSearchResult(pages[i], menu, config, searchConfig, query));

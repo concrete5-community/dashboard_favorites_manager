@@ -16,7 +16,7 @@ use Concrete\Core\User\User;
 use Concrete\Package\DashboardFavoritesManager\Favorites\DashboardFavoriteNormalizer;
 use Concrete\Package\DashboardFavoritesManager\Favorites\DashboardFavoritesService;
 use Concrete\Package\DashboardFavoritesManager\Message\OverlayMessageQueue;
-use Concrete\Package\DashboardFavoritesManager\Toolbar\ToolbarManager;
+use Concrete\Package\DashboardFavoritesManager\Toolbar\ToolbarSettings;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -49,7 +49,9 @@ class FavoritesManager extends DashboardPageController
         $this->set('toolbarClearCacheEnabled', $packageController->isToolbarClearCacheEnabled());
         $this->set('toolbarLogoutEnabled', $packageController->isToolbarLogoutEnabled());
         $this->set('toolbarConcreteVersionEnabled', $packageController->isToolbarConcreteVersionEnabled());
-        $this->set('toolbarSearchMaxResults', ToolbarManager::SEARCH_MAX_RESULTS);
+        $this->set('toolbarSearchMaxResults', $packageController->getToolbarSearchMaxResults());
+        $this->set('toolbarSearchMaxResultsMin', ToolbarSettings::SEARCH_MAX_RESULTS_MIN);
+        $this->set('toolbarSearchMaxResultsMax', ToolbarSettings::SEARCH_MAX_RESULTS_MAX);
         $this->set('canUseToolbarClearCache', $this->canUseToolbarClearCache());
         $this->set('toolbarSettingsToken', $this->app->make('token')->generate('dashboard_favorites_manager_toolbar_settings'));
         $this->set('toggleDashboardPageToken', $this->app->make('token')->generate('dashboard_favorites_manager_toggle_dashboard_page'));
@@ -75,6 +77,9 @@ class FavoritesManager extends DashboardPageController
         $concreteVersionEnabled = (string) $this->request->request->get('toolbar_concrete_version_enabled') === '1';
         $this->getManagerPackageController()->setToolbarFavoritesEnabled($toolbarEnabled);
         $this->getManagerPackageController()->setToolbarSearchEnabled($searchEnabled);
+        if ($this->request->request->has('toolbar_search_max_results')) {
+            $this->getManagerPackageController()->setToolbarSearchMaxResults($this->request->request->get('toolbar_search_max_results'));
+        }
         $this->getManagerPackageController()->setToolbarClearCacheEnabled($clearCacheEnabled);
         $this->getManagerPackageController()->setToolbarLogoutEnabled($logoutEnabled);
         $this->getManagerPackageController()->setToolbarConcreteVersionEnabled($concreteVersionEnabled);
@@ -164,8 +169,9 @@ class FavoritesManager extends DashboardPageController
 
         if (!$returnAll) {
             $pages = $this->sortDashboardSearchPages($pages, $orderBy, $query);
-            if (count($pages) > ToolbarManager::SEARCH_MAX_RESULTS) {
-                $pages = array_slice($pages, 0, ToolbarManager::SEARCH_MAX_RESULTS);
+            $maxResults = $this->getManagerPackageController()->getToolbarSearchMaxResults();
+            if (count($pages) > $maxResults) {
+                $pages = array_slice($pages, 0, $maxResults);
             }
         }
 

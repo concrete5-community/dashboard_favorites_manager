@@ -10,6 +10,8 @@
 /** @var bool $toolbarConcreteVersionEnabled */
 /** @var bool $canUseToolbarClearCache */
 /** @var int $toolbarSearchMaxResults */
+/** @var int $toolbarSearchMaxResultsMin */
+/** @var int $toolbarSearchMaxResultsMax */
 /** @var string $toolbarSettingsToken */
 /** @var string $toggleDashboardPageToken */
 /** @var string $removeFavoritesToken */
@@ -207,6 +209,23 @@ if ($initialFavoriteLinksJson === false) {
                         <?= t('Show dashboard page search') ?> <strong aria-hidden="true">*</strong>
                     </span>
                 </div>
+                <div class="dashboard-favorites-manager-search-limit<?= $toolbarFavoritesEnabled ? '' : ' is-disabled' ?>">
+                    <label for="dashboard-favorites-manager-search-max-results"><?= t('Max menu search results (%1$s-%2$s)', (int) $toolbarSearchMaxResultsMin, (int) $toolbarSearchMaxResultsMax) ?></label>
+                    <div class="dashboard-favorites-manager-search-limit-control">
+                        <input type="text" class="form-control form-control-sm" id="dashboard-favorites-manager-search-max-results" name="toolbar_search_max_results" value="<?= (int) $toolbarSearchMaxResults ?>" inputmode="numeric" pattern="[0-9]*" maxlength="<?= strlen((string) (int) $toolbarSearchMaxResultsMax) ?>" autocomplete="off" form="dashboard-favorites-manager-toolbar-settings" data-dashboard-favorites-search-max-results data-dashboard-favorites-search-max-results-min="<?= (int) $toolbarSearchMaxResultsMin ?>" data-dashboard-favorites-search-max-results-max="<?= (int) $toolbarSearchMaxResultsMax ?>" <?= $toolbarFavoritesEnabled ? '' : 'disabled' ?>>
+                        <div class="dashboard-favorites-manager-search-limit-stepper">
+                            <button type="button" class="btn btn-primary btn-sm dashboard-favorites-manager-search-limit-step" title="<?= h(t('Increase max menu search results')) ?>" aria-label="<?= h(t('Increase max menu search results')) ?>" data-dashboard-favorites-search-max-results-step="1" <?= $toolbarFavoritesEnabled ? '' : 'disabled' ?>>
+                                <i class="fas fa-chevron-up" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="btn btn-primary btn-sm dashboard-favorites-manager-search-limit-step" title="<?= h(t('Decrease max menu search results')) ?>" aria-label="<?= h(t('Decrease max menu search results')) ?>" data-dashboard-favorites-search-max-results-step="-1" <?= $toolbarFavoritesEnabled ? '' : 'disabled' ?>>
+                                <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm dashboard-favorites-manager-search-limit-save" form="dashboard-favorites-manager-toolbar-settings" <?= $toolbarFavoritesEnabled ? '' : 'disabled' ?>>
+                        <?= t('Save') ?>
+                    </button>
+                </div>
                 <?php if ($canUseToolbarClearCache) { ?>
                 <div class="form-check form-switch dashboard-favorites-manager-dependent-switch<?= $toolbarFavoritesEnabled ? '' : ' is-disabled' ?>">
                     <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-clear-cache-enabled" name="toolbar_clear_cache_enabled" value="1" aria-label="<?= h(t('Show "Clear cache now!" action')) ?>" form="dashboard-favorites-manager-toolbar-settings" onchange="this.form.submit()" <?= $toolbarFavoritesEnabled && $toolbarClearCacheEnabled ? 'checked' : '' ?> <?= $toolbarFavoritesEnabled ? '' : 'disabled' ?>>
@@ -222,7 +241,7 @@ if ($initialFavoriteLinksJson === false) {
                     </span>
                 </div>
                 <div class="dashboard-favorites-manager-search-note">
-                    <?= t('* Menu search may be slow on low-cost or overloaded hosting. Max results displayed in menu: %s.', (int) $toolbarSearchMaxResults) ?>
+                    <?= t('* If the maximum number of menu search results is set too high, the menu may become slower on low-cost or overloaded hosting.') ?>
                 </div>
             </div>
         </div>

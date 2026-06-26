@@ -17,8 +17,6 @@ use Concrete\Package\DashboardFavoritesManager\Message\OverlayMessageQueue;
 
 class ToolbarManager
 {
-    public const SEARCH_MAX_RESULTS = 12;
-
     private $app;
 
     private $settings;
@@ -82,7 +80,7 @@ class ToolbarManager
                     'placeholder' => t('Search dashboard pages by name or path'),
                     'emptyText' => t('No dashboard pages found.'),
                     'errorText' => t('Unable to search dashboard pages.'),
-                    'maxResults' => self::SEARCH_MAX_RESULTS,
+                    'maxResults' => $this->settings->getSearchMaxResults(),
                     'clearText' => t('Clear search'),
                     'orderByText' => t('Order by'),
                     'orderByLabelText' => t('order by: '),
