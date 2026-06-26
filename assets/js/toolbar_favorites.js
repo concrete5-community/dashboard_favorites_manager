@@ -619,12 +619,16 @@
         return matches.slice(0, 12);
     }
 
-    function renderToolbarSearchStatus(results, text) {
+    function renderToolbarSearchStatus(results, text, type) {
         while (results.firstChild) {
             results.removeChild(results.firstChild);
         }
         if (text) {
-            results.appendChild(createElement('div', 'dashboard-favorites-toolbar-search-empty', text));
+            var status = createElement('div', 'dashboard-favorites-toolbar-search-empty', text);
+            if (type) {
+                status.classList.add('dashboard-favorites-toolbar-search-empty-' + type);
+            }
+            results.appendChild(status);
         }
         results.hidden = !text;
     }
@@ -799,7 +803,7 @@
                     renderToolbarSearchResults(results, filterToolbarSearchPages(pages, query, orderBy), menu, config, searchConfig, normalizeToolbarSearchText(query));
                 }).catch(function (json) {
                     if (currentRequestID === requestID) {
-                        renderToolbarSearchStatus(results, getAjaxErrorMessage(json, searchConfig.errorText));
+                        renderToolbarSearchStatus(results, getAjaxErrorMessage(json, searchConfig.errorText), 'error');
                     }
                 });
             }, 120);

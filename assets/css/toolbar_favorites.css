@@ -316,6 +316,11 @@
     padding: 0.55rem 0.75rem;
 }
 
+.dashboard-favorites-toolbar-search-empty-error {
+    background: #f8d7da;
+    color: #842029;
+}
+
 .dashboard-favorites-toolbar-link,
 .dashboard-favorites-toolbar-empty {
     display: block;
