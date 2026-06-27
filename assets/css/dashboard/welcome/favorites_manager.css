@@ -243,7 +243,8 @@ html.dashboard-favorites-manager-options-panel-initializing [data-dashboard-favo
     padding-bottom: 0.55rem;
 }
 
-.dashboard-favorites-manager-options-heading {
+.dashboard-favorites-manager-options-heading,
+.dashboard-favorites-manager-page-search-heading {
     color: #495057;
     font-weight: 600;
     margin-bottom: 0.35rem;
@@ -285,7 +286,12 @@ html.dashboard-favorites-manager-options-panel-initializing [data-dashboard-favo
 }
 
 .dashboard-favorites-manager-search-limit-control .form-control:focus {
-    border-color: var(--dfm-search-focus-border);
+    border: 1px solid var(--dfm-search-focus-border) !important;
+    box-shadow: var(--dfm-search-focus-shadow);
+}
+
+.dashboard-favorites-manager-page-search-control .form-control:focus {
+    border: 1px solid var(--dfm-search-focus-border) !important;
     box-shadow: var(--dfm-search-focus-shadow);
 }
 
@@ -468,17 +474,20 @@ html.dashboard-favorites-manager-options-panel-initializing [data-dashboard-favo
     font-weight: 700;
 }
 
-.dashboard-favorites-manager-import-report-summary span.is-imported {
+.dashboard-favorites-manager-import-report-summary span.is-imported,
+.dashboard-favorites-manager-import-status-imported {
     background: #d1e7dd;
     color: #0f5132;
 }
 
-.dashboard-favorites-manager-import-report-summary span.is-existing {
+.dashboard-favorites-manager-import-report-summary span.is-existing,
+.dashboard-favorites-manager-import-status-existing {
     background: #fff3cd;
     color: #664d03;
 }
 
-.dashboard-favorites-manager-import-report-summary span.is-unavailable {
+.dashboard-favorites-manager-import-report-summary span.is-unavailable,
+.dashboard-favorites-manager-import-status-unavailable {
     background: #f8d7da;
     color: #842029;
 }
@@ -500,21 +509,6 @@ html.dashboard-favorites-manager-options-panel-initializing [data-dashboard-favo
     line-height: 1.2;
     padding: 0.2rem 0.45rem;
     white-space: nowrap;
-}
-
-.dashboard-favorites-manager-import-status-imported {
-    background: #d1e7dd;
-    color: #0f5132;
-}
-
-.dashboard-favorites-manager-import-status-existing {
-    background: #fff3cd;
-    color: #664d03;
-}
-
-.dashboard-favorites-manager-import-status-unavailable {
-    background: #f8d7da;
-    color: #842029;
 }
 
 .dashboard-favorites-manager-dependent-switch.is-disabled {
@@ -540,12 +534,6 @@ html.dashboard-favorites-manager-options-panel-initializing [data-dashboard-favo
     border-bottom: 1px solid #dee2e6;
     margin-bottom: 0.75rem;
     padding-bottom: 0.75rem;
-}
-
-.dashboard-favorites-manager-page-search-heading {
-    color: #495057;
-    font-weight: 600;
-    margin-bottom: 0.35rem;
 }
 
 .dashboard-favorites-manager-page-search-control {
@@ -589,11 +577,6 @@ html.dashboard-favorites-manager-options-panel-initializing [data-dashboard-favo
     font-weight: 500;
     padding-right: 2rem;
     width: 100%;
-}
-
-.dashboard-favorites-manager-page-search-control .form-control:focus {
-    border-color: var(--dfm-search-focus-border);
-    box-shadow: var(--dfm-search-focus-shadow);
 }
 
 .dashboard-favorites-manager-page-search-clear {
