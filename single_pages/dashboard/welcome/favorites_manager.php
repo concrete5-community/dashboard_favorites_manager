@@ -8,9 +8,6 @@
 /** @var bool $toolbarLogoutEnabled */
 /** @var bool $toolbarConcreteVersionEnabled */
 /** @var bool $canUseToolbarClearCache */
-/** @var int $toolbarSearchMaxResults */
-/** @var int $toolbarSearchMaxResultsMin */
-/** @var int $toolbarSearchMaxResultsMax */
 /** @var int $dashboardPageSearchMinLength */
 /** @var string $toolbarSettingsToken */
 /** @var string $toggleDashboardPageToken */
@@ -62,7 +59,6 @@ if ($initialFavoriteLinksJson === false) {
     data-dashboard-page-search-error-text="<?= h(t('Unable to load dashboard pages.')) ?>"
     data-dashboard-page-search-min-length="<?= (int) $dashboardPageSearchMinLength ?>"
     data-dashboard-page-search-result-count-text="<?= h(t('results: %s')) ?>"
-    data-dashboard-page-search-result-count-limited-text="<?= h(t('results: %1$s/%2$s')) ?>"
     data-dashboard-favorites-file-large-error="<?= h(t('The selected file is too large.')) ?>"
     data-dashboard-favorite-toggle-error="<?= h(t('Unable to update dashboard favorite.')) ?>"
     data-dashboard-favorite-add-text="<?= h(t('Add to favorites')) ?>"
@@ -215,25 +211,8 @@ if ($initialFavoriteLinksJson === false) {
                 <div class="form-check form-switch dashboard-favorites-manager-dependent-switch<?= $toolbarFavoritesEnabled ? '' : ' is-disabled' ?>">
                     <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-search-enabled" name="toolbar_search_enabled" value="1" aria-label="<?= h(t('Show dashboard page search')) ?>" form="dashboard-favorites-manager-toolbar-settings" onchange="this.form.submit()" <?= $toolbarFavoritesEnabled && $toolbarSearchEnabled ? 'checked' : '' ?> <?= $toolbarFavoritesEnabled ? '' : 'disabled' ?>>
                     <span class="form-check-label">
-                        <?= t('Show dashboard page search') ?> <strong aria-hidden="true">*</strong>
+                        <?= t('Show dashboard page search') ?>
                     </span>
-                </div>
-                <div class="dashboard-favorites-manager-search-limit<?= $toolbarFavoritesEnabled ? '' : ' is-disabled' ?>">
-                    <label for="dashboard-favorites-manager-search-max-results"><?= t('Max menu search results (%1$s-%2$s)', (int) $toolbarSearchMaxResultsMin, (int) $toolbarSearchMaxResultsMax) ?></label>
-                    <div class="dashboard-favorites-manager-search-limit-control">
-                        <input type="text" class="form-control form-control-sm" id="dashboard-favorites-manager-search-max-results" name="toolbar_search_max_results" value="<?= (int) $toolbarSearchMaxResults ?>" inputmode="numeric" pattern="[0-9]*" maxlength="<?= strlen((string) (int) $toolbarSearchMaxResultsMax) ?>" autocomplete="off" form="dashboard-favorites-manager-toolbar-settings" data-dashboard-favorites-search-max-results data-dashboard-favorites-search-max-results-min="<?= (int) $toolbarSearchMaxResultsMin ?>" data-dashboard-favorites-search-max-results-max="<?= (int) $toolbarSearchMaxResultsMax ?>" <?= $toolbarFavoritesEnabled ? '' : 'disabled' ?>>
-                        <div class="dashboard-favorites-manager-search-limit-stepper">
-                            <button type="button" class="btn btn-primary btn-sm dashboard-favorites-manager-search-limit-step" title="<?= h(t('Increase max menu search results')) ?>" aria-label="<?= h(t('Increase max menu search results')) ?>" data-dashboard-favorites-search-max-results-step="1" <?= $toolbarFavoritesEnabled ? '' : 'disabled' ?>>
-                                <i class="fas fa-chevron-up" aria-hidden="true"></i>
-                            </button>
-                            <button type="button" class="btn btn-primary btn-sm dashboard-favorites-manager-search-limit-step" title="<?= h(t('Decrease max menu search results')) ?>" aria-label="<?= h(t('Decrease max menu search results')) ?>" data-dashboard-favorites-search-max-results-step="-1" <?= $toolbarFavoritesEnabled ? '' : 'disabled' ?>>
-                                <i class="fas fa-chevron-down" aria-hidden="true"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-sm dashboard-favorites-manager-search-limit-save" form="dashboard-favorites-manager-toolbar-settings" <?= $toolbarFavoritesEnabled ? '' : 'disabled' ?>>
-                        <?= t('Save') ?>
-                    </button>
                 </div>
                 <?php if ($canUseToolbarClearCache) { ?>
                 <div class="form-check form-switch dashboard-favorites-manager-dependent-switch<?= $toolbarFavoritesEnabled ? '' : ' is-disabled' ?>">
@@ -248,9 +227,6 @@ if ($initialFavoriteLinksJson === false) {
                     <span class="form-check-label">
                         <?= t('Show "Log out" action') ?>
                     </span>
-                </div>
-                <div class="dashboard-favorites-manager-search-note">
-                    <?= t('* If the maximum number of menu search results is set too high, the menu may become slower on low-cost or overloaded hosting.') ?>
                 </div>
             </div>
         </div>

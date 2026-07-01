@@ -67,7 +67,7 @@ class DashboardPageSearch
             || str_contains($this->getSearchValue($page, self::ORDER_BY_PATH), $query);
     }
 
-    public function filterPages(array $pages, $query, $orderBy, $maxResults = null)
+    public function filterPages(array $pages, $query, $orderBy)
     {
         $query = $this->normalizeText($query);
         if (strlen($query) < self::MIN_LENGTH) {
@@ -81,13 +81,7 @@ class DashboardPageSearch
             }
         }
 
-        $matches = $this->sortPages($matches, $orderBy, $query);
-        $maxResults = filter_var($maxResults, FILTER_VALIDATE_INT);
-        if ($maxResults !== false && $maxResults > 0 && count($matches) > $maxResults) {
-            return array_slice($matches, 0, $maxResults);
-        }
-
-        return $matches;
+        return $this->sortPages($matches, $orderBy, $query);
     }
 
     public function sortPages(array $pages, $orderBy, $query)

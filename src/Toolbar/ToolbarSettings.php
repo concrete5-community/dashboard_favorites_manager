@@ -11,19 +11,13 @@ use Concrete\Package\DashboardFavoritesManager\Search\DashboardPageSearch;
 
 class ToolbarSettings
 {
-    public const SEARCH_MAX_RESULTS_DEFAULT = 15;
-
-    public const SEARCH_MAX_RESULTS_MIN = 1;
-
-    public const SEARCH_MAX_RESULTS_MAX = 50;
-
     public const SEARCH_MIN_LENGTH = DashboardPageSearch::MIN_LENGTH;
 
     private const USER_CONFIG_TOOLBAR_ENABLED = 'DASHBOARD_FAVORITES_MANAGER_TOOLBAR_ENABLED';
 
     private const USER_CONFIG_TOOLBAR_SEARCH_ENABLED = 'DASHBOARD_FAVORITES_MANAGER_TOOLBAR_SEARCH_ENABLED';
 
-    private const USER_CONFIG_TOOLBAR_SEARCH_MAX_RESULTS = 'DASHBOARD_FAVORITES_MANAGER_TOOLBAR_SEARCH_MAX_RESULTS';
+    private const USER_CONFIG_LEGACY_TOOLBAR_SEARCH_MAX_RESULTS = 'DASHBOARD_FAVORITES_MANAGER_TOOLBAR_SEARCH_MAX_RESULTS';
 
     private const USER_CONFIG_TOOLBAR_CLEAR_CACHE_ENABLED = 'DASHBOARD_FAVORITES_MANAGER_TOOLBAR_CLEAR_CACHE_ENABLED';
 
@@ -34,7 +28,7 @@ class ToolbarSettings
     private const USER_CONFIG_KEYS = [
         self::USER_CONFIG_TOOLBAR_ENABLED,
         self::USER_CONFIG_TOOLBAR_SEARCH_ENABLED,
-        self::USER_CONFIG_TOOLBAR_SEARCH_MAX_RESULTS,
+        self::USER_CONFIG_LEGACY_TOOLBAR_SEARCH_MAX_RESULTS,
         self::USER_CONFIG_TOOLBAR_CLEAR_CACHE_ENABLED,
         self::USER_CONFIG_TOOLBAR_LOGOUT_ENABLED,
         self::USER_CONFIG_TOOLBAR_CONCRETE_VERSION_ENABLED,
@@ -80,29 +74,6 @@ class ToolbarSettings
         }
 
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_SEARCH_ENABLED, $enabled ? 1 : 0);
-    }
-
-    public function getSearchMaxResults()
-    {
-        $user = new User();
-        if (!$user->isRegistered()) {
-            return self::SEARCH_MAX_RESULTS_DEFAULT;
-        }
-
-        return $this->normalizeSearchMaxResults($user->config(self::USER_CONFIG_TOOLBAR_SEARCH_MAX_RESULTS));
-    }
-
-    public function setSearchMaxResults($maxResults)
-    {
-        $user = new User();
-        if (!$user->isRegistered()) {
-            return;
-        }
-
-        $user->saveConfig(
-            self::USER_CONFIG_TOOLBAR_SEARCH_MAX_RESULTS,
-            $this->normalizeSearchMaxResults($maxResults)
-        );
     }
 
     public function isClearCacheEnabled()
@@ -173,7 +144,6 @@ class ToolbarSettings
     {
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_ENABLED, 1);
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_SEARCH_ENABLED, 1);
-        $user->saveConfig(self::USER_CONFIG_TOOLBAR_SEARCH_MAX_RESULTS, self::SEARCH_MAX_RESULTS_DEFAULT);
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_CLEAR_CACHE_ENABLED, 1);
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_LOGOUT_ENABLED, 1);
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_CONCRETE_VERSION_ENABLED, 1);
@@ -208,7 +178,6 @@ class ToolbarSettings
 
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_ENABLED, 1);
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_SEARCH_ENABLED, 1);
-        $user->saveConfig(self::USER_CONFIG_TOOLBAR_SEARCH_MAX_RESULTS, self::SEARCH_MAX_RESULTS_DEFAULT);
 
         $legacyClearCacheEnabled = $config->get('toolbar.clear_cache.enabled');
         $user->saveConfig(
@@ -217,26 +186,5 @@ class ToolbarSettings
         );
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_LOGOUT_ENABLED, 1);
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_CONCRETE_VERSION_ENABLED, 0);
-    }
-
-    private function normalizeSearchMaxResults($maxResults)
-    {
-        if ($maxResults === null || $maxResults === '') {
-            return self::SEARCH_MAX_RESULTS_DEFAULT;
-        }
-
-        $maxResults = filter_var($maxResults, FILTER_VALIDATE_INT);
-        if ($maxResults === false) {
-            return self::SEARCH_MAX_RESULTS_DEFAULT;
-        }
-
-        if ($maxResults < self::SEARCH_MAX_RESULTS_MIN) {
-            return self::SEARCH_MAX_RESULTS_MIN;
-        }
-        if ($maxResults > self::SEARCH_MAX_RESULTS_MAX) {
-            return self::SEARCH_MAX_RESULTS_MAX;
-        }
-
-        return $maxResults;
     }
 }

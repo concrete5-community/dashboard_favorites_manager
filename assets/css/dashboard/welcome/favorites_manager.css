@@ -259,81 +259,9 @@ html.dashboard-favorites-manager-options-panel-initializing [data-dashboard-favo
     margin-top: 0.35rem;
 }
 
-.dashboard-favorites-manager-search-limit {
-    align-items: center;
-    color: #212529;
-    display: flex;
-    font-size: 0.875rem;
-    gap: 0.5rem;
-    margin-top: 0.45rem;
-}
-
-.dashboard-favorites-manager-search-limit.is-disabled {
-    opacity: 0.65;
-}
-
-.dashboard-favorites-manager-search-limit-control {
-    align-items: stretch;
-    display: flex;
-}
-
-.dashboard-favorites-manager-search-limit-control .form-control {
-    border-bottom-right-radius: 0;
-    border-top-right-radius: 0;
-    min-width: 0;
-    text-align: center;
-    width: 2.35rem;
-}
-
-.dashboard-favorites-manager-search-limit-control .form-control:focus {
-    border: 1px solid var(--dfm-search-focus-border) !important;
-    box-shadow: var(--dfm-search-focus-shadow);
-}
-
 .dashboard-favorites-manager-page-search-control .form-control:focus {
     border: 1px solid var(--dfm-search-focus-border) !important;
     box-shadow: var(--dfm-search-focus-shadow);
-}
-
-.dashboard-favorites-manager-search-limit-stepper {
-    display: flex;
-    flex-direction: column;
-    width: 1.45rem;
-}
-
-.dashboard-favorites-manager-search-limit-step {
-    align-items: center;
-    display: flex;
-    flex: 1 1 0;
-    font-size: 0.55rem;
-    justify-content: center;
-    line-height: 1;
-    min-height: 0;
-    padding: 0;
-}
-
-.dashboard-favorites-manager-search-limit-step:first-child {
-    border-bottom: 0;
-    border-top-right-radius: 0.2rem;
-}
-
-.dashboard-favorites-manager-search-limit-step:last-child {
-    border-bottom-right-radius: 0.2rem;
-}
-
-.dashboard-favorites-manager-search-limit-step:disabled {
-    opacity: 0.65;
-}
-
-.dashboard-favorites-manager-search-limit-save {
-    line-height: 1.2;
-}
-
-.dashboard-favorites-manager-search-note {
-    color: #6c757d;
-    font-size: 0.875em;
-    line-height: 1.25;
-    margin-top: 0.5rem;
 }
 
 .dashboard-favorites-manager-label-star {

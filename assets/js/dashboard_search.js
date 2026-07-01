@@ -72,9 +72,8 @@
         return getSearchValue(a, secondProperty).localeCompare(getSearchValue(b, secondProperty), undefined, { numeric: true });
     }
 
-    function filterPages(pages, query, orderBy, maxResults, minLength) {
+    function filterPages(pages, query, orderBy, minLength) {
         var normalizedQuery = normalizeText(query);
-        var limit = parseInt(maxResults, 10);
         var matches = [];
 
         if (normalizedQuery.length < minLength) {
@@ -95,7 +94,7 @@
         });
 
         return {
-            pages: limit > 0 ? matches.slice(0, limit) : matches,
+            pages: matches,
             total: matches.length
         };
     }
@@ -115,10 +114,6 @@
         labels = labels || {};
         if (visible <= 0) {
             return '';
-        }
-
-        if (total > visible) {
-            return formatText(labels.limited || 'results: %1$s/%2$s', [visible, total]);
         }
 
         return formatText(labels.count || 'results: %s', [visible]);

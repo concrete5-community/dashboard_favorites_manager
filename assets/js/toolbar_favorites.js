@@ -585,8 +585,7 @@
 
     function getToolbarSearchResultCountLabels(searchConfig) {
         return {
-            count: searchConfig.resultCountText,
-            limited: searchConfig.limitedResultCountText
+            count: searchConfig.resultCountText
         };
     }
 
@@ -779,7 +778,7 @@
                         return;
                     }
 
-                    renderToolbarSearchResults(results, search.filterPages(pages, query, orderBy, searchConfig.maxResults, minLength), menu, config, searchConfig, search.normalizeText(query));
+                    renderToolbarSearchResults(results, search.filterPages(pages, query, orderBy, minLength), menu, config, searchConfig, search.normalizeText(query));
                 }).catch(function (json) {
                     if (currentRequestID === requestID) {
                         renderToolbarSearchStatus(results, getAjaxErrorMessage(json, searchConfig.errorText), 'error');
