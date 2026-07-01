@@ -42,9 +42,7 @@ class FavoritesManager extends DashboardPageController
     {
         $this->requireAsset('dashboard-favorites-manager/dashboard');
 
-        $dashboardPageTree = $this->getDashboardPageTree();
         $this->set('favoriteLinks', $this->getDashboardFavoriteLinks());
-        $this->set('dashboardPageTree', $dashboardPageTree);
         $packageController = $this->getManagerPackageController();
         $this->set('packageVersion', $packageController->getPackageVersion());
         $this->set('pendingPackageUpdate', $this->getPendingPackageUpdate($packageController));

@@ -1,7 +1,6 @@
 <?php defined('C5_EXECUTE') or die('Access Denied.');
 
 /** @var array $favoriteLinks */
-/** @var array $dashboardPageTree */
 /** @var string $packageVersion */
 /** @var bool $toolbarFavoritesEnabled */
 /** @var bool $toolbarSearchEnabled */
@@ -55,7 +54,12 @@ if ($initialFavoriteLinksJson === false) {
 
 <div class="dashboard-favorites-manager"
     data-dashboard-favorites-order-error="<?= h(t('Unable to save favorite order.')) ?>"
+    data-dashboard-page-search-url="<?= h($view->action('search_dashboard_pages')) ?>"
+    data-dashboard-page-toggle-url="<?= h($view->action('toggle_dashboard_page')) ?>"
+    data-dashboard-page-toggle-token="<?= h($toggleDashboardPageToken) ?>"
     data-dashboard-page-search-empty-text="<?= h(t('No dashboard pages found.')) ?>"
+    data-dashboard-page-search-loading-text="<?= h(t('Loading dashboard pages.')) ?>"
+    data-dashboard-page-search-error-text="<?= h(t('Unable to load dashboard pages.')) ?>"
     data-dashboard-page-search-min-length="<?= (int) $dashboardPageSearchMinLength ?>"
     data-dashboard-page-search-result-count-text="<?= h(t('results: %s')) ?>"
     data-dashboard-page-search-result-count-limited-text="<?= h(t('results: %1$s/%2$s')) ?>"
@@ -63,6 +67,7 @@ if ($initialFavoriteLinksJson === false) {
     data-dashboard-favorite-toggle-error="<?= h(t('Unable to update dashboard favorite.')) ?>"
     data-dashboard-favorite-add-text="<?= h(t('Add to favorites')) ?>"
     data-dashboard-favorite-remove-text="<?= h(t('Remove from favorites')) ?>"
+    data-dashboard-page-open-text="<?= h(t('Open page')) ?>"
     data-dashboard-favorite-dismiss-text="<?= h(t('Dismiss message')) ?>"
     data-dashboard-favorites-empty-text="<?= h(t('The favorites list is empty.')) ?>"
     data-dashboard-favorites-remove-error="<?= h(t('Unable to remove dashboard favorites.')) ?>"
@@ -330,59 +335,29 @@ if ($initialFavoriteLinksJson === false) {
                 <div class="dashboard-favorites-manager-page-search-heading">
                     <?= t('Use ★ to add or remove favorites, and → to open the page.') ?>
                 </div>
-                <?php if (empty($dashboardPageTree)) { ?>
-                    <div class="alert alert-info mb-0">
-                        <?= t('No dashboard pages found.') ?>
-                    </div>
-                <?php } else { ?>
-                    <div class="dashboard-favorites-manager-page-search-control">
-                        <input type="text" class="form-control form-control-sm" id="dashboard-favorites-manager-page-search" placeholder="<?= h(t('Search dashboard pages by name or path')) ?>" autocomplete="off">
-                        <button type="button" class="dashboard-favorites-manager-page-search-clear" title="<?= h(t('Clear search')) ?>" aria-label="<?= h(t('Clear search')) ?>" data-dashboard-page-search-clear hidden>
-                            &times;
-                        </button>
-                    </div>
-                    <ul class="dashboard-favorites-manager-page-results" data-dashboard-page-results>
-                        <li class="dashboard-favorites-manager-page-search-order-row" data-dashboard-page-search-order-row hidden>
-                            <div class="dashboard-favorites-manager-page-search-order" role="radiogroup" aria-label="<?= h(t('Order by')) ?>">
-                                <span class="dashboard-favorites-manager-page-search-order-label"><?= t('order by: ') ?></span>
-                                <label class="dashboard-favorites-manager-page-search-order-option">
-                                    <input type="radio" name="dashboard_favorites_manager_page_search_order" value="name" checked data-dashboard-page-search-order>
-                                    <span><?= t('name') ?></span>
-                                </label>
-                                <label class="dashboard-favorites-manager-page-search-order-option">
-                                    <input type="radio" name="dashboard_favorites_manager_page_search_order" value="path" data-dashboard-page-search-order>
-                                    <span><?= t('path') ?></span>
-                                </label>
-                            </div>
-                            <span class="dashboard-favorites-manager-page-search-result-count" data-dashboard-page-search-result-count></span>
-                        </li>
-                        <?php foreach ($dashboardPageTree as $page) {
-                            $isFavorite = !empty($page['isFavorite']);
-                            $searchName = (string) ($page['searchName'] ?? strtolower($page['name']));
-                            $searchPath = strtolower((string) ($page['searchPath'] ?? $page['path']));
-                            ?>
-                            <li class="dashboard-favorites-manager-page-result<?= $isFavorite ? ' is-favorite' : '' ?>" data-dashboard-page-id="<?= (int) $page['id'] ?>" data-dashboard-page-search-name="<?= h($searchName) ?>" data-dashboard-page-search-path="<?= h($searchPath) ?>">
-                                <form method="post" action="<?= h($view->action('toggle_dashboard_page')) ?>" class="dashboard-favorites-manager-toggle-form">
-                                    <input type="hidden" name="ccm_token" value="<?= h($toggleDashboardPageToken) ?>">
-                                    <input type="hidden" name="page_id" value="<?= (int) $page['id'] ?>">
-                                    <input type="hidden" name="favorite" value="<?= $isFavorite ? '0' : '1' ?>" data-dashboard-page-toggle-value>
-                                    <button type="submit" class="btn btn-link dashboard-favorites-manager-star" data-dashboard-page-toggle aria-pressed="<?= $isFavorite ? 'true' : 'false' ?>" title="<?= h($isFavorite ? t('Remove from favorites') : t('Add to favorites')) ?>">
-                                        <i class="<?= $isFavorite ? 'fas' : 'far' ?> fa-star" aria-hidden="true"></i>
-                                        <span class="visually-hidden"><?= $isFavorite ? t('Remove from favorites') : t('Add to favorites') ?></span>
-                                    </button>
-                                </form>
-                                <div class="dashboard-favorites-manager-page-result-main">
-                                    <div class="dashboard-favorites-manager-page-result-name"><?= h($page['name']) ?></div>
-                                    <div class="dashboard-favorites-manager-page-result-path"><?= h($page['path']) ?></div>
-                                </div>
-                                <a href="<?= h($page['url']) ?>" class="dashboard-favorites-manager-page-result-link" title="<?= h(t('Open page')) ?>" aria-label="<?= h(t('Open page')) ?>">
-                                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
-                                </a>
-                            </li>
-                        <?php } ?>
-                    </ul>
-                    <div class="dashboard-favorites-manager-page-search-empty text-muted small" data-dashboard-page-search-empty></div>
-                <?php } ?>
+                <div class="dashboard-favorites-manager-page-search-control">
+                    <input type="text" class="form-control form-control-sm" id="dashboard-favorites-manager-page-search" placeholder="<?= h(t('Search dashboard pages by name or path')) ?>" autocomplete="off">
+                    <button type="button" class="dashboard-favorites-manager-page-search-clear" title="<?= h(t('Clear search')) ?>" aria-label="<?= h(t('Clear search')) ?>" data-dashboard-page-search-clear hidden>
+                        &times;
+                    </button>
+                </div>
+                <ul class="dashboard-favorites-manager-page-results" data-dashboard-page-results>
+                    <li class="dashboard-favorites-manager-page-search-order-row" data-dashboard-page-search-order-row hidden>
+                        <div class="dashboard-favorites-manager-page-search-order" role="radiogroup" aria-label="<?= h(t('Order by')) ?>">
+                            <span class="dashboard-favorites-manager-page-search-order-label"><?= t('order by: ') ?></span>
+                            <label class="dashboard-favorites-manager-page-search-order-option">
+                                <input type="radio" name="dashboard_favorites_manager_page_search_order" value="name" checked data-dashboard-page-search-order>
+                                <span><?= t('name') ?></span>
+                            </label>
+                            <label class="dashboard-favorites-manager-page-search-order-option">
+                                <input type="radio" name="dashboard_favorites_manager_page_search_order" value="path" data-dashboard-page-search-order>
+                                <span><?= t('path') ?></span>
+                            </label>
+                        </div>
+                        <span class="dashboard-favorites-manager-page-search-result-count" data-dashboard-page-search-result-count></span>
+                    </li>
+                </ul>
+                <div class="dashboard-favorites-manager-page-search-empty text-muted small" data-dashboard-page-search-empty></div>
             </div>
         </div>
     </div>
