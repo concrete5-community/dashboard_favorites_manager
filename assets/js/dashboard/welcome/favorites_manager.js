@@ -1,6 +1,5 @@
 (function () {
     var OPTIONS_PANEL_STORAGE_KEY = 'dashboardFavoritesManager.optionsPanelVisible';
-    var SEARCH_MAX_RESULTS_FALLBACK = '15';
     var searchMaxResultsStepDelayTimer = null;
     var searchMaxResultsStepIntervalTimer = null;
     var searchMaxResultsSuppressClickTimer = null;
@@ -59,10 +58,23 @@
         return isNaN(step) ? 0 : step;
     }
 
+    function getSearchMaxResultsLimit(input, name) {
+        var value = parseInt(input.getAttribute(name), 10);
+
+        return value > 0 ? value : null;
+    }
+
+    function getSearchMaxResultsDefaultValue(input) {
+        return input.defaultValue
+            || input.getAttribute('value')
+            || input.getAttribute('data-dashboard-favorites-search-max-results-min')
+            || '';
+    }
+
     function normalizeSearchMaxResultsInput(input, emptyValue) {
         var value = String(input.value || '').replace(/\D/g, '');
-        var min = parseInt(input.getAttribute('data-dashboard-favorites-search-max-results-min') || '1', 10);
-        var max = parseInt(input.getAttribute('data-dashboard-favorites-search-max-results-max') || '50', 10);
+        var min = getSearchMaxResultsLimit(input, 'data-dashboard-favorites-search-max-results-min');
+        var max = getSearchMaxResultsLimit(input, 'data-dashboard-favorites-search-max-results-max');
         var number;
 
         if (!value) {
@@ -71,9 +83,9 @@
         }
 
         number = parseInt(value, 10);
-        if (number < min) {
+        if (min !== null && number < min) {
             number = min;
-        } else if (number > max) {
+        } else if (max !== null && number > max) {
             number = max;
         }
 
@@ -118,14 +130,17 @@
             return;
         }
 
-        normalizeSearchMaxResultsInput(input, input.defaultValue || SEARCH_MAX_RESULTS_FALLBACK);
-        number = parseInt(input.value || input.defaultValue || SEARCH_MAX_RESULTS_FALLBACK, 10);
+        normalizeSearchMaxResultsInput(input, getSearchMaxResultsDefaultValue(input));
+        number = parseInt(input.value || getSearchMaxResultsDefaultValue(input), 10);
         if (isNaN(number)) {
-            number = parseInt(input.defaultValue || SEARCH_MAX_RESULTS_FALLBACK, 10);
+            number = getSearchMaxResultsLimit(input, 'data-dashboard-favorites-search-max-results-min');
+        }
+        if (!number) {
+            return;
         }
 
         input.value = String(number + step);
-        normalizeSearchMaxResultsInput(input, input.defaultValue || SEARCH_MAX_RESULTS_FALLBACK);
+        normalizeSearchMaxResultsInput(input, getSearchMaxResultsDefaultValue(input));
         input.focus();
     }
 
@@ -1058,10 +1073,6 @@
         text.textContent = (template || '').replace('%s', selectedCount);
     }
 
-    function normalizeSearchText(value) {
-        return (value || '').toLowerCase().replace(/\s+/g, ' ').trim();
-    }
-
     function renderHighlightedSearchText(element, query) {
         if (!element) {
             return;
@@ -1101,39 +1112,33 @@
         renderHighlightedSearchText(item.querySelector('.dashboard-favorites-manager-page-result-path'), query);
     }
 
-    function matchesDashboardPageSearchItem(item, query) {
-        return query.length > 0
-            && (
-                (item.getAttribute('data-dashboard-page-search-name') || '').indexOf(query) !== -1
-                || (item.getAttribute('data-dashboard-page-search-path') || '').indexOf(query) !== -1
-            );
+    function getDashboardPageSearchHelper() {
+        return window.DashboardFavoritesManagerSearch;
     }
 
-    function compareDashboardPageSearchItems(a, b, orderBy, query) {
-        var firstAttribute = orderBy === 'path' ? 'data-dashboard-page-search-path' : 'data-dashboard-page-search-name';
-        var secondAttribute = orderBy === 'path' ? 'data-dashboard-page-search-name' : 'data-dashboard-page-search-path';
-        var aMatchesPrimary = query.length > 0 && (a.getAttribute(firstAttribute) || '').indexOf(query) !== -1;
-        var bMatchesPrimary = query.length > 0 && (b.getAttribute(firstAttribute) || '').indexOf(query) !== -1;
-        if (aMatchesPrimary !== bMatchesPrimary) {
-            return aMatchesPrimary ? -1 : 1;
-        }
+    function getDashboardPageSearchData(item) {
+        return {
+            searchName: item.getAttribute('data-dashboard-page-search-name') || '',
+            searchPath: item.getAttribute('data-dashboard-page-search-path') || ''
+        };
+    }
 
-        var firstComparison = (a.getAttribute(firstAttribute) || '').localeCompare(b.getAttribute(firstAttribute) || '', undefined, { numeric: true });
-        if (firstComparison !== 0) {
-            return firstComparison;
-        }
-
-        return (a.getAttribute(secondAttribute) || '').localeCompare(b.getAttribute(secondAttribute) || '', undefined, { numeric: true });
+    function getDashboardPageSearchResultCountLabels() {
+        return {
+            count: getManagerText('data-dashboard-page-search-result-count-text'),
+            limited: getManagerText('data-dashboard-page-search-result-count-limited-text')
+        };
     }
 
     function sortDashboardPageSearchItems(items, orderBy, query) {
+        var search = getDashboardPageSearchHelper();
         if (!items.length || !items[0].parentNode) {
             return;
         }
 
         var parent = items[0].parentNode;
         items.sort(function (a, b) {
-            return compareDashboardPageSearchItems(a, b, orderBy, query);
+            return search.comparePages(getDashboardPageSearchData(a), getDashboardPageSearchData(b), orderBy, query);
         });
 
         for (var i = 0; i < items.length; i++) {
@@ -1152,14 +1157,20 @@
             return;
         }
 
-        var query = normalizeSearchText(input.value);
+        var search = getDashboardPageSearchHelper();
+        if (!search) {
+            return;
+        }
+
+        var query = search.normalizeText(input.value);
+        var minLength = search.getMinLength(getManagerText('data-dashboard-page-search-min-length'));
         var orderInput = document.querySelector('[data-dashboard-page-search-order]:checked');
         var orderBy = orderInput && orderInput.value === 'path' ? 'path' : 'name';
         var shown = 0;
 
         for (var i = 0; i < items.length; i++) {
             var item = items[i];
-            var matches = matchesDashboardPageSearchItem(item, query);
+            var matches = search.matchesPage(getDashboardPageSearchData(item), query, minLength);
             item.classList.toggle('is-visible', matches);
             highlightDashboardPageSearchItem(item, matches ? query : '');
             if (matches) {
@@ -1169,7 +1180,7 @@
 
         sortDashboardPageSearchItems(items, orderBy, query);
 
-        if (query.length === 0) {
+        if (query.length < minLength) {
             empty.textContent = '';
         } else if (shown === 0) {
             empty.textContent = getManagerText('data-dashboard-page-search-empty-text');
@@ -1185,7 +1196,7 @@
             orderRow.hidden = shown === 0;
         }
         if (resultCount) {
-            resultCount.textContent = shown > 0 ? 'results: ' + shown : '';
+            resultCount.textContent = search.formatResultCount(shown, shown, getDashboardPageSearchResultCountLabels());
         }
     }
 
@@ -1350,7 +1361,7 @@
 
     document.addEventListener('change', function (event) {
         if (isSearchMaxResultsInput(event.target)) {
-            normalizeSearchMaxResultsInput(event.target, event.target.defaultValue || SEARCH_MAX_RESULTS_FALLBACK);
+            normalizeSearchMaxResultsInput(event.target, getSearchMaxResultsDefaultValue(event.target));
             return;
         }
 
@@ -1426,7 +1437,7 @@
         if (event.target && event.target.id === 'dashboard-favorites-manager-toolbar-settings') {
             var searchMaxResults = document.querySelector('[data-dashboard-favorites-search-max-results]');
             if (searchMaxResults && !searchMaxResults.disabled) {
-                normalizeSearchMaxResultsInput(searchMaxResults, searchMaxResults.defaultValue || SEARCH_MAX_RESULTS_FALLBACK);
+                normalizeSearchMaxResultsInput(searchMaxResults, getSearchMaxResultsDefaultValue(searchMaxResults));
             }
             return;
         }

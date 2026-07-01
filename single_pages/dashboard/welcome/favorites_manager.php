@@ -12,6 +12,7 @@
 /** @var int $toolbarSearchMaxResults */
 /** @var int $toolbarSearchMaxResultsMin */
 /** @var int $toolbarSearchMaxResultsMax */
+/** @var int $dashboardPageSearchMinLength */
 /** @var string $toolbarSettingsToken */
 /** @var string $toggleDashboardPageToken */
 /** @var string $removeFavoritesToken */
@@ -55,6 +56,9 @@ if ($initialFavoriteLinksJson === false) {
 <div class="dashboard-favorites-manager"
     data-dashboard-favorites-order-error="<?= h(t('Unable to save favorite order.')) ?>"
     data-dashboard-page-search-empty-text="<?= h(t('No dashboard pages found.')) ?>"
+    data-dashboard-page-search-min-length="<?= (int) $dashboardPageSearchMinLength ?>"
+    data-dashboard-page-search-result-count-text="<?= h(t('results: %s')) ?>"
+    data-dashboard-page-search-result-count-limited-text="<?= h(t('results: %1$s/%2$s')) ?>"
     data-dashboard-favorites-file-large-error="<?= h(t('The selected file is too large.')) ?>"
     data-dashboard-favorite-toggle-error="<?= h(t('Unable to update dashboard favorite.')) ?>"
     data-dashboard-favorite-add-text="<?= h(t('Add to favorites')) ?>"
@@ -354,8 +358,8 @@ if ($initialFavoriteLinksJson === false) {
                         </li>
                         <?php foreach ($dashboardPageTree as $page) {
                             $isFavorite = !empty($page['isFavorite']);
-                            $searchName = strtolower($page['name']);
-                            $searchPath = strtolower($page['path']);
+                            $searchName = (string) ($page['searchName'] ?? strtolower($page['name']));
+                            $searchPath = strtolower((string) ($page['searchPath'] ?? $page['path']));
                             ?>
                             <li class="dashboard-favorites-manager-page-result<?= $isFavorite ? ' is-favorite' : '' ?>" data-dashboard-page-id="<?= (int) $page['id'] ?>" data-dashboard-page-search-name="<?= h($searchName) ?>" data-dashboard-page-search-path="<?= h($searchPath) ?>">
                                 <form method="post" action="<?= h($view->action('toggle_dashboard_page')) ?>" class="dashboard-favorites-manager-toggle-form">

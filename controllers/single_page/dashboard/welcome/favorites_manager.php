@@ -16,6 +16,7 @@ use Concrete\Core\User\User;
 use Concrete\Package\DashboardFavoritesManager\Favorites\DashboardFavoriteNormalizer;
 use Concrete\Package\DashboardFavoritesManager\Favorites\DashboardFavoritesService;
 use Concrete\Package\DashboardFavoritesManager\Message\OverlayMessageQueue;
+use Concrete\Package\DashboardFavoritesManager\Search\DashboardPageSearch;
 use Concrete\Package\DashboardFavoritesManager\Toolbar\ToolbarSettings;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -35,12 +36,15 @@ class FavoritesManager extends DashboardPageController
 
     private $dashboardFavoritesService;
 
+    private $dashboardPageSearch;
+
     public function view()
     {
         $this->requireAsset('dashboard-favorites-manager/dashboard');
 
+        $dashboardPageTree = $this->getDashboardPageTree();
         $this->set('favoriteLinks', $this->getDashboardFavoriteLinks());
-        $this->set('dashboardPageTree', $this->getDashboardPageTree());
+        $this->set('dashboardPageTree', $dashboardPageTree);
         $packageController = $this->getManagerPackageController();
         $this->set('packageVersion', $packageController->getPackageVersion());
         $this->set('pendingPackageUpdate', $this->getPendingPackageUpdate($packageController));
@@ -52,6 +56,7 @@ class FavoritesManager extends DashboardPageController
         $this->set('toolbarSearchMaxResults', $packageController->getToolbarSearchMaxResults());
         $this->set('toolbarSearchMaxResultsMin', ToolbarSettings::SEARCH_MAX_RESULTS_MIN);
         $this->set('toolbarSearchMaxResultsMax', ToolbarSettings::SEARCH_MAX_RESULTS_MAX);
+        $this->set('dashboardPageSearchMinLength', DashboardPageSearch::MIN_LENGTH);
         $this->set('canUseToolbarClearCache', $this->canUseToolbarClearCache());
         $this->set('toolbarSettingsToken', $this->app->make('token')->generate('dashboard_favorites_manager_toolbar_settings'));
         $this->set('toggleDashboardPageToken', $this->app->make('token')->generate('dashboard_favorites_manager_toggle_dashboard_page'));
@@ -144,35 +149,24 @@ class FavoritesManager extends DashboardPageController
         }
 
         $returnAll = (string) $this->request->query->get('all', '') === '1';
-        $query = $this->normalizeSearchText((string) $this->request->query->get('q', ''));
+        $query = $this->getDashboardPageSearch()->normalizeText((string) $this->request->query->get('q', ''));
         $orderByParameter = $this->request->query->get('order_by', $this->request->query->get('search_by', 'name'));
-        $orderBy = (string) $orderByParameter === 'path' ? 'path' : 'name';
-        if (!$returnAll && strlen($query) < 2) {
+        $orderBy = $this->getDashboardPageSearch()->normalizeOrderBy($orderByParameter);
+        if (!$returnAll && strlen($query) < DashboardPageSearch::MIN_LENGTH) {
             return new JsonResponse([
                 'success' => true,
                 'pages' => [],
             ]);
         }
 
-        $pages = [];
-        foreach ($this->getDashboardPageTree() as $page) {
-            if (
-                !$returnAll
-                && !str_contains($this->normalizeSearchText((string) $page['name']), $query)
-                && !str_contains($this->normalizeSearchText((string) $page['path']), $query)
-            ) {
-                continue;
-            }
-
-            $pages[] = $page;
-        }
-
+        $pages = $this->getDashboardPageTree();
         if (!$returnAll) {
-            $pages = $this->sortDashboardSearchPages($pages, $orderBy, $query);
-            $maxResults = $this->getManagerPackageController()->getToolbarSearchMaxResults();
-            if (count($pages) > $maxResults) {
-                $pages = array_slice($pages, 0, $maxResults);
-            }
+            $pages = $this->getDashboardPageSearch()->filterPages(
+                $pages,
+                $query,
+                $orderBy,
+                $this->getManagerPackageController()->getToolbarSearchMaxResults()
+            );
         }
 
         return new JsonResponse([
@@ -429,41 +423,13 @@ class FavoritesManager extends DashboardPageController
         $addedPageIDs[$pageID] = true;
         $normalizer = $this->getDashboardFavoriteNormalizer();
         $path = $normalizer->getPagePath($page);
-        $pages[] = [
+        $pages[] = $this->getDashboardPageSearch()->preparePage([
             'id' => $pageID,
             'name' => (string) $page->getCollectionName(),
             'path' => $path,
             'url' => $normalizer->getDashboardFavoriteUrlFromPath($path),
             'isFavorite' => isset($favoritePageIDs[$pageID]),
-        ];
-    }
-
-    private function normalizeSearchText($value)
-    {
-        return trim((string) preg_replace('/\s+/', ' ', strtolower((string) $value)));
-    }
-
-    private function sortDashboardSearchPages(array $pages, $orderBy, $query)
-    {
-        $primaryKey = (string) $orderBy === 'path' ? 'path' : 'name';
-        $secondaryKey = $primaryKey === 'path' ? 'name' : 'path';
-        $query = $this->normalizeSearchText($query);
-        usort($pages, function ($a, $b) use ($primaryKey, $secondaryKey, $query) {
-            $aMatchesPrimary = $query !== '' && str_contains($this->normalizeSearchText((string) $a[$primaryKey]), $query);
-            $bMatchesPrimary = $query !== '' && str_contains($this->normalizeSearchText((string) $b[$primaryKey]), $query);
-            if ($aMatchesPrimary !== $bMatchesPrimary) {
-                return $aMatchesPrimary ? -1 : 1;
-            }
-
-            $primaryComparison = strnatcasecmp((string) $a[$primaryKey], (string) $b[$primaryKey]);
-            if ($primaryComparison !== 0) {
-                return $primaryComparison;
-            }
-
-            return strnatcasecmp((string) $a[$secondaryKey], (string) $b[$secondaryKey]);
-        });
-
-        return $pages;
+        ]);
     }
 
     private function handleToggleDashboardPageResponse($success, $message, array $data = [])
@@ -590,6 +556,15 @@ class FavoritesManager extends DashboardPageController
         }
 
         return $this->dashboardFavoritesService;
+    }
+
+    private function getDashboardPageSearch()
+    {
+        if (!$this->dashboardPageSearch instanceof DashboardPageSearch) {
+            $this->dashboardPageSearch = new DashboardPageSearch();
+        }
+
+        return $this->dashboardPageSearch;
     }
 
     private function isSearchableDashboardPage($page)

@@ -81,7 +81,10 @@ class ToolbarManager
                     'emptyText' => t('No dashboard pages found.'),
                     'errorText' => t('Unable to search dashboard pages.'),
                     'maxResults' => $this->settings->getSearchMaxResults(),
+                    'minLength' => ToolbarSettings::SEARCH_MIN_LENGTH,
                     'clearText' => t('Clear search'),
+                    'resultCountText' => t('results: %s'),
+                    'limitedResultCountText' => t('results: %1$s/%2$s'),
                     'orderByText' => t('Order by'),
                     'orderByLabelText' => t('order by: '),
                     'nameText' => t('name'),
@@ -115,6 +118,7 @@ class ToolbarManager
     {
         $assetList = AssetList::getInstance();
         $assetList->register('css', 'dashboard-favorites-manager/overlay', 'assets/css/overlay_messages.css', [], $package);
+        $assetList->register('javascript', 'dashboard-favorites-manager/search', 'assets/js/dashboard_search.js', [], $package);
         $assetList->register('css', 'dashboard-favorites-manager/dashboard', 'assets/css/dashboard/welcome/favorites_manager.css', [], $package);
         $assetList->register('javascript', 'dashboard-favorites-manager/dashboard', 'assets/js/dashboard/welcome/favorites_manager.js', [], $package);
         $assetList->register('css', 'dashboard-favorites-manager/toolbar', 'assets/css/toolbar_favorites.css', [], $package);
@@ -122,11 +126,13 @@ class ToolbarManager
         $assetList->registerGroup('dashboard-favorites-manager/dashboard', [
             ['css', 'dashboard-favorites-manager/overlay'],
             ['css', 'dashboard-favorites-manager/dashboard'],
+            ['javascript', 'dashboard-favorites-manager/search'],
             ['javascript', 'dashboard-favorites-manager/dashboard'],
         ]);
         $assetList->registerGroup('dashboard-favorites-manager/toolbar', [
             ['css', 'dashboard-favorites-manager/overlay'],
             ['css', 'dashboard-favorites-manager/toolbar'],
+            ['javascript', 'dashboard-favorites-manager/search'],
             ['javascript', 'dashboard-favorites-manager/toolbar'],
         ]);
     }

@@ -573,56 +573,20 @@
         return item;
     }
 
-    function normalizeToolbarSearchText(value) {
-        return (value || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    function getToolbarSearchHelper() {
+        return window.DashboardFavoritesManagerSearch;
     }
 
-    function compareToolbarSearchPages(a, b, orderBy, query) {
-        var firstProperty = orderBy === 'path' ? 'searchPath' : 'searchName';
-        var secondProperty = orderBy === 'path' ? 'searchName' : 'searchPath';
-        var aMatchesPrimary = query.length > 0 && (a[firstProperty] || '').indexOf(query) !== -1;
-        var bMatchesPrimary = query.length > 0 && (b[firstProperty] || '').indexOf(query) !== -1;
-        if (aMatchesPrimary !== bMatchesPrimary) {
-            return aMatchesPrimary ? -1 : 1;
-        }
+    function getToolbarSearchMinLength(searchConfig) {
+        var search = getToolbarSearchHelper();
 
-        var firstComparison = (a[firstProperty] || '').localeCompare(b[firstProperty] || '', undefined, { numeric: true });
-        if (firstComparison !== 0) {
-            return firstComparison;
-        }
-
-        return (a[secondProperty] || '').localeCompare(b[secondProperty] || '', undefined, { numeric: true });
+        return search.getMinLength(searchConfig.minLength);
     }
 
-    function filterToolbarSearchPages(pages, query, orderBy, maxResults) {
-        var normalizedQuery = normalizeToolbarSearchText(query);
-        var matches = [];
-        var limit = parseInt(maxResults, 10);
-        if (normalizedQuery.length < 2) {
-            return {
-                pages: [],
-                total: 0
-            };
-        }
-
-        for (var i = 0; i < pages.length; i++) {
-            if (
-                (pages[i].searchName || '').indexOf(normalizedQuery) === -1
-                && (pages[i].searchPath || '').indexOf(normalizedQuery) === -1
-            ) {
-                continue;
-            }
-
-            matches.push(pages[i]);
-        }
-
-        matches.sort(function (a, b) {
-            return compareToolbarSearchPages(a, b, orderBy, normalizedQuery);
-        });
-
+    function getToolbarSearchResultCountLabels(searchConfig) {
         return {
-            pages: matches.slice(0, limit > 0 ? limit : 15),
-            total: matches.length
+            count: searchConfig.resultCountText,
+            limited: searchConfig.limitedResultCountText
         };
     }
 
@@ -652,7 +616,7 @@
         }
 
         var total = searchResult.total || pages.length;
-        searchConfig.order.count.textContent = 'results: ' + pages.length + '/' + total;
+        searchConfig.order.count.textContent = getToolbarSearchHelper().formatResultCount(pages.length, total, getToolbarSearchResultCountLabels(searchConfig));
         results.appendChild(searchConfig.order.element);
         for (var i = 0; i < pages.length; i++) {
             results.appendChild(renderToolbarSearchResult(pages[i], menu, config, searchConfig, query));
@@ -721,7 +685,11 @@
 
     function renderToolbarSearch(menu, config) {
         var searchConfig = config.search || null;
+        var search = getToolbarSearchHelper();
         if (!searchConfig || !searchConfig.url || !searchConfig.toggleUrl || !searchConfig.token) {
+            return null;
+        }
+        if (!search) {
             return null;
         }
         if (!window.fetch || !window.Promise) {
@@ -763,12 +731,7 @@
                         throw json;
                     }
 
-                    cachedPages = (json.pages || []).map(function (page) {
-                        page.searchName = normalizeToolbarSearchText(page.name || '');
-                        page.searchPath = normalizeToolbarSearchText(page.path || '');
-
-                        return page;
-                    });
+                    cachedPages = (json.pages || []).map(search.preparePage);
 
                     return cachedPages;
                 });
@@ -800,9 +763,10 @@
         function updateToolbarSearchResults() {
             var query = input.value.replace(/\s+/g, ' ').trim();
             var orderBy = order.pathOrder.checked ? 'path' : 'name';
+            var minLength = getToolbarSearchMinLength(searchConfig);
             updateToolbarSearchClear();
             window.clearTimeout(timer);
-            if (query.length < 2) {
+            if (query.length < minLength) {
                 requestID++;
                 renderToolbarSearchStatus(results, '');
                 return;
@@ -815,7 +779,7 @@
                         return;
                     }
 
-                    renderToolbarSearchResults(results, filterToolbarSearchPages(pages, query, orderBy, searchConfig.maxResults), menu, config, searchConfig, normalizeToolbarSearchText(query));
+                    renderToolbarSearchResults(results, search.filterPages(pages, query, orderBy, searchConfig.maxResults, minLength), menu, config, searchConfig, search.normalizeText(query));
                 }).catch(function (json) {
                     if (currentRequestID === requestID) {
                         renderToolbarSearchStatus(results, getAjaxErrorMessage(json, searchConfig.errorText), 'error');

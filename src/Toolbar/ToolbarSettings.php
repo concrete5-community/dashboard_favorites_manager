@@ -7,6 +7,7 @@ namespace Concrete\Package\DashboardFavoritesManager\Toolbar;
 defined('C5_EXECUTE') or die('Access Denied.');
 
 use Concrete\Core\User\User;
+use Concrete\Package\DashboardFavoritesManager\Search\DashboardPageSearch;
 
 class ToolbarSettings
 {
@@ -15,6 +16,8 @@ class ToolbarSettings
     public const SEARCH_MAX_RESULTS_MIN = 1;
 
     public const SEARCH_MAX_RESULTS_MAX = 50;
+
+    public const SEARCH_MIN_LENGTH = DashboardPageSearch::MIN_LENGTH;
 
     private const USER_CONFIG_TOOLBAR_ENABLED = 'DASHBOARD_FAVORITES_MANAGER_TOOLBAR_ENABLED';
 
