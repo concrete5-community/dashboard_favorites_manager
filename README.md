@@ -8,13 +8,15 @@ The package adds a dedicated dashboard page where users can add, remove, reorder
 
 It also **adds an optional star button** to the Concrete CMS toolbar. This button opens a quick menu with the current user's dashboard favorites, making frequently used dashboard pages easier to reach.
 
-Favorites can be reordered with **drag and drop** in table, or with simple up and down controls on smaller screens. A real-time search feature makes it easy to find pages and add them to favorites in one single operation.
+Favorites can be reordered with **drag and drop** in table, or with simple up and down controls on smaller screens. A real-time search feature makes it easy to find dashboard pages and add them to favorites in one single operation.
 
-The toolbar menu can also include optional actions such as "Clear cache now!" and "Log out". These actions can be enabled or disabled from the package settings.
+The toolbar menu shows the current user's favorites, can search dashboard pages, and can optionally show the Concrete CMS version, "Clear cache now!", and "Log out".
 
 All settings are saved **per user.**
 
 ## Installation
+
+This package requires Concrete CMS 9.2.0 or later.
 
 There are multiple ways to install this package.
 
@@ -34,7 +36,7 @@ See the [marketplace page](https://market.concretecms.com/products/dashboard-fav
 ### Manually
 
 1. Go to the [releases page](https://github.com/concrete5-community/dashboard_favorites_manager/releases) page
-2. download the `dashboard_favorites_manager-v….zip` file attached to the releases
+2. download the `dashboard_favorites_manager-vX.Y.Z.zip` file attached to the release
 3. extract it into the `packages` directory of your Concrete CMS installation
 4. In the Concrete CMS dashboard, go to System & Settings > Extend Concrete > Add Functionality
 5. Find Dashboard Favorites Manager in the list of available packages and click Install.
@@ -54,6 +56,9 @@ After installation, open Dashboard > Welcome > Dashboard Favorites Manager to ma
 - Export favorites to JSON
 - Import report showing imported, existing, and unavailable items
 - Optional toolbar star button for quick favorites access
+- Optional dashboard page search inside the toolbar favorites menu
+- Add or remove dashboard pages from favorites directly from toolbar search results
+- Optional Concrete CMS version label inside the toolbar
 - Optional "Clear cache now!" action inside the toolbar menu
 - Optional "Log out" action inside the toolbar menu
 - Per-user settings and favorites
