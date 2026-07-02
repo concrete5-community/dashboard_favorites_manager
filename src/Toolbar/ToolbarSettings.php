@@ -63,7 +63,7 @@ class ToolbarSettings
 
         $value = $user->config(self::USER_CONFIG_TOOLBAR_SEARCH_ENABLED);
 
-        return $value === null ? true : (int) $value === 1;
+        return $this->isMissingConfigValue($value) ? true : (int) $value === 1;
     }
 
     public function setSearchEnabled($enabled)
@@ -168,6 +168,8 @@ class ToolbarSettings
         }
 
         if ($user->config(self::USER_CONFIG_TOOLBAR_ENABLED) !== null) {
+            $this->enableSearchDefaultForUser($user);
+
             return;
         }
 
@@ -186,5 +188,17 @@ class ToolbarSettings
         );
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_LOGOUT_ENABLED, 1);
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_CONCRETE_VERSION_ENABLED, 0);
+    }
+
+    private function enableSearchDefaultForUser(User $user)
+    {
+        if ($this->isMissingConfigValue($user->config(self::USER_CONFIG_TOOLBAR_SEARCH_ENABLED))) {
+            $user->saveConfig(self::USER_CONFIG_TOOLBAR_SEARCH_ENABLED, 1);
+        }
+    }
+
+    private function isMissingConfigValue($value)
+    {
+        return $value === null || $value === false || $value === '';
     }
 }
