@@ -500,7 +500,7 @@
         }
 
         element.appendChild(document.createTextNode(value.slice(0, index)));
-        var mark = document.createElement('mark');
+        var mark = document.createElement('span');
         mark.className = 'dashboard-favorites-toolbar-search-highlight';
         mark.textContent = value.slice(index, index + query.length);
         element.appendChild(mark);

@@ -302,9 +302,14 @@
     overflow-wrap: anywhere;
 }
 
-.dashboard-favorites-toolbar-search-highlight {
+.dashboard-favorites-toolbar .dashboard-favorites-toolbar-search-highlight {
     background: #d9eaff;
+    border: 0;
+    box-shadow: none;
     color: inherit;
+    display: inline;
+    font: inherit;
+    margin: 0;
     padding: 0;
 }
 
