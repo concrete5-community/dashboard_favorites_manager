@@ -195,7 +195,9 @@
 
     function setupOptionsPanelToggle() {
         var toggle = document.querySelector('[data-dashboard-favorites-options-panel-toggle]');
+        var control = document.querySelector('[data-dashboard-favorites-options-panel-control]');
         var panel = document.querySelector('[data-dashboard-favorites-options-panel]');
+        var changedWithPointer = false;
 
         if (!toggle || !panel) {
             return;
@@ -204,9 +206,27 @@
         setOptionsPanelVisible(toggle, panel, getStoredOptionsPanelVisible());
         document.documentElement.classList.remove('dashboard-favorites-manager-options-panel-initializing');
 
+        function markPointerChange() {
+            changedWithPointer = true;
+        }
+
+        if (control) {
+            if (window.PointerEvent) {
+                control.addEventListener('pointerdown', markPointerChange);
+            } else {
+                control.addEventListener('mousedown', markPointerChange);
+                control.addEventListener('touchstart', markPointerChange);
+            }
+        }
+
         toggle.addEventListener('change', function () {
+            var shouldBlurAfterHide = changedWithPointer && !toggle.checked;
+            changedWithPointer = false;
             setOptionsPanelVisible(toggle, panel, toggle.checked);
             storeOptionsPanelVisible(toggle.checked);
+            if (shouldBlurAfterHide && typeof toggle.blur === 'function') {
+                toggle.blur();
+            }
         });
     }
 
