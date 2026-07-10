@@ -254,6 +254,16 @@
         });
     }
 
+    function setClearCacheButtonBusy(button, isBusy) {
+        if (!button) {
+            return;
+        }
+
+        button.disabled = isBusy;
+        button.setAttribute('aria-disabled', isBusy ? 'true' : 'false');
+        button.classList.toggle('is-loading', isBusy);
+    }
+
     function submitClearCacheForm(event, menu, config, button) {
         if (!window.fetch || !window.FormData) {
             return;
@@ -262,8 +272,8 @@
         event.preventDefault();
 
         var form = event.currentTarget;
-        var originalText = button.textContent;
-        button.disabled = true;
+        var originalText = button.getAttribute('data-dashboard-favorites-toolbar-action-label') || button.textContent;
+        setClearCacheButtonBusy(button, true);
 
         window.fetch(form.action, {
             method: 'POST',
@@ -284,8 +294,7 @@
         }).catch(function (json) {
             showToolbarNotice(menu, 'error', getAjaxErrorMessage(json, config.clearCache.errorText), config);
         }).then(function () {
-            button.disabled = false;
-            button.textContent = originalText;
+            setClearCacheButtonBusy(button, false);
         });
     }
 
@@ -598,6 +607,13 @@
             if (type) {
                 status.classList.add('dashboard-favorites-toolbar-search-empty-' + type);
             }
+            if (type === 'loading') {
+                status.textContent = '';
+                var spinner = createElement('i', 'fas fa-spinner fa-spin dashboard-favorites-toolbar-search-status-spinner');
+                spinner.setAttribute('aria-hidden', 'true');
+                status.appendChild(document.createTextNode(text));
+                status.appendChild(spinner);
+            }
             results.appendChild(status);
         }
         results.hidden = !text;
@@ -773,6 +789,9 @@
 
             timer = window.setTimeout(function () {
                 var currentRequestID = ++requestID;
+                if (!cachedPages) {
+                    renderToolbarSearchStatus(results, searchConfig.loadingText || 'Loading dashboard pages...', 'loading');
+                }
                 fetchToolbarSearchPages().then(function (pages) {
                     if (currentRequestID !== requestID) {
                         return;
@@ -830,6 +849,20 @@
         return wrapper;
     }
 
+    function createToolbarActionButton(label) {
+        var button = createElement('button', 'dashboard-favorites-toolbar-action-button');
+        var text = createElement('span', 'dashboard-favorites-toolbar-action-label', label || '');
+        var spinner = createElement('i', 'fas fa-spinner fa-spin dashboard-favorites-toolbar-action-spinner');
+
+        button.type = 'submit';
+        button.setAttribute('data-dashboard-favorites-toolbar-action-label', label || '');
+        spinner.setAttribute('aria-hidden', 'true');
+        button.appendChild(text);
+        button.appendChild(spinner);
+
+        return button;
+    }
+
     function renderMenuItems(menu, config) {
         while (menu.firstChild) {
             menu.removeChild(menu.firstChild);
@@ -862,8 +895,7 @@
             token.name = 'ccm_token';
             token.value = config.clearCache.token;
 
-            var clearCacheButton = createElement('button', 'dashboard-favorites-toolbar-action-button', config.clearCache.label || '');
-            clearCacheButton.type = 'submit';
+            var clearCacheButton = createToolbarActionButton(config.clearCache.label || '');
 
             clearCacheForm.appendChild(token);
             clearCacheForm.appendChild(clearCacheButton);

@@ -78,6 +78,7 @@ class ToolbarManager
                     'toggleUrl' => (string) \URL::to($this->managerPath, 'toggle_dashboard_page'),
                     'token' => $this->app->make('token')->generate('dashboard_favorites_manager_toggle_dashboard_page'),
                     'placeholder' => t('Search dashboard pages by name or path'),
+                    'loadingText' => t('Loading dashboard pages...'),
                     'emptyText' => t('No dashboard pages found.'),
                     'errorText' => t('Unable to search dashboard pages.'),
                     'minLength' => ToolbarSettings::SEARCH_MIN_LENGTH,
