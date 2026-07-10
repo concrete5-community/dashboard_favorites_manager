@@ -261,7 +261,11 @@
 
         button.disabled = isBusy;
         button.setAttribute('aria-disabled', isBusy ? 'true' : 'false');
-        button.classList.toggle('is-loading', isBusy);
+        if (isBusy) {
+            button.setAttribute('data-dashboard-favorites-toolbar-action-loading', '1');
+        } else {
+            button.removeAttribute('data-dashboard-favorites-toolbar-action-loading');
+        }
     }
 
     function submitClearCacheForm(event, menu, config, button) {

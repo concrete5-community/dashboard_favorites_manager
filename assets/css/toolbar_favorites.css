@@ -512,10 +512,6 @@
     line-height: 1;
 }
 
-.dashboard-favorites-toolbar-action-button::before {
-    display: none;
-}
-
 .dashboard-favorites-toolbar-action-spinner {
     animation: dashboard-favorites-toolbar-spin 1s linear infinite;
     color: currentColor;
@@ -525,7 +521,7 @@
     line-height: 1;
 }
 
-.dashboard-favorites-toolbar-action-button.is-loading .dashboard-favorites-toolbar-action-spinner {
+.dashboard-favorites-toolbar-action-button[data-dashboard-favorites-toolbar-action-loading="1"] .dashboard-favorites-toolbar-action-spinner {
     display: inline-block;
 }
 
