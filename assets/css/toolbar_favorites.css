@@ -512,7 +512,7 @@
     line-height: 1;
 }
 
-.dashboard-favorites-toolbar-action-spinner {
+.dashboard-favorites-toolbar .dashboard-favorites-toolbar-action-spinner {
     animation: dashboard-favorites-toolbar-spin 1s linear infinite;
     color: currentColor;
     display: none;
