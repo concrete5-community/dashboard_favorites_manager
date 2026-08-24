@@ -175,6 +175,7 @@ class DashboardFavoritesService
 
             $seenUrls[$path] = true;
             $links[] = [
+                'pageID' => (int) $favorite['pageID'],
                 'name' => $name !== '' ? $name : $path,
                 'path' => $path,
                 'url' => $this->normalizer->getDashboardFavoriteUrlFromPath($path),

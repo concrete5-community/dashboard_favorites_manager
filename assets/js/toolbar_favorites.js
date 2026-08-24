@@ -1,4 +1,6 @@
 (function () {
+    var openInNewTabTooltipShown = false;
+
     function createElement(tag, className, text) {
         var element = document.createElement(tag);
         if (className) {
@@ -9,6 +11,71 @@
         }
 
         return element;
+    }
+
+    function setConcreteTooltip(element, text, placement) {
+        if (!element) {
+            return;
+        }
+
+        var tooltipText = text || '';
+        var Tooltip = window.bootstrap && window.bootstrap.Tooltip;
+        var currentTooltip = Tooltip ? Tooltip.getInstance(element) : null;
+        if (currentTooltip) {
+            currentTooltip.dispose();
+        }
+
+        element.classList.add('launch-tooltip');
+        element.setAttribute('data-bs-toggle', 'tooltip');
+        element.title = tooltipText;
+        if (Tooltip && tooltipText) {
+            var options = document.getElementById('ccm-tooltip-holder') ? {container: '#ccm-tooltip-holder'} : {};
+            if (placement) {
+                options.placement = placement;
+                options.fallbackPlacements = [];
+                options.delay = {show: 0, hide: 1000};
+            }
+            new Tooltip(element, options);
+        }
+    }
+
+    function resetOpenInNewTabTooltips(container) {
+        openInNewTabTooltipShown = false;
+        var Tooltip = window.bootstrap && window.bootstrap.Tooltip;
+        if (!Tooltip) {
+            return;
+        }
+
+        var links = container.querySelectorAll('[data-dashboard-favorites-toolbar-open-new-tab]');
+        Array.prototype.forEach.call(links, function (link) {
+            var currentTooltip = Tooltip.getInstance(link);
+            if (currentTooltip) {
+                currentTooltip.dispose();
+            }
+        });
+    }
+
+    function syncOpenInNewTabTooltips(container, text) {
+        var isDesktop = !window.matchMedia || window.matchMedia('(min-width: 576px)').matches;
+        var Tooltip = window.bootstrap && window.bootstrap.Tooltip;
+        var links = container.querySelectorAll('[data-dashboard-favorites-toolbar-open-new-tab]');
+        Array.prototype.forEach.call(links, function (link) {
+            var currentTooltip = Tooltip ? Tooltip.getInstance(link) : null;
+            if (isDesktop) {
+                if (!currentTooltip) {
+                    setConcreteTooltip(link, text, 'right');
+                }
+                return;
+            }
+
+            if (currentTooltip) {
+                currentTooltip.dispose();
+            }
+            link.classList.remove('launch-tooltip');
+            link.removeAttribute('data-bs-toggle');
+            link.removeAttribute('data-bs-original-title');
+            link.removeAttribute('title');
+        });
     }
 
     function removeOverlayMessage(message) {
@@ -86,6 +153,7 @@
     }
 
     function closeMenu(wrapper) {
+        resetOpenInNewTabTooltips(wrapper);
         wrapper.classList.remove('is-open');
         wrapper.classList.remove('is-viewport-positioned');
         wrapper.style.removeProperty('--dashboard-favorites-toolbar-menu-left');
@@ -385,6 +453,19 @@
         return counts;
     }
 
+    function isCurrentFavorite(favorite, config) {
+        var favoritePageID = parseInt(favorite && favorite.pageID, 10);
+        var currentPageID = parseInt(config && config.currentPageID, 10);
+        if (favoritePageID > 0 && currentPageID > 0) {
+            return favoritePageID === currentPageID;
+        }
+
+        var favoritePath = getFavoriteDisplayPath(favorite).replace(/\/+$/, '');
+        var currentPath = getFavoriteDisplayPath({path: window.location.pathname}).replace(/\/+$/, '');
+
+        return favoritePath !== '' && favoritePath === currentPath;
+    }
+
     function renderFavoriteMenuLink(link, favorite, nameCounts) {
         var name = favorite.name || favorite.url || '';
         var displayPath = getFavoriteDisplayPath(favorite);
@@ -414,10 +495,50 @@
                     continue;
                 }
 
-                var link = createElement('a', 'dashboard-favorites-toolbar-link');
-                link.href = favorite.url || '#';
+                var isCurrent = isCurrentFavorite(favorite, config);
+                var row = createElement('div', 'dashboard-favorites-toolbar-link-row');
+                var link = createElement(isCurrent ? 'span' : 'a', 'dashboard-favorites-toolbar-link dashboard-favorites-toolbar-link-primary');
+                if (!isCurrent) {
+                    link.href = favorite.url || '#';
+                }
                 renderFavoriteMenuLink(link, favorite, nameCounts);
-                container.appendChild(link);
+                if (isCurrent) {
+                    row.classList.add('is-current');
+                    link.setAttribute('aria-current', 'page');
+                }
+
+                var openInNewTab = createElement('a', 'dashboard-favorites-toolbar-open-new-tab');
+                var openInNewTabText = config.openInNewTabText || 'Open in new tab';
+                var openInNewTabIcon = createElement('i', 'fas fa-arrow-up dashboard-favorites-toolbar-open-new-tab-icon');
+                openInNewTab.href = favorite.url || '#';
+                openInNewTab.target = '_blank';
+                openInNewTab.rel = 'noopener noreferrer';
+                openInNewTab.setAttribute('data-bs-trigger', 'hover');
+                openInNewTab.setAttribute('data-dashboard-favorites-toolbar-open-new-tab', '1');
+                openInNewTab.setAttribute('aria-label', openInNewTabText);
+                openInNewTabIcon.setAttribute('aria-hidden', 'true');
+                openInNewTab.appendChild(openInNewTabIcon);
+                openInNewTab.addEventListener('show.bs.tooltip', function (event) {
+                    if (openInNewTabTooltipShown) {
+                        event.preventDefault();
+                        return;
+                    }
+                    openInNewTabTooltipShown = true;
+                });
+                openInNewTab.addEventListener('click', function (event) {
+                    var Tooltip = window.bootstrap && window.bootstrap.Tooltip;
+                    var currentTooltip = Tooltip ? Tooltip.getInstance(event.currentTarget) : null;
+                    if (currentTooltip) {
+                        currentTooltip.dispose();
+                    }
+                    if (event.detail > 0) {
+                        event.currentTarget.blur();
+                    }
+                });
+
+                row.appendChild(link);
+                row.appendChild(openInNewTab);
+                container.appendChild(row);
                 addedFavorites++;
             }
 
@@ -425,6 +546,8 @@
                 container.appendChild(createElement('div', 'dashboard-favorites-toolbar-empty', config.emptyText || ''));
             }
         }
+
+        syncOpenInNewTabTooltips(container, config.openInNewTabText || 'Open in new tab');
     }
 
     function updateToolbarSearchStar(item, isFavorite, searchConfig) {
@@ -440,7 +563,8 @@
         }
         if (button) {
             button.setAttribute('aria-pressed', isFavorite ? 'true' : 'false');
-            button.title = label || '';
+            button.setAttribute('data-bs-trigger', 'hover');
+            setConcreteTooltip(button, label);
         }
         if (icon) {
             icon.className = (isFavorite ? 'fas' : 'far') + ' fa-star';
@@ -572,8 +696,8 @@
 
         var link = createElement('a', 'dashboard-favorites-toolbar-search-result-link');
         link.href = isSafeUrl(page.url || '') ? page.url : '#';
-        link.title = searchConfig.openText || '';
         link.setAttribute('aria-label', searchConfig.openText || '');
+        setConcreteTooltip(link, searchConfig.openText);
         var arrow = createElement('i', 'fas fa-arrow-right');
         arrow.setAttribute('aria-hidden', 'true');
         link.appendChild(arrow);
@@ -930,8 +1054,9 @@
             button.type = 'button';
             button.setAttribute('aria-expanded', 'false');
             button.setAttribute('aria-haspopup', 'true');
+            button.setAttribute('data-bs-trigger', 'hover');
             button.setAttribute('data-dashboard-favorites-toolbar-button', '1');
-            button.title = config.title || '';
+            setConcreteTooltip(button, config.title);
 
             var icon = createElement('i', 'fas fa-star');
             icon.setAttribute('aria-hidden', 'true');
@@ -948,10 +1073,10 @@
                 var isOpen = wrapper.classList.toggle('is-open');
                 button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
                 if (isOpen) {
+                    syncOpenInNewTabTooltips(menu, config.openInNewTabText || 'Open in new tab');
                     positionMenuInViewport(wrapper);
                 } else {
-                    wrapper.classList.remove('is-viewport-positioned');
-                    wrapper.style.removeProperty('--dashboard-favorites-toolbar-menu-left');
+                    closeMenu(wrapper);
                 }
             });
 
@@ -1036,6 +1161,7 @@
 
             window.addEventListener('resize', function () {
                 positionMenuInViewport(menu);
+                syncOpenInNewTabTooltips(menu, config.openInNewTabText || 'Open in new tab');
             });
         }
     }
