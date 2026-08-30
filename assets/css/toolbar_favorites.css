@@ -87,17 +87,23 @@
 
 .dashboard-favorites-toolbar-button:hover,
 .dashboard-favorites-toolbar-button:focus {
+    outline: 0;
+}
+
+.dashboard-favorites-toolbar-button:hover {
     background: rgba(255, 255, 255, 0.08);
 }
 
-[data-bs-theme="dark"] .dashboard-favorites-toolbar-button:hover,
-[data-bs-theme="dark"] .dashboard-favorites-toolbar-button:focus {
+.dashboard-favorites-toolbar-button:focus-visible {
+    box-shadow: var(--dfm-search-focus-shadow);
+}
+
+[data-bs-theme="dark"] .dashboard-favorites-toolbar-button:hover {
     background: var(--dfm-toolbar-button-hover-bg);
     color: var(--dfm-toolbar-button-hover-color);
 }
 
-.dashboard-favorites-toolbar-dashboard .dashboard-favorites-toolbar-button:hover,
-.dashboard-favorites-toolbar-dashboard .dashboard-favorites-toolbar-button:focus {
+.dashboard-favorites-toolbar-dashboard .dashboard-favorites-toolbar-button:hover {
     background: var(--dfm-menu-hover-bg);
 }
 
