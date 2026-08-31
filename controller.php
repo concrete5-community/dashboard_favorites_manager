@@ -106,6 +106,16 @@ class Controller extends Package
         $this->getToolbarSettings()->setConcreteVersionEnabled($enabled);
     }
 
+    public function isToolbarTooltipsEnabled()
+    {
+        return $this->getToolbarSettings()->isTooltipsEnabled();
+    }
+
+    public function setToolbarTooltipsEnabled($enabled)
+    {
+        $this->getToolbarSettings()->setTooltipsEnabled($enabled);
+    }
+
     public function isToolbarKeepOpenOnPageChangeEnabled()
     {
         return $this->getToolbarSettings()->isKeepOpenOnPageChangeEnabled();

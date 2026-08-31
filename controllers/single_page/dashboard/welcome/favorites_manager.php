@@ -50,6 +50,7 @@ class FavoritesManager extends DashboardPageController
         $this->set('toolbarClearCacheEnabled', $packageController->isToolbarClearCacheEnabled());
         $this->set('toolbarLogoutEnabled', $packageController->isToolbarLogoutEnabled());
         $this->set('toolbarConcreteVersionEnabled', $packageController->isToolbarConcreteVersionEnabled());
+        $this->set('toolbarTooltipsEnabled', $packageController->isToolbarTooltipsEnabled());
         $this->set('toolbarKeepOpenOnPageChangeEnabled', $packageController->isToolbarKeepOpenOnPageChangeEnabled());
         $this->set('dashboardPageSearchMinLength', DashboardPageSearch::MIN_LENGTH);
         $this->set('canUseToolbarClearCache', $this->canUseToolbarClearCache());
@@ -75,12 +76,14 @@ class FavoritesManager extends DashboardPageController
         $clearCacheEnabled = $toolbarEnabled && $this->canUseToolbarClearCache() && (string) $this->request->request->get('toolbar_clear_cache_enabled') === '1';
         $logoutEnabled = $toolbarEnabled && (string) $this->request->request->get('toolbar_logout_enabled') === '1';
         $concreteVersionEnabled = (string) $this->request->request->get('toolbar_concrete_version_enabled') === '1';
+        $tooltipsEnabled = $toolbarEnabled && (string) $this->request->request->get('toolbar_tooltips_enabled') === '1';
         $keepOpenOnPageChangeEnabled = $toolbarEnabled && (string) $this->request->request->get('toolbar_keep_open_on_page_change_enabled') === '1';
         $this->getManagerPackageController()->setToolbarFavoritesEnabled($toolbarEnabled);
         $this->getManagerPackageController()->setToolbarSearchEnabled($searchEnabled);
         $this->getManagerPackageController()->setToolbarClearCacheEnabled($clearCacheEnabled);
         $this->getManagerPackageController()->setToolbarLogoutEnabled($logoutEnabled);
         $this->getManagerPackageController()->setToolbarConcreteVersionEnabled($concreteVersionEnabled);
+        $this->getManagerPackageController()->setToolbarTooltipsEnabled($tooltipsEnabled);
         $this->getManagerPackageController()->setToolbarKeepOpenOnPageChangeEnabled($keepOpenOnPageChangeEnabled);
         $this->queueOverlayMessage('success', t('Toolbar favorites settings saved.'));
 

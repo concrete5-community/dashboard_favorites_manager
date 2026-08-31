@@ -53,13 +53,10 @@
 
         element.classList.remove('launch-tooltip');
         element.removeAttribute('data-bs-toggle');
+        element.removeAttribute('data-bs-trigger');
         element.removeAttribute('data-bs-original-title');
         element.removeAttribute('aria-describedby');
-        if (text) {
-            element.title = text;
-        } else {
-            element.removeAttribute('title');
-        }
+        element.removeAttribute('title');
     }
 
     function setToolbarTooltip(element, text, config, placement) {
@@ -104,14 +101,14 @@
             if (currentTooltip) {
                 currentTooltip.dispose();
             }
+            if (config.toolbarTooltips === false) {
+                clearConcreteTooltip(link);
+                return;
+            }
             link.classList.remove('launch-tooltip');
             link.removeAttribute('data-bs-toggle');
             link.removeAttribute('data-bs-original-title');
-            if (config.toolbarTooltips === false) {
-                link.title = text;
-            } else {
-                link.removeAttribute('title');
-            }
+            link.removeAttribute('title');
         });
     }
 

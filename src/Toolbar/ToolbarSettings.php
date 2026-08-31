@@ -25,6 +25,8 @@ class ToolbarSettings
 
     private const USER_CONFIG_TOOLBAR_CONCRETE_VERSION_ENABLED = 'DASHBOARD_FAVORITES_MANAGER_TOOLBAR_CONCRETE_VERSION_ENABLED';
 
+    private const USER_CONFIG_TOOLBAR_TOOLTIPS_ENABLED = 'DASHBOARD_FAVORITES_MANAGER_TOOLBAR_TOOLTIPS_ENABLED';
+
     private const USER_CONFIG_TOOLBAR_KEEP_OPEN_ON_PAGE_CHANGE = 'DASHBOARD_FAVORITES_MANAGER_TOOLBAR_KEEP_OPEN_ON_PAGE_CHANGE';
 
     private const USER_CONFIG_KEYS = [
@@ -34,6 +36,7 @@ class ToolbarSettings
         self::USER_CONFIG_TOOLBAR_CLEAR_CACHE_ENABLED,
         self::USER_CONFIG_TOOLBAR_LOGOUT_ENABLED,
         self::USER_CONFIG_TOOLBAR_CONCRETE_VERSION_ENABLED,
+        self::USER_CONFIG_TOOLBAR_TOOLTIPS_ENABLED,
         self::USER_CONFIG_TOOLBAR_KEEP_OPEN_ON_PAGE_CHANGE,
     ];
 
@@ -143,6 +146,28 @@ class ToolbarSettings
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_CONCRETE_VERSION_ENABLED, $enabled ? 1 : 0);
     }
 
+    public function isTooltipsEnabled()
+    {
+        $user = new User();
+        if (!$user->isRegistered()) {
+            return false;
+        }
+
+        $value = $user->config(self::USER_CONFIG_TOOLBAR_TOOLTIPS_ENABLED);
+
+        return $value === null ? true : (int) $value === 1;
+    }
+
+    public function setTooltipsEnabled($enabled)
+    {
+        $user = new User();
+        if (!$user->isRegistered()) {
+            return;
+        }
+
+        $user->saveConfig(self::USER_CONFIG_TOOLBAR_TOOLTIPS_ENABLED, $enabled ? 1 : 0);
+    }
+
     public function isKeepOpenOnPageChangeEnabled()
     {
         $user = new User();
@@ -170,6 +195,7 @@ class ToolbarSettings
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_CLEAR_CACHE_ENABLED, 1);
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_LOGOUT_ENABLED, 1);
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_CONCRETE_VERSION_ENABLED, 1);
+        $user->saveConfig(self::USER_CONFIG_TOOLBAR_TOOLTIPS_ENABLED, 1);
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_KEEP_OPEN_ON_PAGE_CHANGE, 0);
     }
 
@@ -212,6 +238,7 @@ class ToolbarSettings
         );
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_LOGOUT_ENABLED, 1);
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_CONCRETE_VERSION_ENABLED, 0);
+        $user->saveConfig(self::USER_CONFIG_TOOLBAR_TOOLTIPS_ENABLED, 1);
         $user->saveConfig(self::USER_CONFIG_TOOLBAR_KEEP_OPEN_ON_PAGE_CHANGE, 0);
     }
 

@@ -61,7 +61,7 @@ class ToolbarManager
                 'favoritesEnabled' => $favoritesEnabled,
                 'favorites' => $favoritesEnabled ? $this->favoritesService->getToolbarFavoriteLinks() : [],
                 'currentPageID' => (int) $view->getCollectionObject()->getCollectionID(),
-                'toolbarTooltips' => (bool) $this->app->make('config')->get('concrete.accessibility.toolbar_tooltips'),
+                'toolbarTooltips' => (bool) $this->app->make('config')->get('concrete.accessibility.toolbar_tooltips') && $this->settings->isTooltipsEnabled(),
                 'emptyText' => t('The favorites list is empty.'),
                 'title' => t('Dashboard favorites'),
                 'openInNewTabText' => t('Open in new tab'),
