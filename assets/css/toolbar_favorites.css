@@ -62,8 +62,8 @@
     --dfm-favorite-link-path-color: var(--dfm-search-muted-color);
     --dfm-favorite-link-icon-color: var(--dfm-menu-primary);
     --dfm-favorite-link-icon-hover-color: var(--dfm-menu-hover-color);
-    --dfm-action-color: var(--dfm-menu-primary);
-    --dfm-action-hover-color: var(--dfm-menu-hover-color);
+    --dfm-action-color: var(--dfm-favorite-link-color);
+    --dfm-action-hover-color: var(--dfm-favorite-link-hover-color);
 }
 
 .dashboard-favorites-toolbar-dashboard {
@@ -679,6 +679,7 @@
 
 .dashboard-favorites-toolbar-action-button::before,
 .dashboard-favorites-toolbar-action-link::before {
+    color: var(--dfm-menu-primary);
     content: "\f152";
     flex: 0 0 auto;
     font-family: "Font Awesome 5 Free";
