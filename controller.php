@@ -106,6 +106,16 @@ class Controller extends Package
         $this->getToolbarSettings()->setConcreteVersionEnabled($enabled);
     }
 
+    public function isToolbarKeepOpenOnPageChangeEnabled()
+    {
+        return $this->getToolbarSettings()->isKeepOpenOnPageChangeEnabled();
+    }
+
+    public function setToolbarKeepOpenOnPageChangeEnabled($enabled)
+    {
+        $this->getToolbarSettings()->setKeepOpenOnPageChangeEnabled($enabled);
+    }
+
     public function install()
     {
         $pkg = parent::install();

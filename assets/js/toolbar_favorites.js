@@ -1,5 +1,6 @@
 (function () {
     var openInNewTabTooltipShown = false;
+    var keepOpenOnPageChangeKey = 'dashboardFavoritesManager.keepMenuOpenOnPageChange';
 
     function createElement(tag, className, text) {
         var element = document.createElement(tag);
@@ -39,6 +40,37 @@
         }
     }
 
+    function clearConcreteTooltip(element, text) {
+        if (!element) {
+            return;
+        }
+
+        var Tooltip = window.bootstrap && window.bootstrap.Tooltip;
+        var currentTooltip = Tooltip ? Tooltip.getInstance(element) : null;
+        if (currentTooltip) {
+            currentTooltip.dispose();
+        }
+
+        element.classList.remove('launch-tooltip');
+        element.removeAttribute('data-bs-toggle');
+        element.removeAttribute('data-bs-original-title');
+        element.removeAttribute('aria-describedby');
+        if (text) {
+            element.title = text;
+        } else {
+            element.removeAttribute('title');
+        }
+    }
+
+    function setToolbarTooltip(element, text, config, placement) {
+        if (config && config.toolbarTooltips === false) {
+            clearConcreteTooltip(element, text);
+            return;
+        }
+
+        setConcreteTooltip(element, text, placement);
+    }
+
     function resetOpenInNewTabTooltips(container) {
         openInNewTabTooltipShown = false;
         var Tooltip = window.bootstrap && window.bootstrap.Tooltip;
@@ -55,13 +87,14 @@
         });
     }
 
-    function syncOpenInNewTabTooltips(container, text) {
+    function syncOpenInNewTabTooltips(container, config) {
         var isDesktop = !window.matchMedia || window.matchMedia('(min-width: 576px)').matches;
         var Tooltip = window.bootstrap && window.bootstrap.Tooltip;
         var links = container.querySelectorAll('[data-dashboard-favorites-toolbar-open-new-tab]');
+        var text = config.openInNewTabText || 'Open in new tab';
         Array.prototype.forEach.call(links, function (link) {
             var currentTooltip = Tooltip ? Tooltip.getInstance(link) : null;
-            if (isDesktop) {
+            if (isDesktop && config.toolbarTooltips !== false) {
                 if (!currentTooltip) {
                     setConcreteTooltip(link, text, 'right');
                 }
@@ -74,7 +107,11 @@
             link.classList.remove('launch-tooltip');
             link.removeAttribute('data-bs-toggle');
             link.removeAttribute('data-bs-original-title');
-            link.removeAttribute('title');
+            if (config.toolbarTooltips === false) {
+                link.title = text;
+            } else {
+                link.removeAttribute('title');
+            }
         });
     }
 
@@ -161,6 +198,91 @@
         if (button) {
             button.setAttribute('aria-expanded', 'false');
         }
+    }
+
+    function openMenu(wrapper, config) {
+        var menu = wrapper.querySelector('.dashboard-favorites-toolbar-menu');
+        var button = wrapper.querySelector('[data-dashboard-favorites-toolbar-button]');
+        if (!menu || !button) {
+            return;
+        }
+
+        wrapper.classList.add('is-open');
+        button.setAttribute('aria-expanded', 'true');
+        syncOpenInNewTabTooltips(menu, config);
+        positionMenuInViewport(wrapper);
+    }
+
+    function getKeepOpenOnPageChangeFlag() {
+        try {
+            return window.sessionStorage.getItem(keepOpenOnPageChangeKey) === '1';
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function setKeepOpenOnPageChangeFlag() {
+        try {
+            window.sessionStorage.setItem(keepOpenOnPageChangeKey, '1');
+        } catch (e) {
+            // Storage can be unavailable; direct navigation still works normally.
+        }
+    }
+
+    function clearKeepOpenOnPageChangeFlag() {
+        try {
+            window.sessionStorage.removeItem(keepOpenOnPageChangeKey);
+        } catch (e) {
+            // Storage can be unavailable.
+        }
+    }
+
+    function shouldKeepMenuOpenAfterNavigation(event, link, config) {
+        if (!config.keepOpenOnPageChange || event.defaultPrevented || event.button !== 0) {
+            return false;
+        }
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+            return false;
+        }
+        if (!link || link.target || link.hasAttribute('download')) {
+            return false;
+        }
+        if (link.closest('[data-dashboard-favorites-toolbar-open-new-tab]')
+            || link.closest('.dashboard-favorites-toolbar-action-link')) {
+            return false;
+        }
+        try {
+            return new URL(link.href, window.location.href).origin === window.location.origin;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function bindKeepOpenOnPageChange(menu, config) {
+        if (!menu || !config.keepOpenOnPageChange) {
+            clearKeepOpenOnPageChangeFlag();
+            return;
+        }
+
+        menu.addEventListener('click', function (event) {
+            var link = event.target.closest('a[href]');
+            if (shouldKeepMenuOpenAfterNavigation(event, link, config)) {
+                setKeepOpenOnPageChangeFlag();
+            }
+        }, true);
+    }
+
+    function restoreKeepOpenOnPageChange(wrapper, config) {
+        if (!config.keepOpenOnPageChange) {
+            clearKeepOpenOnPageChangeFlag();
+            return;
+        }
+        if (!getKeepOpenOnPageChangeFlag()) {
+            return;
+        }
+
+        clearKeepOpenOnPageChangeFlag();
+        openMenu(wrapper, config);
     }
 
     function getViewportWidth() {
@@ -547,7 +669,7 @@
             }
         }
 
-        syncOpenInNewTabTooltips(container, config.openInNewTabText || 'Open in new tab');
+        syncOpenInNewTabTooltips(container, config);
     }
 
     function updateToolbarSearchStar(item, isFavorite, searchConfig) {
@@ -564,7 +686,7 @@
         if (button) {
             button.setAttribute('aria-pressed', isFavorite ? 'true' : 'false');
             button.setAttribute('data-bs-trigger', 'hover');
-            setConcreteTooltip(button, label);
+            setToolbarTooltip(button, label, searchConfig);
         }
         if (icon) {
             icon.className = (isFavorite ? 'fas' : 'far') + ' fa-star';
@@ -697,7 +819,7 @@
         var link = createElement('a', 'dashboard-favorites-toolbar-search-result-link');
         link.href = isSafeUrl(page.url || '') ? page.url : '#';
         link.setAttribute('aria-label', searchConfig.openText || '');
-        setConcreteTooltip(link, searchConfig.openText);
+        setToolbarTooltip(link, searchConfig.openText, searchConfig);
         var arrow = createElement('i', 'fas fa-arrow-right');
         arrow.setAttribute('aria-hidden', 'true');
         link.appendChild(arrow);
@@ -832,6 +954,7 @@
         if (!searchConfig || !searchConfig.url || !searchConfig.toggleUrl || !searchConfig.token) {
             return null;
         }
+        searchConfig.toolbarTooltips = config.toolbarTooltips;
         if (!search) {
             return null;
         }
@@ -1056,7 +1179,7 @@
             button.setAttribute('aria-haspopup', 'true');
             button.setAttribute('data-bs-trigger', 'hover');
             button.setAttribute('data-dashboard-favorites-toolbar-button', '1');
-            setConcreteTooltip(button, config.title);
+            setToolbarTooltip(button, config.title, config);
 
             var icon = createElement('i', 'fas fa-star');
             icon.setAttribute('aria-hidden', 'true');
@@ -1073,13 +1196,13 @@
                 var isOpen = wrapper.classList.toggle('is-open');
                 button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
                 if (isOpen) {
-                    syncOpenInNewTabTooltips(menu, config.openInNewTabText || 'Open in new tab');
-                    positionMenuInViewport(wrapper);
+                    openMenu(wrapper, config);
                 } else {
                     closeMenu(wrapper);
                 }
             });
 
+            bindKeepOpenOnPageChange(menu, config);
             wrapper.appendChild(button);
             wrapper.appendChild(menu);
         }
@@ -1151,6 +1274,7 @@
             menu = buildMenu(config, 'div', 'dashboard-favorites-toolbar dashboard-favorites-toolbar-dashboard');
             dashboardPageHeader.appendChild(menu);
         }
+        restoreKeepOpenOnPageChange(menu, config);
 
         if (config.favoritesEnabled === true) {
             document.addEventListener('click', function (event) {
@@ -1161,7 +1285,7 @@
 
             window.addEventListener('resize', function () {
                 positionMenuInViewport(menu);
-                syncOpenInNewTabTooltips(menu, config.openInNewTabText || 'Open in new tab');
+                syncOpenInNewTabTooltips(menu, config);
             });
         }
     }

@@ -16,6 +16,10 @@
     --dfm-menu-text-secondary: #495057;
     --dfm-menu-current-bg: var(--dfm-menu-primary);
     --dfm-menu-current-color: #fff;
+    --dfm-toolbar-button-active-bg: var(--dfm-menu-primary);
+    --dfm-toolbar-button-active-color: #fff;
+    --dfm-toolbar-button-icon-color: var(--dfm-menu-primary);
+    --dfm-toolbar-button-icon-hover-color: var(--dfm-toolbar-button-icon-color);
     --dfm-toolbar-button-hover-bg: rgba(255, 255, 255, 0.08);
     --dfm-toolbar-button-hover-color: inherit;
     --dfm-search-highlight-bg: #d9eaff;
@@ -49,6 +53,7 @@
     --dfm-menu-text-secondary: #dee2e6;
     --dfm-menu-current-bg: #4a90e2;
     --dfm-menu-current-color: #fff;
+    --dfm-toolbar-button-active-bg: #4a90e2;
     --dfm-toolbar-button-hover-bg: #2c2c2c;
     --dfm-toolbar-button-hover-color: #e9ecef;
     --dfm-search-highlight-bg: #284f70;
@@ -108,7 +113,29 @@
 }
 
 .dashboard-favorites-toolbar-button .fas {
-    color: var(--dfm-menu-primary);
+    color: var(--dfm-toolbar-button-icon-color);
+}
+
+.dashboard-favorites-toolbar-button:hover .fas {
+    color: var(--dfm-toolbar-button-icon-hover-color);
+}
+
+.dashboard-favorites-toolbar.is-open .dashboard-favorites-toolbar-button {
+    background: var(--dfm-toolbar-button-active-bg);
+    color: var(--dfm-toolbar-button-active-color);
+}
+
+.dashboard-favorites-toolbar.is-open .dashboard-favorites-toolbar-button .fas {
+    color: var(--dfm-toolbar-button-active-color);
+}
+
+.dashboard-favorites-toolbar.is-open .dashboard-favorites-toolbar-button:hover {
+    background: var(--dfm-toolbar-button-hover-bg);
+    color: var(--dfm-toolbar-button-hover-color);
+}
+
+.dashboard-favorites-toolbar.is-open .dashboard-favorites-toolbar-button:hover .fas {
+    color: var(--dfm-toolbar-button-icon-hover-color);
 }
 
 .dashboard-favorites-toolbar-version {

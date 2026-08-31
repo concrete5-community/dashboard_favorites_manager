@@ -61,12 +61,14 @@ class ToolbarManager
                 'favoritesEnabled' => $favoritesEnabled,
                 'favorites' => $favoritesEnabled ? $this->favoritesService->getToolbarFavoriteLinks() : [],
                 'currentPageID' => (int) $view->getCollectionObject()->getCollectionID(),
+                'toolbarTooltips' => (bool) $this->app->make('config')->get('concrete.accessibility.toolbar_tooltips'),
                 'emptyText' => t('The favorites list is empty.'),
                 'title' => t('Dashboard favorites'),
                 'openInNewTabText' => t('Open in new tab'),
                 'dismissText' => t('Dismiss message'),
                 'sessionExpiredText' => t('Session expired. Please sign in again.'),
                 'overlayMessages' => $this->pullOverlayMessages(),
+                'keepOpenOnPageChange' => $favoritesEnabled && $this->settings->isKeepOpenOnPageChangeEnabled(),
             ];
             if ($concreteVersionEnabled) {
                 $toolbarConfig['concreteVersion'] = [
