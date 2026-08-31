@@ -225,9 +225,9 @@ if ($initialFavoriteLinksJson === false) {
                     </span>
                 </div>
                 <div class="form-check form-switch dashboard-favorites-manager-dependent-switch<?= $toolbarFavoritesEnabled ? '' : ' is-disabled' ?>">
-                    <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-tooltips-enabled" name="toolbar_tooltips_enabled" value="1" aria-label="<?= h(t('Show DFM tooltips')) ?>" form="dashboard-favorites-manager-toolbar-settings" onchange="this.form.submit()" <?= $toolbarFavoritesEnabled && $toolbarTooltipsEnabled ? 'checked' : '' ?> <?= $toolbarFavoritesEnabled ? '' : 'disabled' ?>>
+                    <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-tooltips-enabled" name="toolbar_tooltips_enabled" value="1" aria-label="<?= h(t('Show toolbar favorites tooltips')) ?>" form="dashboard-favorites-manager-toolbar-settings" onchange="this.form.submit()" <?= $toolbarFavoritesEnabled && $toolbarTooltipsEnabled ? 'checked' : '' ?> <?= $toolbarFavoritesEnabled ? '' : 'disabled' ?>>
                     <span class="form-check-label">
-                        <?= t('Show DFM tooltips') ?>
+                        <?= t('Show toolbar favorites tooltips') ?>
                     </span>
                 </div>
                 <?php if ($canUseToolbarClearCache) { ?>

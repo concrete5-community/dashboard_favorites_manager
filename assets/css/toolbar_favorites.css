@@ -20,7 +20,7 @@
     --dfm-toolbar-button-active-color: #fff;
     --dfm-toolbar-button-icon-color: var(--dfm-menu-primary);
     --dfm-toolbar-button-icon-hover-color: var(--dfm-toolbar-button-icon-color);
-    --dfm-toolbar-button-hover-bg: rgba(255, 255, 255, 0.08);
+    --dfm-toolbar-button-hover-bg: rgba(0, 0, 0, 0.08);
     --dfm-toolbar-button-hover-color: inherit;
     --dfm-search-highlight-bg: #d9eaff;
     --dfm-favorite-link-color: var(--dfm-menu-text);
@@ -95,20 +95,20 @@
     outline: 0;
 }
 
-.dashboard-favorites-toolbar-button:hover {
-    background: rgba(255, 255, 255, 0.08);
+.dashboard-favorites-toolbar:not(.is-open) .dashboard-favorites-toolbar-button:hover {
+    background: var(--dfm-toolbar-button-hover-bg);
 }
 
 .dashboard-favorites-toolbar-button:focus-visible {
     box-shadow: var(--dfm-search-focus-shadow);
 }
 
-[data-bs-theme="dark"] .dashboard-favorites-toolbar-button:hover {
+[data-bs-theme="dark"] .dashboard-favorites-toolbar:not(.is-open) .dashboard-favorites-toolbar-button:hover {
     background: var(--dfm-toolbar-button-hover-bg);
     color: var(--dfm-toolbar-button-hover-color);
 }
 
-.dashboard-favorites-toolbar-dashboard .dashboard-favorites-toolbar-button:hover {
+.dashboard-favorites-toolbar-dashboard:not(.is-open) .dashboard-favorites-toolbar-button:hover {
     background: var(--dfm-menu-hover-bg);
 }
 
@@ -130,12 +130,12 @@
 }
 
 .dashboard-favorites-toolbar.is-open .dashboard-favorites-toolbar-button:hover {
-    background: var(--dfm-toolbar-button-hover-bg);
-    color: var(--dfm-toolbar-button-hover-color);
+    background: var(--dfm-toolbar-button-active-bg);
+    color: var(--dfm-toolbar-button-active-color);
 }
 
 .dashboard-favorites-toolbar.is-open .dashboard-favorites-toolbar-button:hover .fas {
-    color: var(--dfm-toolbar-button-icon-hover-color);
+    color: var(--dfm-toolbar-button-active-color);
 }
 
 .dashboard-favorites-toolbar-version {
