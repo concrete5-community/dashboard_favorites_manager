@@ -1,6 +1,6 @@
 .dashboard-favorites-toolbar {
-    --dfm-search-focus-border: #86b7fe;
-    --dfm-search-focus-shadow: 0 0 0 0.18rem rgba(13, 110, 253, 0.26);
+    --dfm-search-focus-border: var(--dfm-menu-primary);
+    --dfm-search-focus-shadow: 0 0 0 0.18rem rgba(74, 144, 226, 0.32);
     --dfm-search-input-color: #212529;
     --dfm-search-input-font-size: 0.9375rem;
     --dfm-search-order-color: #495057;
@@ -22,7 +22,8 @@
     --dfm-toolbar-button-icon-hover-color: var(--dfm-toolbar-button-icon-color);
     --dfm-toolbar-button-hover-bg: rgba(0, 0, 0, 0.08);
     --dfm-toolbar-button-hover-color: inherit;
-    --dfm-search-highlight-bg: #d9eaff;
+    --dfm-search-highlight-bg: #d2eafa;
+    --dfm-search-result-hover-bg: #ebf5fb;
     --dfm-favorite-link-color: var(--dfm-menu-text);
     --dfm-favorite-link-hover-color: var(--dfm-menu-text);
     --dfm-favorite-link-path-color: var(--dfm-search-muted-color);
@@ -38,14 +39,14 @@
 }
 
 [data-bs-theme="dark"] .dashboard-favorites-toolbar {
-    --dfm-search-focus-border: #6ea8fe;
-    --dfm-search-focus-shadow: 0 0 0 0.18rem rgba(110, 168, 254, 0.28);
+    --dfm-search-focus-border: var(--dfm-menu-primary);
+    --dfm-search-focus-shadow: 0 0 0 0.18rem rgba(74, 144, 226, 0.36);
     --dfm-search-input-color: #f8f9fa;
     --dfm-search-order-color: #dee2e6;
     --dfm-search-muted-color: #adb5bd;
     --dfm-menu-hover-bg: #424f5b;
     --dfm-menu-hover-color: #bbbbbb;
-    --dfm-menu-primary: #6ea8fe;
+    --dfm-menu-primary: #4a90e2;
     --dfm-menu-bg: #343a40;
     --dfm-menu-border: #495057;
     --dfm-menu-divider: #3d444a;
@@ -56,7 +57,8 @@
     --dfm-toolbar-button-active-bg: #4a90e2;
     --dfm-toolbar-button-hover-bg: #2c2c2c;
     --dfm-toolbar-button-hover-color: #e9ecef;
-    --dfm-search-highlight-bg: #284f70;
+    --dfm-search-highlight-bg: #424f5b;
+    --dfm-search-result-hover-bg: #1c1c1c;
     --dfm-favorite-link-color: #d8d8d8;
     --dfm-favorite-link-hover-color: var(--dfm-menu-hover-color);
     --dfm-favorite-link-path-color: var(--dfm-search-muted-color);
@@ -350,7 +352,7 @@
 }
 
 .dashboard-favorites-toolbar-search-result:hover {
-    background: var(--dfm-menu-hover-bg);
+    background: var(--dfm-search-result-hover-bg);
 }
 
 .dashboard-favorites-toolbar-search-toggle-form {

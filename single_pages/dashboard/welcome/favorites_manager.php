@@ -219,9 +219,9 @@ if ($initialFavoriteLinksJson === false) {
                     </span>
                 </div>
                 <div class="form-check form-switch dashboard-favorites-manager-dependent-switch<?= $toolbarFavoritesEnabled ? '' : ' is-disabled' ?>">
-                    <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-keep-open-on-page-change-enabled" name="toolbar_keep_open_on_page_change_enabled" value="1" aria-label="<?= h(t('Keep menu open after page change')) ?>" form="dashboard-favorites-manager-toolbar-settings" onchange="this.form.submit()" <?= $toolbarFavoritesEnabled && $toolbarKeepOpenOnPageChangeEnabled ? 'checked' : '' ?> <?= $toolbarFavoritesEnabled ? '' : 'disabled' ?>>
+                    <input type="checkbox" class="form-check-input" id="dashboard-favorites-manager-keep-open-on-page-change-enabled" name="toolbar_keep_open_on_page_change_enabled" value="1" aria-label="<?= h(t('Keep menu open after page change (click on star to close)')) ?>" form="dashboard-favorites-manager-toolbar-settings" onchange="this.form.submit()" <?= $toolbarFavoritesEnabled && $toolbarKeepOpenOnPageChangeEnabled ? 'checked' : '' ?> <?= $toolbarFavoritesEnabled ? '' : 'disabled' ?>>
                     <span class="form-check-label">
-                        <?= t('Keep menu open after page change') ?>
+                        <?= t('Keep menu open after page change (click on star to close)') ?>
                     </span>
                 </div>
                 <div class="form-check form-switch dashboard-favorites-manager-dependent-switch<?= $toolbarFavoritesEnabled ? '' : ' is-disabled' ?>">
