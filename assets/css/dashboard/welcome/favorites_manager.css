@@ -671,11 +671,6 @@ html.dashboard-favorites-manager-options-panel-initializing [data-dashboard-favo
     text-decoration: none;
 }
 
-.dashboard-favorites-manager-page-result:hover .dashboard-favorites-manager-page-result-link,
-.dashboard-favorites-manager-page-result:focus-within .dashboard-favorites-manager-page-result-link {
-    color: var(--dfm-primary);
-}
-
 .dashboard-favorites-manager-page-result-link:hover,
 .dashboard-favorites-manager-page-result-link:focus {
     color: var(--dfm-primary);
