@@ -1,0 +1,5 @@
+live/state.json
+live/*.cookies
+live/failed-*.json
+live/login.html
+live/manager.html

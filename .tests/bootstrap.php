@@ -16,6 +16,7 @@ namespace Concrete\Core\Page {
         private $id;
         private $path;
         public $visible;
+        public $error;
         public static $idReads = 0;
         public static $pathReads = 0;
 
@@ -24,6 +25,7 @@ namespace Concrete\Core\Page {
             $this->id = $id;
             $this->path = $path;
             $this->visible = $visible;
+            $this->error = $id === 0 ? COLLECTION_NOT_FOUND : false;
         }
 
         public static function getByID($id)
@@ -41,7 +43,7 @@ namespace Concrete\Core\Page {
             }
             return new self();
         }
-        public function isError() { return $this->id === 0; }
+        public function isError($error = null) { return $error ? $this->error == $error : $this->error; }
         public function getCollectionID() { return $this->id; }
         public function getCollectionPath() { return $this->path; }
         public function getCollectionName() { return 'Page ' . $this->id; }
@@ -55,9 +57,15 @@ namespace Concrete\Core\User {
         public static $registered = true;
         public static $rawConfig;
         public static $writes = 0;
+        public static $settings = [];
         public function isRegistered() { return self::$registered; }
         public function getUserID() { return self::$registered ? 1 : 0; }
-        public function config($key) { return self::$rawConfig ?? json_encode(self::$items); }
+        public function config($key)
+        {
+            return $key === 'DASHBOARD_FAVORITES'
+                ? (self::$rawConfig ?? json_encode(self::$items))
+                : (self::$settings[$key] ?? null);
+        }
         public function saveConfig($key, $value)
         {
             self::$writes++;
@@ -68,6 +76,7 @@ namespace Concrete\Core\User {
 
 namespace {
     define('C5_EXECUTE', true);
+    define('COLLECTION_NOT_FOUND', 10);
     define('DIR_REL', getenv('DFM_TEST_BASE_PATH') ?: '');
 
     class URL

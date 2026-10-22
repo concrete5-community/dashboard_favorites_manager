@@ -8,7 +8,7 @@
     };
     const onError = error => errors.push(error.message);
     page.on('pageerror', onError);
-    const baseUrl = 'http://127.0.0.1:8765/tests/smoke_fixture.php';
+    const baseUrl = 'http://127.0.0.1:8765/.tests/smoke_fixture.php';
     const rows = () => page.locator('tr[data-favorite-key]');
     const toolbarRows = () => page.locator('.dashboard-favorites-toolbar-link-row');
     const unavailableRows = () => rows().filter({hasText: 'Page unavailable'});

@@ -407,6 +407,61 @@ class DashboardFavoritesService
         $this->clearFavoritesCache();
     }
 
+    public function removeCurrentUserOrphanedFavorites()
+    {
+        $user = new User();
+        if (!$user->isRegistered()) {
+            return 0;
+        }
+
+        // Only clean explicitly stored favorites; do not persist the defaults.
+        $items = $this->getUserStoredFavoriteItems($user);
+        if (empty($items)) {
+            return 0;
+        }
+
+        $removed = 0;
+        $filtered = $this->filterOrphanedFavoriteItems($items, $removed);
+        if ($removed > 0) {
+            $this->saveCurrentUserDashboardFavoriteItems($filtered);
+        }
+
+        return $removed;
+    }
+
+    private function filterOrphanedFavoriteItems(array $items, &$removed)
+    {
+        $filtered = [];
+        foreach ($items as $item) {
+            if (!is_array($item)) {
+                $filtered[] = $item;
+                continue;
+            }
+
+            $children = !empty($item['children']) && is_array($item['children'])
+                ? $this->filterOrphanedFavoriteItems($item['children'], $removed)
+                : [];
+            $pageID = $this->getFavoriteItemPageID($item);
+            $path = $this->normalizer->sanitizeFavoriteUrl($this->getFavoriteItemUrl($item));
+            $page = $this->getFavoritePage($pageID, $path);
+            // Permission failures and other page errors are not proof of deletion.
+            if ($page instanceof Page && $page->isError(COLLECTION_NOT_FOUND)) {
+                $removed++;
+                foreach ($children as $child) {
+                    $filtered[] = $child;
+                }
+                continue;
+            }
+
+            if (!empty($item['children']) && is_array($item['children'])) {
+                $item['children'] = $children;
+            }
+            $filtered[] = $item;
+        }
+
+        return $filtered;
+    }
+
     public function addCurrentUserDashboardPageFavorite(Page $page)
     {
         if ($this->getCurrentUserID() <= 0) {
@@ -625,14 +680,7 @@ class DashboardFavoritesService
         foreach ($this->normalizer->flattenItems($this->getCurrentUserDashboardFavoriteItems()) as $item) {
             $pageID = $this->getFavoriteItemPageID($item);
             $urlPath = $this->normalizer->sanitizeFavoriteUrl($this->getFavoriteItemUrl($item));
-            $page = $pageID > 0 ? $this->getPageByID($pageID) : null;
-            // Legacy URL-only favorites need the same existence and permission checks.
-            if ($pageID <= 0 && $urlPath !== null) {
-                if (!array_key_exists($urlPath, $this->pagePathCache)) {
-                    $this->pagePathCache[$urlPath] = Page::getByPath($urlPath);
-                }
-                $page = $this->pagePathCache[$urlPath];
-            }
+            $page = $this->getFavoritePage($pageID, $urlPath);
             $pagePath = $this->normalizer->isDashboardPage($page) ? $this->normalizer->getPagePath($page) : '';
 
             $favorites[] = [
@@ -647,6 +695,21 @@ class DashboardFavoritesService
         }
 
         return $favorites;
+    }
+
+    private function getFavoritePage($pageID, $urlPath)
+    {
+        if ($pageID > 0) {
+            return $this->getPageByID($pageID);
+        }
+        if ($urlPath === null) {
+            return null;
+        }
+        if (!array_key_exists($urlPath, $this->pagePathCache)) {
+            $this->pagePathCache[$urlPath] = Page::getByPath($urlPath);
+        }
+
+        return $this->pagePathCache[$urlPath];
     }
 
     private function getPageByID($pageID)

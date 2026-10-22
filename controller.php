@@ -9,6 +9,7 @@ defined('C5_EXECUTE') or die('Access Denied.');
 use Concrete\Core\Package\Package;
 use Concrete\Core\Page\Page;
 use Concrete\Core\Page\Single as SinglePage;
+use Concrete\Core\Support\Facade\Events;
 use Concrete\Core\User\User;
 use Concrete\Package\DashboardFavoritesManager\Favorites\DashboardFavoriteNormalizer;
 use Concrete\Package\DashboardFavoritesManager\Favorites\DashboardFavoritesRepairer;
@@ -32,6 +33,8 @@ class Controller extends Package
 
     protected $pkgVersion = '1.2.4';
 
+    private $dashboardFavoritesService;
+
     public function getPackageName()
     {
         return t('Dashboard Favorites Manager');
@@ -53,6 +56,13 @@ class Controller extends Package
     {
         $this->clearFavoritesCacheWhenUserChanges();
         $this->getDashboardFavoritesRepairer()->repairOnce();
+        // Run before dashboard controllers build the core favorites navigation,
+        // including when the optional toolbar favorites menu is disabled.
+        Events::addListener('on_page_view', function ($event) {
+            if ($this->getDashboardFavoriteNormalizer()->isDashboardPage($event->getPageObject()) || $this->isToolbarFavoritesEnabled()) {
+                $this->getDashboardFavoritesService()->removeCurrentUserOrphanedFavorites();
+            }
+        });
         $this->getToolbarManager()->start($this);
     }
 
@@ -238,11 +248,15 @@ class Controller extends Package
 
     private function getDashboardFavoritesService()
     {
-        return new DashboardFavoritesService(
-            $this->app,
-            self::MANAGER_PATH,
-            $this->getDashboardFavoriteNormalizer()
-        );
+        if ($this->dashboardFavoritesService === null) {
+            $this->dashboardFavoritesService = new DashboardFavoritesService(
+                $this->app,
+                self::MANAGER_PATH,
+                $this->getDashboardFavoriteNormalizer()
+            );
+        }
+
+        return $this->dashboardFavoritesService;
     }
 
     private function getDashboardFavoriteNormalizer()

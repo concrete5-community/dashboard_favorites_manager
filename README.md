@@ -65,6 +65,7 @@ After installation, open Dashboard > Welcome > Dashboard Favorites Manager to ma
 - Automatically repairs malformed dashboard favorite data where possible
 - Safe dashboard-only favorite links in the toolbar menu
 - Checks legacy URL-only favorites against existing dashboard pages and permissions
+- Automatically removes favorites for deleted pages when loading the dashboard or using the enabled toolbar menu
 - Marks unavailable favorites in the manager without clickable links, keeping them selectable for removal
 
 ## License

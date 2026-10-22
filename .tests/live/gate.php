@@ -147,6 +147,37 @@ try {
             'Native permissions disable both private manager links');
         $assert($digest() === $state['beforeDigest'], 'Native tests preserve existing users');
         echo json_encode(['checks' => $checks], JSON_PRETTY_PRINT), "\n";
+    } elseif ($action === 'automatic-seed') {
+        foreach (['a' => 1, 'b' => 0] as $suffix => $enabled) {
+            $service = $seed($state['users'][$suffix]['id']);
+            (new User())->saveConfig('DASHBOARD_FAVORITES_MANAGER_TOOLBAR_ENABLED', $enabled);
+        }
+        $assert($digest() === $state['beforeDigest'], 'Automatic cleanup setup preserves existing users');
+        echo json_encode(['checks' => $checks]), "\n";
+    } elseif ($action === 'automatic-assert') {
+        foreach (['a' => 1, 'b' => 0] as $suffix => $enabled) {
+            $service = $asUser($state['users'][$suffix]['id']);
+            $rows = $service->getManagerFavoriteLinks();
+            $assert(count($rows) === 2, 'HTTP page load removed all three orphans for user ' . $suffix);
+            $assert(count(array_filter($rows, function ($row) { return $row['isUnavailable']; })) === 0, 'Valid favorites retained for user ' . $suffix);
+            $assert((int) (new User())->config('DASHBOARD_FAVORITES_MANAGER_TOOLBAR_ENABLED') === $enabled, 'Toolbar setting retained for user ' . $suffix);
+            $stored = (new User())->config('DASHBOARD_FAVORITES');
+            $assert($service->removeCurrentUserOrphanedFavorites() === 0, 'Clean list needs no further cleanup for user ' . $suffix);
+            $assert((new User())->config('DASHBOARD_FAVORITES') === $stored, 'Clean list is unchanged for user ' . $suffix);
+        }
+        $service = $asUser($state['users']['restricted']['id']);
+        $private = Page::getByPath('/dashboard/system/basics/name');
+        $assert(!(new Permissions($private))->canViewPage(), 'Restricted user lacks page permission');
+        $service->saveCurrentUserDashboardFavoriteItems([
+            ['pageID' => $private->getCollectionID(), 'name' => 'Private ID'],
+            ['url' => (string) URL::to('/dashboard/system/basics/name'), 'name' => 'Private URL'],
+        ]);
+        $stored = (new User())->config('DASHBOARD_FAVORITES');
+        $assert($service->removeCurrentUserOrphanedFavorites() === 0, 'Denied pages are not deleted');
+        $assert((new User())->config('DASHBOARD_FAVORITES') === $stored, 'Denied favorites remain stored');
+        $assert($service->getToolbarFavoriteLinks() === [], 'Denied favorites remain hidden');
+        $assert($digest() === $state['beforeDigest'], 'Automatic cleanup tests preserve existing users');
+        echo json_encode(['checks' => $checks], JSON_PRETTY_PRINT), "\n";
     } elseif ($action === 'reset-ui') {
         $seed($state['users']['a']['id']);
         echo "UI fixture favorites reset.\n";

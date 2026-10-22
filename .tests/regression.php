@@ -200,4 +200,63 @@ scenario('import rejects invalid format and permissions', function ($service) {
     check($report['skippedInvalid'] === 3 && User::$writes === 0, 'Unavailable import changed data.');
 });
 
+scenario('automatic cleanup removes only missing pages', function ($service) {
+    User::$items = [
+        ['pageID' => 1, 'name' => 'Valid'],
+        ['pageID' => 99, 'url' => '/dashboard/current', 'name' => 'Deleted ID with reused path'],
+        ['url' => '/dashboard/gone', 'name' => 'Deleted legacy URL'],
+        ['pageID' => 3, 'name' => 'Denied ID'],
+        ['url' => '/dashboard/private', 'name' => 'Denied URL'],
+        ['pageID' => 5, 'name' => 'Permission error'],
+        ['pageID' => 4, 'name' => 'Outside dashboard'],
+    ];
+    check($service->removeCurrentUserOrphanedFavorites() === 2, 'Cleanup must remove only missing pages.');
+    check(array_column(User::$items, 'name') === ['Valid', 'Denied ID', 'Denied URL', 'Permission error', 'Outside dashboard'], 'Existing favorites or order changed.');
+    check(User::$writes === 1, 'Cleanup must save once.');
+    check(count($service->getToolbarFavoriteLinks()) === 1, 'Toolbar did not use the cleaned list.');
+    check(count($service->getManagerFavoriteLinks()) === 5, 'Manager did not use the cleaned list.');
+    check($service->removeCurrentUserOrphanedFavorites() === 0 && User::$writes === 1, 'Clean favorites were saved again.');
+});
+scenario('automatic cleanup preserves nested valid favorites', function ($service) {
+    User::$items = [
+        ['pageID' => 99, 'children' => [['pageID' => 1], ['pageID' => 100]]],
+        ['pageID' => 2, 'children' => [['url' => '/dashboard/gone'], ['pageID' => 3]]],
+    ];
+    check($service->removeCurrentUserOrphanedFavorites() === 3, 'Nested orphans not removed.');
+    check(array_column(User::$items, 'pageID') === [1, 2], 'Valid favorites lost or reordered.');
+    check(array_column(User::$items[1]['children'], 'pageID') === [3], 'Valid nested favorite lost.');
+});
+scenario('automatic cleanup empty and guest favorites do not write', function ($service) {
+    check($service->removeCurrentUserOrphanedFavorites() === 0 && User::$writes === 0, 'Empty list was saved.');
+    User::$registered = false;
+    User::$items = [['pageID' => 99]];
+    check($service->removeCurrentUserOrphanedFavorites() === 0 && User::$writes === 0, 'Guest favorites were changed.');
+});
+scenario('automatic cleanup does not materialize defaults or malformed data', function ($service) {
+    foreach (['', '{broken', 'null'] as $raw) {
+        User::$rawConfig = $raw;
+        check($service->removeCurrentUserOrphanedFavorites() === 0 && User::$writes === 0, 'Missing or malformed settings were overwritten.');
+    }
+});
+scenario('automatic cleanup preserves unknown page errors and invalid URLs', function ($service) {
+    Page::$pages[6] = new Page(6, '/dashboard/unknown-error');
+    Page::$pages[6]->error = 11;
+    User::$items = [['pageID' => 6], ['url' => 'javascript:alert(1)'], ['url' => '/outside']];
+    $before = User::$items;
+    check($service->removeCurrentUserOrphanedFavorites() === 0 && User::$writes === 0, 'Uncertain data was deleted.');
+    check(User::$items === $before, 'Uncertain data changed.');
+});
+scenario('automatic cleanup reuses page lookups for toolbar', function ($service) {
+    User::$items = [['pageID' => 1], ['pageID' => 1], ['url' => '/dashboard/legacy'], ['url' => '/dashboard/legacy']];
+    $service->removeCurrentUserOrphanedFavorites();
+    $service->getToolbarFavoriteLinks();
+    check(Page::$idReads === 1 && Page::$pathReads === 1, 'Cleanup and toolbar repeated page lookups.');
+    check(User::$writes === 0, 'Clean list was saved.');
+});
+scenario('automatic cleanup persists an empty list after last orphan', function ($service) {
+    User::$items = [['pageID' => 99]];
+    check($service->removeCurrentUserOrphanedFavorites() === 1 && User::$items === [], 'Last orphan was not removed.');
+    check($service->getToolbarFavoriteLinks() === [] && $service->getManagerFavoriteLinks() === [], 'Defaults reappeared after cleanup.');
+});
+
 echo "$passed scenarios passed (base path: " . (DIR_REL ?: '/') . ").\n";
