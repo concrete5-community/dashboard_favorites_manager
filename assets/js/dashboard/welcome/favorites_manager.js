@@ -445,6 +445,9 @@
         var pathCell = url
             ? '<a href="' + escapeHtml(url) + '" class="dashboard-favorites-manager-path-link">' + escapeHtml(displayPath) + '</a>'
             : escapeHtml(displayPath);
+        if (favorite && favorite.isUnavailable) {
+            pathCell += ' <span class="text-muted">(' + escapeHtml(getManagerText('data-dashboard-favorite-unavailable-text')) + ')</span>';
+        }
 
         return ''
             + '<tr data-favorite-key="' + escapeHtml(selectionKey) + '">'

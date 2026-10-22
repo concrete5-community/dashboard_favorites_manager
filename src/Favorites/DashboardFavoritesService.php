@@ -25,6 +25,8 @@ class DashboardFavoritesService
 
     private $pageCache = [];
 
+    private $pagePathCache = [];
+
     public function __construct($app, $managerPath, DashboardFavoriteNormalizer $normalizer)
     {
         $this->app = $app;
@@ -152,21 +154,14 @@ class DashboardFavoritesService
         $links = [];
         $seenUrls = [];
         foreach ($this->getResolvedFavoriteItems() as $favorite) {
+            if (!$favorite['isAvailable']) {
+                continue;
+            }
+
             $name = trim($favorite['name']);
-            $path = $favorite['urlPath'];
-
-            if ($favorite['pageID'] > 0) {
-                if (!$this->normalizer->isDashboardPage($favorite['page']) || !$this->canViewPage($favorite['page'])) {
-                    continue;
-                }
-
-                if ($path === null) {
-                    $path = $favorite['pagePath'];
-                }
-
-                if ($name === '') {
-                    $name = (string) $favorite['page']->getCollectionName();
-                }
+            $path = $favorite['pagePath'];
+            if ($name === '') {
+                $name = (string) $favorite['page']->getCollectionName();
             }
 
             if ($path === null || $path === '' || isset($seenUrls[$path])) {
@@ -198,17 +193,13 @@ class DashboardFavoritesService
                 continue;
             }
 
-            $urlPath = $favorite['urlPath'];
-            if ($urlPath === null && $favorite['pagePath'] !== '') {
-                $urlPath = $favorite['pagePath'];
-            }
-
             $links[$selectionKey] = [
                 'selectionKey' => $selectionKey,
                 'pageID' => $favorite['pageID'],
                 'name' => $favorite['name'],
-                'path' => $favorite['pagePath'],
-                'url' => $urlPath === null ? '' : $this->normalizer->getDashboardFavoriteUrlFromPath($urlPath),
+                'path' => $favorite['pagePath'] !== '' ? $favorite['pagePath'] : ($favorite['urlPath'] ?? ''),
+                'url' => $favorite['isAvailable'] ? $this->normalizer->getDashboardFavoriteUrlFromPath($favorite['pagePath']) : '',
+                'isUnavailable' => !$favorite['isAvailable'],
             ];
         }
 
@@ -633,7 +624,15 @@ class DashboardFavoritesService
         $favorites = [];
         foreach ($this->normalizer->flattenItems($this->getCurrentUserDashboardFavoriteItems()) as $item) {
             $pageID = $this->getFavoriteItemPageID($item);
+            $urlPath = $this->normalizer->sanitizeFavoriteUrl($this->getFavoriteItemUrl($item));
             $page = $pageID > 0 ? $this->getPageByID($pageID) : null;
+            // Legacy URL-only favorites need the same existence and permission checks.
+            if ($pageID <= 0 && $urlPath !== null) {
+                if (!array_key_exists($urlPath, $this->pagePathCache)) {
+                    $this->pagePathCache[$urlPath] = Page::getByPath($urlPath);
+                }
+                $page = $this->pagePathCache[$urlPath];
+            }
             $pagePath = $this->normalizer->isDashboardPage($page) ? $this->normalizer->getPagePath($page) : '';
 
             $favorites[] = [
@@ -642,7 +641,8 @@ class DashboardFavoritesService
                 'pagePath' => $pagePath,
                 'name' => $this->getFavoriteItemName($item),
                 'url' => $this->getFavoriteItemUrl($item),
-                'urlPath' => $this->normalizer->sanitizeFavoriteUrl($this->getFavoriteItemUrl($item)),
+                'urlPath' => $urlPath,
+                'isAvailable' => $pagePath !== '' && $this->canViewPage($page),
             ];
         }
 

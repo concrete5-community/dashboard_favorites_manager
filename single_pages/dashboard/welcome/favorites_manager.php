@@ -79,6 +79,7 @@ if ($initialFavoriteLinksJson === false) {
     data-dashboard-favorites-position-heading="<?= h(t('#')) ?>"
     data-dashboard-favorites-name-heading="<?= h(t('Name')) ?>"
     data-dashboard-favorites-path-heading="<?= h(t('Path')) ?>"
+    data-dashboard-favorite-unavailable-text="<?= h(t('Page unavailable')) ?>"
     data-dashboard-favorites-move-up-text="<?= h(t('Move up')) ?>"
     data-dashboard-favorites-move-down-text="<?= h(t('Move down')) ?>"
 >
