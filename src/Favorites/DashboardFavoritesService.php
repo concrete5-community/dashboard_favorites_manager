@@ -703,7 +703,8 @@ class DashboardFavoritesService
             return $this->getPageByID($pageID);
         }
         if ($urlPath === null) {
-            return null;
+            // No usable page ID or dashboard URL: return null without a page lookup.
+            return;
         }
         if (!array_key_exists($urlPath, $this->pagePathCache)) {
             $this->pagePathCache[$urlPath] = Page::getByPath($urlPath);
