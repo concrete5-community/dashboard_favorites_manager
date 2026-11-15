@@ -70,6 +70,7 @@ if ($initialFavoriteLinksJson === false) {
     data-dashboard-favorites-empty-text="<?= h(t('The favorites list is empty.')) ?>"
     data-dashboard-favorites-remove-error="<?= h(t('Unable to remove dashboard favorites.')) ?>"
     data-dashboard-favorites-select-all-text="<?= h(t('Select all')) ?>"
+    data-dashboard-favorites-select-favorite-text="<?= h(t('Select favorite: %s')) ?>"
     data-dashboard-favorites-remove-selected-text="<?= h(t('Remove selected')) ?>"
     data-dashboard-favorites-confirm-remove-text="<?= h(t('Confirm remove?')) ?>"
     data-dashboard-favorites-confirm-remove-one="<?= h(t('Confirm remove %s favorite?')) ?>"

@@ -440,6 +440,9 @@
         var path = favorite && favorite.path ? String(favorite.path) : '';
         var url = favorite && favorite.url ? String(favorite.url) : '';
         var displayPath = path || url;
+        var selectFavoriteText = getManagerText('data-dashboard-favorites-select-favorite-text').replace('%s', function () {
+            return name || displayPath || String(position);
+        });
         var moveUpText = getManagerText('data-dashboard-favorites-move-up-text');
         var moveDownText = getManagerText('data-dashboard-favorites-move-down-text');
         var pathCell = url
@@ -452,7 +455,7 @@
         return ''
             + '<tr data-favorite-key="' + escapeHtml(selectionKey) + '">'
             + '<td>'
-            + '<input type="checkbox" name="selected_favorites[]" value="' + escapeHtml(selectionKey) + '" class="dashboard-favorites-manager-checkbox" form="dashboard-favorites-manager-form">'
+            + '<input type="checkbox" name="selected_favorites[]" value="' + escapeHtml(selectionKey) + '" class="dashboard-favorites-manager-checkbox" form="dashboard-favorites-manager-form" aria-label="' + escapeHtml(selectFavoriteText) + '">'
             + '</td>'
             + '<td class="dashboard-favorites-manager-position-cell" data-dashboard-favorites-position>' + position + '</td>'
             + '<td class="dashboard-favorites-manager-sort-cell">'
