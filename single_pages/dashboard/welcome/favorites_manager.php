@@ -330,6 +330,7 @@ if ($initialFavoriteLinksJson === false) {
                     <?= t('Use ★ to add or remove favorites, and → to open the page.') ?>
                 </div>
                 <div class="dashboard-favorites-manager-page-search-control">
+                    <label for="dashboard-favorites-manager-page-search" class="visually-hidden"><?= h(t('Search dashboard pages by name or path')) ?></label>
                     <input type="text" class="form-control form-control-sm" id="dashboard-favorites-manager-page-search" placeholder="<?= h(t('Search dashboard pages by name or path')) ?>" autocomplete="off">
                     <button type="button" class="dashboard-favorites-manager-page-search-clear" title="<?= h(t('Clear search')) ?>" aria-label="<?= h(t('Clear search')) ?>" data-dashboard-page-search-clear hidden>
                         &times;
