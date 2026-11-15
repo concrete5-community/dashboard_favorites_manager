@@ -40,7 +40,7 @@
         }
     }
 
-    function clearConcreteTooltip(element, text) {
+    function clearConcreteTooltip(element) {
         if (!element) {
             return;
         }
@@ -61,7 +61,7 @@
 
     function setToolbarTooltip(element, text, config, placement) {
         if (config && config.toolbarTooltips === false) {
-            clearConcreteTooltip(element, text);
+            clearConcreteTooltip(element);
             return;
         }
 
