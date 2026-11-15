@@ -110,7 +110,6 @@
 
     function formatResultCount(visible, total, labels) {
         visible = parseInt(visible, 10) || 0;
-        total = parseInt(total, 10) || visible;
         labels = labels || {};
         if (visible <= 0) {
             return '';
