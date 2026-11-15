@@ -491,7 +491,7 @@
             + '</colgroup>'
             + '<thead>'
             + '<tr>'
-            + '<th><input type="checkbox" id="dashboard-favorites-manager-select-all"></th>'
+            + '<th><input type="checkbox" id="dashboard-favorites-manager-select-all" aria-label="' + escapeHtml(getManagerText('data-dashboard-favorites-select-all-text')) + '"></th>'
             + '<th class="dashboard-favorites-manager-position-cell">' + escapeHtml(getManagerText('data-dashboard-favorites-position-heading')) + '</th>'
             + '<th></th>'
             + '<th class="dashboard-favorites-manager-name-cell">' + escapeHtml(getManagerText('data-dashboard-favorites-name-heading')) + '</th>'
