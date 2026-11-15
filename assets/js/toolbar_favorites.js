@@ -581,6 +581,15 @@
         return counts;
     }
 
+    function trimTrailingSlashes(path) {
+        var end = path.length;
+        while (end > 0 && path.charAt(end - 1) === '/') {
+            end--;
+        }
+
+        return path.slice(0, end);
+    }
+
     function isCurrentFavorite(favorite, config) {
         var favoritePageID = parseInt(favorite && favorite.pageID, 10);
         var currentPageID = parseInt(config && config.currentPageID, 10);
@@ -588,8 +597,8 @@
             return favoritePageID === currentPageID;
         }
 
-        var favoritePath = getFavoriteDisplayPath(favorite).replace(/\/+$/, '');
-        var currentPath = getFavoriteDisplayPath({path: window.location.pathname}).replace(/\/+$/, '');
+        var favoritePath = trimTrailingSlashes(getFavoriteDisplayPath(favorite));
+        var currentPath = trimTrailingSlashes(getFavoriteDisplayPath({path: window.location.pathname}));
 
         return favoritePath !== '' && favoritePath === currentPath;
     }
