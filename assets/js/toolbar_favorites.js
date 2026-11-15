@@ -455,6 +455,12 @@
         }
     }
 
+    function logToolbarActionError(error) {
+        if (window.console && typeof window.console.error === 'function') {
+            window.console.error('Dashboard Favorites Manager toolbar action failed.', error);
+        }
+    }
+
     function submitClearCacheForm(event, menu, config, button) {
         if (!window.fetch || !window.FormData) {
             return;
@@ -486,6 +492,9 @@
             showToolbarNotice(menu, 'error', getAjaxErrorMessage(json, config.clearCache.errorText), config);
         }).then(function () {
             setClearCacheButtonBusy(button, false);
+        }).catch(function (error) {
+            setClearCacheButtonBusy(button, false);
+            logToolbarActionError(error);
         });
     }
 
