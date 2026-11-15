@@ -17,6 +17,7 @@ use Concrete\Package\DashboardFavoritesManager\Favorites\DashboardFavoriteNormal
 use Concrete\Package\DashboardFavoritesManager\Favorites\DashboardFavoritesService;
 use Concrete\Package\DashboardFavoritesManager\Message\OverlayMessageQueue;
 use Concrete\Package\DashboardFavoritesManager\Search\DashboardPageSearch;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -238,7 +239,7 @@ class FavoritesManager extends DashboardPageController
         }
 
         $file = $this->request->files->get('favorites_file');
-        if (!$file || !$file->isValid()) {
+        if (!$file instanceof UploadedFile || !$file->isValid()) {
             $this->queueOverlayMessage('warning', t('Select a valid favorites export file.'));
 
             return $this->redirectToManager();
