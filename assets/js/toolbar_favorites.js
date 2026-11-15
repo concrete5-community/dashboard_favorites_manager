@@ -747,6 +747,11 @@
             if (button) {
                 button.disabled = false;
             }
+        }).catch(function (error) {
+            if (button) {
+                button.disabled = false;
+            }
+            logToolbarActionError(error);
         });
     }
 
