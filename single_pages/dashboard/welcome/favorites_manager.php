@@ -192,7 +192,7 @@ if ($initialFavoriteLinksJson === false) {
             <form method="post" action="<?= h($view->action('import_favorites')) ?>" enctype="multipart/form-data" class="dashboard-favorites-manager-import-form dashboard-favorites-manager-import-controls-form">
                 <input type="hidden" name="ccm_token" value="<?= h($importExportToken) ?>">
                 <div class="dashboard-favorites-manager-import-controls" data-dashboard-favorites-import-controls hidden>
-                    <input type="file" name="favorites_file" class="dashboard-favorites-manager-file-input" accept="application/json,.json" required data-dashboard-favorites-import-file data-dashboard-favorites-import-max-size="65536" data-dashboard-favorites-import-size-error="<?= h(t('The selected file is too large. Maximum size is 64 KB.')) ?>">
+                    <input type="file" name="favorites_file" class="dashboard-favorites-manager-file-input" aria-label="<?= h(t('Select favorites export file')) ?>" accept="application/json,.json" required data-dashboard-favorites-import-file data-dashboard-favorites-import-max-size="65536" data-dashboard-favorites-import-size-error="<?= h(t('The selected file is too large. Maximum size is 64 KB.')) ?>">
                     <button type="button" class="btn btn-primary btn-sm dashboard-favorites-manager-file-button" data-dashboard-favorites-file-button>
                         <?= t('Select file') ?>
                     </button>
