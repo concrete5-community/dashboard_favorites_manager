@@ -31,7 +31,7 @@ class Controller extends Package
 
     protected $appVersionRequired = '9.2.0';
 
-    protected $pkgVersion = '1.2.6';
+    protected $pkgVersion = '1.3.0';
 
     private $dashboardFavoritesService;
 
