@@ -1126,6 +1126,7 @@
         var spinner = createElement('i', 'fas fa-spinner fa-spin dashboard-favorites-toolbar-action-spinner');
 
         button.type = 'submit';
+        button.setAttribute('aria-label', label || '');
         button.setAttribute('data-dashboard-favorites-toolbar-action-label', label || '');
         spinner.setAttribute('aria-hidden', 'true');
         button.appendChild(text);
